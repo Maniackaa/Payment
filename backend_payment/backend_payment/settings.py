@@ -204,7 +204,8 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': True,
     # OTHER SETTINGS
     'PREPROCESSING_HOOKS': ["backend_payment.excluded_path.custom_preprocessing_hook"],
-    'SERVE_PERMISSIONS': ['rest_framework.permissions.IsAuthenticated'],
+    # 'SERVE_PERMISSIONS': ['rest_framework.permissions.IsAuthenticated'],
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
 }
 
 LOGGING = {
