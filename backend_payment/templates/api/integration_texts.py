@@ -13,7 +13,7 @@ instruction = """
 <p>&nbsp;</p>
 <p>Вашему магазину будет присвоен merchant_id</p>
 <p>&nbsp;</p>
-<p><strong>II Проведение оплаты.</strong></p>
+<p><strong>II Проведение оплаты. Тип "card_2"</strong></p>
 <p><strong>Вариант 1.</strong></p>
 <p>Перенаправить пользователя на страницу <a href="https://asu-payme.com/invoice">https://asu-payme.com/invoice</a>/ c аргументами:</p>
 <p>&nbsp;</p>

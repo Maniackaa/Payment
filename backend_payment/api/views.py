@@ -7,7 +7,7 @@ from rest_framework import viewsets, status, generics, serializers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action, api_view
 from rest_framework.generics import GenericAPIView, get_object_or_404, CreateAPIView, UpdateAPIView
-
+from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
 from rest_framework import mixins
@@ -16,8 +16,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from api.permissions import PaymentOwnerOrStaff, IsStaff, IsStaffOrReadOnly
 from api.serializers import PaymentCreateSerializer, PaymentInputCardSerializer, \
-    PaymentInputSmsCodeSerializer, PaymentStaffSerializer
-from payment.models import Payment
+    PaymentInputSmsCodeSerializer, PaymentStaffSerializer, PaymentTypesSerializer
+from payment.models import Payment, PayRequisite
 from payment.views import get_phone_script, get_bank_from_bin
 
 logger = structlog.get_logger(__name__)
@@ -42,13 +42,62 @@ class ResponseInputSms(serializers.Serializer):
     status = serializers.CharField()
 
 
+@extend_schema(tags=['Payment check'], summary='Информация о доступных типах оплаты',
+               responses={
+                   status.HTTP_200_OK: OpenApiResponse(
+                       description='Created',
+                       response=PaymentTypesSerializer,
+                       examples=[
+                           OpenApiExample(
+                               "Good example",
+                               value={"id": "4caed007-2d31-489c-9f3d-a2af6ccf07e4"},
+                               status_codes=[201],
+                               response_only=False,
+                           ),
+                       ]),
+
+                   status.HTTP_401_UNAUTHORIZED: OpenApiResponse(
+                       response=BadResponse,
+                       description='Some errors',
+                       examples=[
+                           OpenApiExample(
+                               "Bad response",
+                               value={
+    "detail": "Given token not valid for any token type",
+    "code": "token_not_valid",
+    "messages": [
+        {
+            "token_class": "AccessToken",
+            "token_type": "access",
+            "message": "Token is invalid or expired"
+        }
+    ]
+},
+                               status_codes=[401],
+                               response_only=False,
+                           ),
+                       ]),
+               },)
+class PaymentTypesView(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = PaymentTypesSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        active_pay_types = PayRequisite.objects.values('pay_type').distinct().all()
+        result = []
+        for pay_type in active_pay_types:
+            name = pay_type['pay_type']
+            result.append(PayRequisite.objects.filter(pay_type=name).first())
+        return result
+
+
 class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = PaymentCreateSerializer
     queryset = Payment.objects.all()
     authentication_classes = [JWTAuthentication]
     permission_classes = [PaymentOwnerOrStaff]
 
-    @extend_schema(tags=['Payment check'],
+    @extend_schema(tags=['Payment check'], summary='Просмотр данных о платеже',
                    request=[
                        OpenApiExample(
                            "Bad response",
@@ -59,7 +108,6 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
                        ),
                    ])
     def retrieve(self, request, *args, **kwargs):
-        """Просмотр данных о платеже"""
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(data={'id': instance.id, 'status': instance.status}, status=status.HTTP_200_OK)
@@ -107,7 +155,7 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
     def perform_create(self, serializer):
         serializer.save(source='api')
 
-    @extend_schema(tags=['API Payment process'], summary="Отправка даных карты",
+    @extend_schema(tags=['API Payment process'], summary="Отправка даных карты (For pay_type ['card_2]')",
                    # description="После ввода предоставленных данных карты будет отправлен post-запрос: {'order_id': , 'id': id, 'status': 5,  'signature': }",
                    request=PaymentInputCardSerializer,
                    responses={status.HTTP_200_OK: OpenApiResponse(
@@ -167,7 +215,7 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
 
     @extend_schema(tags=['API Payment process'],
                    request=PaymentInputSmsCodeSerializer,
-                   summary="Отправка кода подтверждения",
+                   summary="Отправка кода подтверждения (For pay_type ['card_2]')",
                    description="Необходим если sms_required=True. После ввода предоставленных данных карты будет отправлен информирующий post-запрос:<br>{'order_id': 'string', 'id': '4caed007-2d31-489c-9f3d-a2af6ccf07e4', 'status': 5,  'signature': hash('sha256', 'card_number' + 'secret_key')}",
                    responses={status.HTTP_200_OK: OpenApiResponse(
                        response=ResponseInputSms,

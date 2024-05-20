@@ -36,8 +36,6 @@ class Merchant(models.Model):
         ordering = ('id',)
 
 
-
-
 class CreditCard(models.Model):
     card_number = models.CharField('Номер карты', max_length=19)
     owner_name = models.CharField('Имя владельца', max_length=100, null=True, blank=True)
@@ -64,7 +62,7 @@ class CreditCard(models.Model):
 
 
 PAY_TYPE = (
-        # ('card-to-card', 'card-to-card'),
+        ('card-to-card', 'card-to-card'),
         ('card_2', 'card_2'),
     )
 
@@ -75,8 +73,8 @@ class PayRequisite(models.Model):
     card = models.ForeignKey(CreditCard, on_delete=models.CASCADE, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     info = models.CharField('Инструкция', null=True, blank=True)
-    min_amount = models.FloatField(default=0)
-    max_amount = models.FloatField(default=10000)
+    min_amount = models.IntegerField(default=0)
+    max_amount = models.IntegerField(default=10000)
 
     def __repr__(self):
         string = f'{self.__class__.__name__}({self.id})'
@@ -94,7 +92,7 @@ class Payment(models.Model):
         (3, '3. CardData input.'),
         (4, '4. Send to work'),
         (5, '5. Wait Sms'),
-        (6, '6. Work complited'),
+        (6, '6. Work completed'),
         (7, '7. Await confirm'),
         (9, '9. Confirmed'),
     )
@@ -230,7 +228,7 @@ class Payment(models.Model):
             data = {
                 'order_id': self.order_id,
                 'id': str(self.id),
-                'status': 5,
+                'status': -1,
                 'signature': self.get_hash()
             }
         else:
@@ -305,4 +303,10 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         data = instance.webhook_data()
         result = send_merch_webhook.delay(url=instance.merchant.host, data=data)
         logger.info(f'answer: {result}')
-        
+
+    # Если статус изменился на -1 (Отклонен):
+    if instance.status == -1 and instance.cached_status != 9:
+        logger.info('Выполняем действие после отклонения платежа')
+        data = instance.webhook_data()
+        result = send_merch_webhook.delay(url=instance.merchant.host, data=data)
+        logger.info(f'answer: {result}')

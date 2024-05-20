@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import as_serializer_error
 from rest_framework import validators
 
-from payment.models import Payment, Merchant, CreditCard
+from payment.models import Payment, Merchant, CreditCard, PayRequisite
 
 logger = structlog.get_logger(__name__)
 
@@ -66,7 +66,7 @@ class UserRegSerializer(serializers.ModelSerializer):
 
 class PaymentCreateSerializer(serializers.ModelSerializer):
     """Создание payment"""
-    amount = serializers.IntegerField(required=True, min_value=10, max_value=3000)
+    amount = serializers.IntegerField(required=True)
     confirmed_amount = serializers.IntegerField(read_only=True)
     create_at = serializers.DateTimeField(read_only=True)
 
@@ -75,6 +75,12 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if merchant.owner != user:
             raise ValidationError('Is not your merchant')
+
+        pay_type = data.get('pay_type')
+        amount = data.get('amount')
+        pay_requsite = PayRequisite.objects.filter(pay_type=pay_type).first()
+        if amount < pay_requsite.min_amount or amount > pay_requsite.max_amount:
+            raise ValidationError(f'Amount must be from {pay_requsite.min_amount} to {pay_requsite.max_amount}')
         return data
 
     def save(self, **kwargs):
@@ -181,5 +187,9 @@ class PaymentStaffSerializer(serializers.ModelSerializer):
         if self.instance.status in (-1, 9):
             raise serializers.ValidationError("Платеж уже обработан")
         return value
-#
-#
+
+
+class PaymentTypesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PayRequisite
+        fields = ('pay_type', 'min_amount', 'max_amount', 'info')

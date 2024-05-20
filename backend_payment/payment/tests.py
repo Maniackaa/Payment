@@ -40,18 +40,15 @@ class TestPayment(TestCase):
         merch_hash = hash_gen(string_value, merch.secret)
         url = f'/invoice/?merchant_id={merchant_id}&order_id={order_id}&amount=10&owner_name=John%20Dou&user_login=user_22216456&pay_type=card_2&signature={merch_hash}'
         response = self.client.get(url, follow=True)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 400, 'Платеж создается без наличия типа')
         self.assertEqual(Payment.objects.count(), 0)
 
-        pay_type = PayRequisite.objects.create(pay_type='card_2', min_amount=10, max_amount=3000, is_active=True)
+        PayRequisite.objects.create(pay_type='card_2', min_amount=3, max_amount=3000, is_active=True)
         response = self.client.get(url, follow=True)
         self.assertEqual(response.status_code, 200, 'Не создается платеж')
         self.assertEqual(Payment.objects.count(), 1)
         payment = Payment.objects.last()
-        self.assertEqual(payment.status, 0)
+        self.assertEqual(payment.status, 0, 'Статус платежа не 0')
 
-    def test_create_payment2(self):
-        print('test2')
-        print(self.user)
 
 

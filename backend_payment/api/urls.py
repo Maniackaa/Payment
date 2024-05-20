@@ -11,6 +11,7 @@ v1_router = DefaultRouter()
 # v1_router.register("users", UsersViewSet, basename="users")
 v1_router.register("payment", views.PaymentViewSet, basename='payment'),
 v1_router.register("payment_status", views.PaymentStatusView, basename='payment_status'),
+v1_router.register("payment_types", views.PaymentTypesView, basename='payment_types'),
 # v1_router.register("payment_card_data", views.PaymentInputCard, basename='payment_card_data'),
 # v1_router.register("payment_sms_code", views.PaymentInputSmsCode, basename='payment_sms'),
 # v1_router.register("payments", PaymentViewSet, basename="payments")

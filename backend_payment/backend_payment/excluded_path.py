@@ -1,12 +1,11 @@
 def custom_preprocessing_hook(endpoints):
     filtered = []
     paths = [
-        '/api/payment/',
-        '/api/payment/{pk}/',
-        '/api/payment/{pk}/send_card_data/',
-        '/api/payment/{pk}/send_sms_code/',
-        '',
-        '',
+        '/api/v1/payment_types/',
+        '/api/v1/payment/',
+        '/api/v1/payment/{pk}/',
+        '/api/v1/payment/{pk}/send_card_data/',
+        '/api/v1/payment/{pk}/send_sms_code/',
     ]
     for (path, path_regex, method, callback) in endpoints:
         print(path)

@@ -7,12 +7,12 @@ urlpatterns = [
     path('', include('payment.urls', namespace='payment')),
     path('admin/', admin.site.urls),
     path('auth/', include('users.urls', namespace='users')),
-    path('api/', include('api.urls')),
+    path('api/v1/', include('api.urls')),
 
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='docs'),
+    path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/v1/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='docs'),
     path(
-        'api/redoc/',
+        'api/v1/redoc/',
         SpectacularRedocView.as_view(url_name='schema'),
         name='redoc'
     ),
