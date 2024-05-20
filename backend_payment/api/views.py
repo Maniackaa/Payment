@@ -7,12 +7,14 @@ from rest_framework import viewsets, status, generics, serializers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action, api_view
 from rest_framework.generics import GenericAPIView, get_object_or_404, CreateAPIView, UpdateAPIView
+
+
 from rest_framework.response import Response
 from rest_framework import mixins
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from api.permissions import PaymentOwnerOrStaff, IsStaff
+from api.permissions import PaymentOwnerOrStaff, IsStaff, IsStaffOrReadOnly
 from api.serializers import PaymentCreateSerializer, PaymentInputCardSerializer, \
     PaymentInputSmsCodeSerializer, PaymentStaffSerializer
 from payment.models import Payment
@@ -223,14 +225,13 @@ class PaymentInputSmsCode(mixins.UpdateModelMixin, viewsets.GenericViewSet):
 class PaymentStatusView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     serializer_class = PaymentStaffSerializer
     queryset = Payment.objects.all()
-    permission_classes = [IsStaff]
+    permission_classes = [IsStaffOrReadOnly]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         data = serializer.data
-        if instance.card_data:
-            print(instance.card_data)
+        if request.user.is_staff and instance.card_data:
             sms = json.loads(instance.card_data).get('sms_code')
             data.update({'sms_code': sms})
         return Response(serializer.data)

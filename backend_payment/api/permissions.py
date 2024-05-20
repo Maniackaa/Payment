@@ -26,6 +26,22 @@ class IsStaff(permissions.BasePermission):
         return request.user.is_staff
 
 
+class IsStaffOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        print('request', request)
+        print('request', request.method)
+        if request.method in ['GET']:
+            print('if request.method in [GET]:')
+            return True
+        return request.user.is_staff
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in ['GET']:
+            print('if request.method in [GET]:')
+            return True
+        return request.user.is_staff
+
+
 class IsOwnerOrAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         return (

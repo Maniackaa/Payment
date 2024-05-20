@@ -163,7 +163,8 @@ EMAIL_FILE_PATH = MEDIA_ROOT / 'email'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        # 'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -343,8 +344,7 @@ CELERYBEAT_LOG_FILE = os.path.join(BASE_DIR, "logs", "celery_beat.log")
 CELERYD_HIJACK_ROOT_LOGGER = False
 
 
-CORS_ALLOWED_ORIGINS = ["http://91.105.172.137", "http://localhost:3000", "https://asu-payme.com",
-                        "http://194.190.152.131"]
+CORS_ALLOWED_ORIGINS = ["https://asu-payme.com", "http://127.0.0.1"]
 # CORS_ALLOW_ALL_ORIGINS = True
 # CORS_ALLOW_CREDENTIALS = True
 print('DEBUG-', DEBUG)

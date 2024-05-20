@@ -113,12 +113,9 @@ function yourFunction() {
 };
 
 function getStatus() {
-fetch('https://asu-payme.com/api/payment_status/', {
-    method: 'POST',
+fetch('https://asu-payme.com/api/payment_status/{{payment.id}}/', {
+    method: 'GET',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-        'id': '{{payment.id}}}'
-    })
 }).then(response => response.json())
        .then(result => { if (status.toString() !== result['status'].toString()) {
            location.reload()

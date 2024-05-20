@@ -446,7 +446,6 @@ class PaymentListView(ListView):
             payment.status = 9
             payment.confirmed_user = request.user
             payment.confirmed_time = timezone.now()
-
             form.save()
         else:
             return HttpResponseBadRequest(str(form.errors))

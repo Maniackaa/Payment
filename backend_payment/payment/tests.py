@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.http import HttpResponseRedirect
 from django.test import TestCase
 
@@ -12,7 +13,7 @@ class TestPayment(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        # call_command('import_bins')
+        call_command('import_bins')
         print('setUpTestData')
         cls.user = User.objects.create_user(username='user', password='test', email='email1@mail.ru')
         cls.merch_user = User.objects.create_user(username='merch_test', password='test', email='email2@mail.ru',
