@@ -1,21 +1,17 @@
 from rest_framework import permissions
 
 
-class ForUsers(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return True
-
-    def has_object_permission(self, request, view, obj):
-        if request.method == "POST" and request.user.is_anonymous:
-            return True
-        if (
-            request.user.is_authenticated
-            and request.method in permissions.SAFE_METHODS
-        ):
-            return True
-
-
 class PaymentOwnerOrStaff(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        user = request.user
+        if user.is_staff or user.is_superuser:
+            return True
+        if not user.is_authenticated:
+            return False
+        if user.is_authenticated and not user.role == 'merchant':
+            return False
+        return True
 
     def has_object_permission(self, request, view, obj):
         if obj.merchant.owner == request.user or request.user.is_staff:

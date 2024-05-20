@@ -56,8 +56,6 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
                            response_only=False,
                        ),
                    ])
-
-
     def retrieve(self, request, *args, **kwargs):
         """Просмотр данных о платеже"""
         instance = self.get_object()
@@ -92,7 +90,6 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
                                    response_only=False,
                                ),
                            ]),
-
                    },
                    )
     def create(self, request, *args, **kwargs):
@@ -100,7 +97,9 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
         if serializer.is_valid(raise_exception=True):
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
-            return Response({'status': 'success', 'id': serializer.data['id']}, status=status.HTTP_201_CREATED, headers=headers)
+            return Response({'status': 'success', 'id': serializer.data['id']},
+                            status=status.HTTP_201_CREATED,
+                            headers=headers)
         return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
     def perform_create(self, serializer):

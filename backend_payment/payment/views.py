@@ -151,6 +151,7 @@ def invoice(request, *args, **kwargs):
             merch = Merchant.objects.get(pk=merchant_id)
             string_value = f'{merchant_id}{order_id}'
             merch_hash = hash_gen(string_value, merch.secret)
+            print(string_value, signature, merch_hash)
             assert signature == merch_hash
 
         except Exception as err:
@@ -161,8 +162,14 @@ def invoice(request, *args, **kwargs):
         # Проверяем наличие всех данных для создания платежа
         if not all(required_values):
             return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='Not enough info for create pay',
-                                              content='Not enough info for create pay')
+                                          content='Not enough info for create pay')
         logger.debug('Key ok')
+
+        # Проверка что pay_type действует
+        pay_requsites = PayRequisite.objects.filter(pay_type=pay_type, is_active=True).exists()
+        if not pay_requsites:
+            return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='This pay_type not worked',
+                                          content='This pay_type not worked')
 
         try:
             payment, status = Payment.objects.get_or_create(
@@ -435,7 +442,9 @@ class PaymentListView(ListView):
             # Логика подтверждения заявки
             logger.debug(f'valid {form.cleaned_data}')
             payment.status = 9
+            payment.confirmed_user = request.user
             payment.confirmed_time = timezone.now()
+
             form.save()
         else:
             return HttpResponseBadRequest(str(form.errors))
@@ -466,7 +475,6 @@ class PaymentEdit(UpdateView, ):
         # history = self.object.history.order_by('-id').all()
         # context['history'] = history
         return context
-
 
 
 def get_bank_from_bin(bin_num) -> Bank:

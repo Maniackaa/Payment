@@ -36,6 +36,8 @@ class Merchant(models.Model):
         ordering = ('id',)
 
 
+
+
 class CreditCard(models.Model):
     card_number = models.CharField('Номер карты', max_length=19)
     owner_name = models.CharField('Имя владельца', max_length=100, null=True, blank=True)
@@ -119,7 +121,6 @@ class Payment(models.Model):
                                  choices=PAYMENT_STATUS)
     change_time = models.DateTimeField('Время изменения в базе', auto_now=True)
     cc_data_input_time = models.DateTimeField('Время ввода данных карты', null=True, blank=True)
-    confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
 
     # Данные отправителя
     phone = models.CharField('Телефон отправителя', max_length=20, null=True, blank=True)
@@ -129,6 +130,8 @@ class Payment(models.Model):
 
     # Подтверждение:
     confirmed_amount = models.IntegerField('Подтвержденная сумма заявки', null=True, blank=True)
+    confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
+    confirmed_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     comment = models.CharField('Комментарий', max_length=1000, null=True, blank=True)
     response_status_code = models.IntegerField(null=True, blank=True)
     source = models.CharField(max_length=5, default='form', null=True, blank=True)
@@ -283,6 +286,8 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
     if instance.status == 9 and instance.cached_status != 9:
         if not instance.confirmed_time:
             instance.confirmed_time = datetime.datetime.now()
+        if not instance.confirmed_amount:
+            instance.confirmed_amount = instance.amount
 
 
 @receiver(post_save, sender=Payment)
