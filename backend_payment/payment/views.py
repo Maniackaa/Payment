@@ -312,7 +312,9 @@ def pay_to_m10_create(request, *args, **kwargs):
         if payment.card_data:
             initial_data.update(json.loads(payment.card_data))
         form = forms.InvoiceM10Form(initial=initial_data)
-        context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment)}
+        bank = get_bank_from_bin(initial_data.get('card_num'))
+        print('bank', bank)
+        context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment), 'bank_url': bank.image.url}
         card_number = initial_data.get('card_number')
         if card_number:
             phone_script = get_phone_script(card_number)
