@@ -9,7 +9,8 @@ def custom_preprocessing_hook(endpoints):
     ]
     for (path, path_regex, method, callback) in endpoints:
         print(path)
-        # if "api" in path:
+        if "token" in path:
+            filtered.append((path, path_regex, method, callback))
         if path in paths:
             filtered.append((path, path_regex, method, callback))
     return filtered
