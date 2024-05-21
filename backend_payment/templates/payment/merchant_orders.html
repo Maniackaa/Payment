@@ -5,11 +5,13 @@
 {% block content %}
      <div class="container ">
     {% include 'includes/user_menu.html' %}
-<form method="get">
-    {{ filter.form.as_p }}
-    <button type="submit">Filter</button>
-</form>
-
+    <div class="row">
+      <form method="get">
+        {{ filter.form.as_p }}
+          <button type="submit">Filter</button>
+      </form>
+    </div>
+<!--{{filter.qs}}-->
      {% include 'includes/paginator.html' %}
 
      <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">

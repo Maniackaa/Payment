@@ -553,15 +553,14 @@ class MerchantOrders(ListView):
 
     def get_queryset(self):
         user = self.request.user
-        payments = Payment.objects.filter(merchant__owner=user)
-        return payments
+        queryset = Payment.objects.filter(merchant__owner=user)
+        return PaymentFilter(self.request.GET, queryset=queryset).qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        form = PaymentListConfirmForm()
-        context['form'] = form
-        filter = PaymentFilter(self.request.GET, queryset=Payment.objects.filter(merchant__owner=self.request.user))
+        filter = PaymentFilter(self.request.GET, queryset=self.get_queryset())
         context['filter'] = filter
+        # context['page_obj'] = filter
         return context
 
 
