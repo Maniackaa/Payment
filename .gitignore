@@ -40,10 +40,10 @@ pip-delete-this-directory.txt
 *.log
 *.log.*
 
-./backend_deposit/collected_static/
-backend_deposit/collected_static/
-./backend_deposit/media/
-./backend_deposit/test/
+./backend_payment/collected_static/
+backend_payment/collected_static/
+./backend_payment/media/
+./backend_payment/test/
 
 # Unit test / coverage reports
 htmlcov/
@@ -174,7 +174,7 @@ cython_debug/
 **/migrations/**
 !**/migrations
 !**/migrations/__init__.py
-/backend_deposit/media
+/backend_payment/media
 ftp/screenshots/*.*
 
 certbot/

@@ -7,9 +7,11 @@ from http import HTTPStatus
 
 import requests
 import structlog
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 
 from django.http import HttpResponse, QueryDict, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, \
     JsonResponse
@@ -30,6 +32,12 @@ from payment.permissions import AuthorRequiredMixin
 from payment.task import send_merch_webhook
 
 logger = structlog.get_logger(__name__)
+
+
+def make_page_obj(request, objects, numbers_of_posts=settings.PAGINATE):
+    paginator = Paginator(objects, numbers_of_posts)
+    page_number = request.GET.get('page')
+    return paginator.get_page(page_number)
 
 
 def menu(request, *args, **kwargs):
@@ -541,6 +549,7 @@ class MerchantOrders(ListView):
     model = Payment
     filter = PaymentFilter
     context_object_name = 'payments'
+    paginate_by = settings.PAGINATE
 
     def get_queryset(self):
         user = self.request.user
@@ -551,7 +560,7 @@ class MerchantOrders(ListView):
         context = super().get_context_data(**kwargs)
         form = PaymentListConfirmForm()
         context['form'] = form
-        filter = PaymentFilter(self.request.GET, queryset=Payment.objects.all())
+        filter = PaymentFilter(self.request.GET, queryset=Payment.objects.filter(merchant__owner=self.request.user))
         context['filter'] = filter
         return context
 
