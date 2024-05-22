@@ -50,7 +50,7 @@
                       </div>
                       {% if merchant.payments.count == 0 %}
                       <div class="col-3">
-                        <a class="" href="{% url 'payment:merchant_delete' merchant.id %}">Удалить</a>
+                        <a class="" href="{% url 'payment:merchant_delete' merchant.id %}">Удалить (Только пустые)</a>
                       </div>
                       {% endif %}
                     </div>

@@ -8,7 +8,7 @@ import structlog
 from django.contrib.auth import get_user_model
 
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F, Sum
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -24,7 +24,7 @@ User = get_user_model()
 
 class Merchant(models.Model):
     name = models.CharField('Название', max_length=100)
-    owner = models.ForeignKey(to=User, related_name='merchants', on_delete=models.CASCADE,)
+    owner = models.ForeignKey(to=User, related_name='merchants', on_delete=models.CASCADE)
     host = models.URLField('Адрес для отправки вэбхук')
     secret = models.CharField('Your secret key', max_length=256)
     # Endpoints
@@ -44,6 +44,14 @@ class Merchant(models.Model):
 
     class Meta:
         ordering = ('id',)
+
+
+class Withdraw(models.Model):
+    create_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.FloatField('Изменение баланса')
+    comment = models.CharField(null=True, blank=True)
+    payment = models.OneToOneField(to='Payment', null=True, blank=True, on_delete=models.SET_NULL)
 
 
 class CreditCard(models.Model):
@@ -307,11 +315,21 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
     if instance.status == 9 and instance.cached_status != 9:
         logger.info('Выполняем действие полсле подтверждения платежа')
         # Плюсуем баланс
-        user = User.objects.get(pk=instance.merchant.owner.id)
-        tax = instance.confirmed_amount * user.tax / 100
-        logger.info(f'user: {user}. {user.balance} -> {user.balance + instance.confirmed_amount - round(tax, 2)}')
-        user.balance = F('balance') + instance.confirmed_amount - round(tax, 2)
-        user.save()
+        with transaction.atomic():
+            user = User.objects.get(pk=instance.merchant.owner.id)
+            tax = instance.confirmed_amount * user.tax / 100
+            logger.info(f'user: {user}. {user.balance} -> {user.balance + instance.confirmed_amount - round(tax, 2)}')
+            user.balance = F('balance') + instance.confirmed_amount - round(tax, 2)
+            user.save()
+            # Фиксируем историю
+            new_log = Withdraw.objects.create(
+                user=user,
+                amount=instance.confirmed_amount - tax,
+                payment=instance,
+                comment=f'From payment {instance.id}. +{instance.confirmed_amount - tax} ₼. (Tax: {tax} ₼)'
+            )
+            new_log.save()
+
 
         # Отправляем вэбхук
         data = instance.webhook_data()
