@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models import F
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django_better_admin_arrayfield.models.fields import ArrayField
@@ -103,7 +104,7 @@ class Payment(models.Model):
         self.cached_status = self.status
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, max_length=36, db_index=True, unique=True,)
-    merchant = models.ForeignKey('Merchant', on_delete=models.CASCADE)
+    merchant = models.ForeignKey('Merchant', on_delete=models.CASCADE, related_name='payments')
     order_id = models.CharField(max_length=36, db_index=True)
     amount = models.IntegerField('Сумма заявки', null=True)
 
@@ -288,12 +289,22 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
             instance.confirmed_amount = instance.amount
 
 
+        # user.balance = F('balance') + instance.confirmed_amount - round(tax, 2)
+
 @receiver(post_save, sender=Payment)
 def after_save_pay(sender, instance: Payment, created, raw, using, update_fields, *args, **kwargs):
     logger.debug(f'post_save_status = {instance.status}  cashed: {instance.cached_status}')
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
         logger.info('Выполняем действие полсле подтверждения платежа')
+        # Плюсуем баланс
+        user = User.objects.get(pk=instance.merchant.owner.id)
+        tax = instance.confirmed_amount * user.tax / 100
+        logger.info(f'user: {user}. {user.balance} -> {user.balance + instance.confirmed_amount - round(tax, 2)}')
+        user.balance = F('balance') + instance.confirmed_amount - round(tax, 2)
+        user.save()
+
+        # Отправляем вэбхук
         data = instance.webhook_data()
         result = send_merch_webhook.delay(url=instance.merchant.host, data=data)
         logger.info(f'answer: {result}')

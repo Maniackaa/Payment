@@ -6,7 +6,7 @@ from payment.models import Merchant, Payment, PayRequisite
 
 User = get_user_model()
 
-urls = ['/api/payment/', '/api/payment_status/']
+urls = ['/api/v1/payment/', '/api/v1/payment_status/']
 
 
 class TestAPI(APITestCase):
@@ -33,7 +33,7 @@ class TestAPI(APITestCase):
 
     def test_create_payment(self):
         # Тест создания платежа по api
-        url = '/api/payment/'
+        url = '/api/v1/payment/'
 
         # ПРоверка неавторизованного
         good_data = {"merchant": "1", "order_id": "testorder", "amount": "10", "pay_type": "card_2"},
@@ -110,7 +110,7 @@ class TestAPI(APITestCase):
         assert response.status_code == 400
 
     def test_full_steps(self):
-        start_url = '/api/payment/'
+        start_url = '/api/v1/payment/'
         self.client.force_authenticate(user=self.merch_user)
         data = {"merchant": "1", "order_id": "testorder1", "amount": "10", "pay_type": "card_2"}
         response = self.client.post(start_url, data)

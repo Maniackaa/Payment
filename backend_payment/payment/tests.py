@@ -50,5 +50,25 @@ class TestPayment(TestCase):
         payment = Payment.objects.last()
         self.assertEqual(payment.status, 0, 'Статус платежа не 0')
 
+    def test_balance(self):
+        amount = 100
+        payment = Payment.objects.create(merchant=self.shop,
+                                         amount=amount,
+                                         order_id='1'
+                                         )
+        self.assertIsInstance(payment, Payment)
+        payment.status = 9
+        payment.save()
+        owner = payment.merchant.owner
+        user = User.objects.get(pk=owner.id)
+        tax = user.tax
+        self.assertEqual(user.balance, amount - tax, 'Неверный расчет баланса')
 
-
+        payment = Payment.objects.create(merchant=self.shop,
+                                         amount=amount,
+                                         order_id='1'
+                                         )
+        payment.status = 9
+        payment.save()
+        user = User.objects.get(pk=user.id)
+        self.assertEqual(user.balance, 2 * (amount - tax), 'Неверный расчет баланса')

@@ -14,7 +14,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 
 from django.http import HttpResponse, QueryDict, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, \
-    JsonResponse
+    JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
@@ -577,6 +577,16 @@ class MerchantDelete(AuthorRequiredMixin, SuccessMessageMixin, DeleteView):
     success_url = reverse_lazy('payment:menu')
     model = Merchant
     success_message = 'Delete complete'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.payments.all():
+            return HttpResponseBadRequest("You can't delete not empty Merchant. Call to administrator to delete")
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
 
 
 def merchant_test_webhook(request, *args, **kwargs):

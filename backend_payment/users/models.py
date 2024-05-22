@@ -25,7 +25,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     MODERATOR = "editor"
     MERCHANT = "merchant"
     ROLES = (
-        (USER, "Пользователь"),
         (ADMIN, "Администратор"),
         (STAFF, "Оператор"),
         (MODERATOR, "Корректировщик"),
@@ -56,6 +55,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
 
     objects = UserManager()
+
+    balance = models.FloatField('Баланс', default=0)
+    tax = models.FloatField('Комиссия', default=5)
 
     class Meta:
         verbose_name = "Пользователь"
@@ -132,14 +134,6 @@ class Profile(models.Model):
     my_filter2 = models.JSONField('Фильтр по получателю2', default=list, blank=True)
     my_filter3 = models.JSONField('Фильтр по получателю3', default=list, blank=True)
     view_bad_warning = models.BooleanField(default=False)
-
-    @staticmethod
-    def all_message_count():
-        return Message.objects.exclude(type='macros').count()
-
-    def read_message_count(self):
-        res = self.user.messages_read.all().exclude(message__type='macros').count()
-        return res
 
     def __str__(self):
         return f'{self.user.username}'
