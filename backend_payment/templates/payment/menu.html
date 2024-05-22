@@ -15,7 +15,7 @@
             <a class="" href="{% url 'payment:merchant_orders' %}">Заказы</a><br>
             </div>
             <div class="col-3">
-            Баланс: {{ request.user.balance }}
+            Баланс: {{ request.user.balance }} ₼
             </div>
            {% endif %}
         </div>
@@ -38,13 +38,15 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        Количество: {{ merchant.payments.count }}
+                        <b>Статистика:</b><br>
+                        Количество: {{ merchant.payments.count }}<br>
+                        Всего amount: {{merchant.stat.total_sum}} ₼
                     </div>
                 </div>
                 <div class="card-footer">
                    <div class="row">
                       <div class="col-3">
-                        <a class="" href="{% url 'payment:merchant_detail' merchant.id %}">Подробно</a>
+                        <a class="" href="{% url 'payment:merchant_detail' merchant.id %}">Редактировать</a>
                       </div>
                       {% if merchant.payments.count == 0 %}
                       <div class="col-3">

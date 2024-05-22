@@ -9,12 +9,12 @@ from django.contrib.auth import get_user_model
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.db.models import F
+from django.db.models import F, Sum
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django_better_admin_arrayfield.models.fields import ArrayField
 
-from core.global_func import hash_gen
+from core.global_func import hash_gen, TZ
 from payment.task import send_merch_webhook
 
 logger = structlog.get_logger(__name__)
@@ -29,6 +29,15 @@ class Merchant(models.Model):
     secret = models.CharField('Your secret key', max_length=256)
     # Endpoints
     pay_success_endpoint = models.URLField('Url for redirect user back to your site', null=True, blank=True)
+
+    def stat(self):
+        confirmed_payments = self.payments.filter(status=9)
+        count = confirmed_payments.count()
+        result = confirmed_payments.aggregate(total_sum=Sum('confirmed_amount'))
+        print(result)
+        return {
+            'count': count,
+            'total_sum': result['total_sum']}
 
     def __str__(self):
         return f'{self.id}. {self.name} {self.host}'
@@ -284,7 +293,7 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
         if not instance.confirmed_time:
-            instance.confirmed_time = datetime.datetime.now()
+            instance.confirmed_time = datetime.datetime.now(tz=TZ)
         if not instance.confirmed_amount:
             instance.confirmed_amount = instance.amount
 
