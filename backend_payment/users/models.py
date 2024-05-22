@@ -57,7 +57,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     balance = models.FloatField('Баланс', default=0)
-    tax = models.FloatField('Комиссия', default=5)
+    tax = models.FloatField('Комиссия', default=9)
 
     class Meta:
         verbose_name = "Пользователь"
