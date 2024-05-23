@@ -39,7 +39,7 @@ class BankAdmin(admin.ModelAdmin, DynamicArrayMixin):
     list_display = (
         'id', 'name', 'script', 'pic'
     )
-    list_display_links = ('id', 'name', 'pic')
+    list_display_links = ('id', 'name')
 
     def pic(self, obj):  # receives the instance as an argument
         return format_html('<img height="50" src="http://127.0.0.1:8000{thumb}"/>'.format(

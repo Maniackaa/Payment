@@ -77,4 +77,4 @@ class TestPayment(TestCase):
         self.assertEqual(withdraws.count(), 2)
         print('withdraws:', withdraws)
         for x in withdraws:
-            print(x.comment)
+            print(x.amount, x.comment, x.payment)

@@ -153,7 +153,7 @@ class Payment(models.Model):
     source = models.CharField(max_length=5, default='form', null=True, blank=True)
 
     def __str__(self):
-        string = f'{self.__class__.__name__} {self.id}.'
+        string = f'{self.__class__.__name__} {self.id}'
         return string
 
     def status_str(self):
