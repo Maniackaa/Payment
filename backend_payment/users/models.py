@@ -25,6 +25,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     MODERATOR = "editor"
     MERCHANT = "merchant"
     ROLES = (
+        (USER, "Пользователь"),
         (ADMIN, "Администратор"),
         (STAFF, "Оператор"),
         (MODERATOR, "Корректировщик"),
