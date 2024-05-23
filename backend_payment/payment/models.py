@@ -26,7 +26,7 @@ class Merchant(models.Model):
     name = models.CharField('Название', max_length=100)
     owner = models.ForeignKey(to=User, related_name='merchants', on_delete=models.CASCADE)
     host = models.URLField('Адрес для отправки вэбхук')
-    secret = models.CharField('Your secret key', max_length=256)
+    secret = models.CharField('Your secret key', max_length=1000)
     # Endpoints
     pay_success_endpoint = models.URLField('Url for redirect user back to your site', null=True, blank=True)
 
@@ -46,7 +46,7 @@ class Merchant(models.Model):
         ordering = ('id',)
 
 
-class Withdraw(models.Model):
+class BalanceChange(models.Model):
     create_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.FloatField('Изменение баланса')
@@ -322,7 +322,7 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
             user.balance = F('balance') + instance.confirmed_amount - round(tax, 2)
             user.save()
             # Фиксируем историю
-            new_log = Withdraw.objects.create(
+            new_log = BalanceChange.objects.create(
                 user=user,
                 amount=instance.confirmed_amount - tax,
                 payment=instance,

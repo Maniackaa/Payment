@@ -22,7 +22,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, DetailView, FormView, UpdateView, ListView, DeleteView
 
-from core.global_func import hash_gen
+from core.global_func import hash_gen, TZ
 from payment import forms
 from payment.filters import PaymentFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
@@ -608,7 +608,7 @@ def merchant_test_webhook(request, *args, **kwargs):
     else:
         payment.confirmed_amount = random.randrange(10, 3000)
         payment.status = 9
-        payment.confirmed_time = datetime.datetime.now()
+        payment.confirmed_time = datetime.datetime.now(tz=TZ)
         data = payment.webhook_data()
     send_merch_webhook.delay(merchant.host, data)
     return JsonResponse(json.dumps(data), safe=False)

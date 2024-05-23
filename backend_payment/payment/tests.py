@@ -4,7 +4,7 @@ from django.http import HttpResponseRedirect
 from django.test import TestCase
 
 from core.global_func import hash_gen
-from payment.models import Merchant, PayRequisite, Payment, Withdraw
+from payment.models import Merchant, PayRequisite, Payment, BalanceChange
 
 User = get_user_model()
 
@@ -73,7 +73,7 @@ class TestPayment(TestCase):
         user = User.objects.get(pk=user.id)
         self.assertEqual(user.balance, 2 * (amount - tax), 'Неверный расчет баланса')
 
-        withdraws = Withdraw.objects.all()
+        withdraws = BalanceChange.objects.all()
         self.assertEqual(withdraws.count(), 2)
         print('withdraws:', withdraws)
         for x in withdraws:
