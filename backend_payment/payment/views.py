@@ -600,7 +600,7 @@ def merchant_test_webhook(request, *args, **kwargs):
                       id=pk,
                       order_id=order_id,
                       amount=random.randrange(10, 3000),
-                      create_at=(datetime.datetime.now() - datetime.timedelta(minutes=1)),
+                      create_at=(timezone.now() - datetime.timedelta(minutes=1)),
                       )
     if 'decline' in request.POST:
         payment.status = -1
@@ -608,7 +608,8 @@ def merchant_test_webhook(request, *args, **kwargs):
     else:
         payment.confirmed_amount = random.randrange(10, 3000)
         payment.status = 9
-        payment.confirmed_time = datetime.datetime.now(tz=TZ)
+        # payment.confirmed_time = datetime.datetime.now(tz=TZ)
+        payment.confirmed_time = timezone.now()
         data = payment.webhook_data()
     send_merch_webhook.delay(merchant.host, data)
     return JsonResponse(json.dumps(data), safe=False)

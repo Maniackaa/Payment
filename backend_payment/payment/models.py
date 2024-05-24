@@ -12,6 +12,7 @@ from django.db import models, transaction
 from django.db.models import F, Sum
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django_better_admin_arrayfield.models.fields import ArrayField
 
 from core.global_func import hash_gen, TZ
@@ -301,7 +302,8 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
         if not instance.confirmed_time:
-            instance.confirmed_time = datetime.datetime.now(tz=TZ)
+            # instance.confirmed_time = datetime.datetime.now(tz=TZ)
+            instance.confirmed_time = timezone.now()
         if not instance.confirmed_amount:
             instance.confirmed_amount = instance.amount
 

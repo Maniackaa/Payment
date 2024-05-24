@@ -31,7 +31,7 @@ class TestAPI(APITestCase):
         cls.shop_user = Merchant.objects.create(name='merch_user', secret='secret4', host='localhost', owner=user)
         cls.pay_type = PayRequisite.objects.create(pay_type='card_2', min_amount=10, max_amount=3000, is_active=True)
 
-    def test_create_payment(self):
+    def test_api_create_payment(self):
         # Тест создания платежа по api
         url = '/api/v1/payment/'
 
