@@ -6,6 +6,8 @@ def custom_preprocessing_hook(endpoints):
         '/api/v1/payment/{pk}/',
         '/api/v1/payment/{pk}/send_card_data/',
         '/api/v1/payment/{pk}/send_sms_code/',
+        '/api/v1/withdraw/',
+        '/api/v1/withdraw/{pk}/',
     ]
     for (path, path_regex, method, callback) in endpoints:
         print(path)

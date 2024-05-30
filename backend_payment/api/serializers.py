@@ -9,59 +9,13 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import as_serializer_error
 from rest_framework import validators
 
-from payment.models import Payment, Merchant, CreditCard, PayRequisite
+from core.global_func import hash_gen
+from payment.models import Payment, Merchant, CreditCard, PayRequisite, Withdraw
 
 logger = structlog.get_logger(__name__)
 
 
 User = get_user_model()
-
-
-class UserRegSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        write_only=False,
-        validators=[
-            EmailValidator(),
-            validators.UniqueValidator(queryset=User.objects.all()),
-        ],
-    )
-    password = serializers.CharField(
-        write_only=True,
-    )
-
-    class Meta:
-        model = User
-        fields = (
-            "id",
-            "email",
-            "username",
-            "password",
-        )
-        read_only_fields = ("id", "email")
-
-    def validate(self, attrs: dict):
-        if attrs.get("password") == "123456":
-            raise ValidationError()
-        return attrs
-
-    def run_validation(self, *args, **kwargs):
-        try:
-            print("run_validation", *args, **kwargs)
-            return super().run_validation(*args, **kwargs)
-        except Exception as exc:
-            print("Критическая ошибка при валидации")
-            raise ValidationError(detail=as_serializer_error(exc))
-
-    @transaction.atomic
-    def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data["username"],
-            email=validated_data["email"],
-            password=validated_data["password"],
-            first_name=validated_data.get("first_name"),
-            last_name=validated_data.get("last_name"),
-        )
-        return user
 
 
 class PaymentCreateSerializer(serializers.ModelSerializer):
@@ -79,6 +33,8 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         pay_type = data.get('pay_type')
         amount = data.get('amount')
         pay_requsite = PayRequisite.objects.filter(pay_type=pay_type).first()
+        if not pay_requsite:
+            raise ValidationError(f'Sorry, service not available in this moment.')
         if amount < pay_requsite.min_amount or amount > pay_requsite.max_amount:
             raise ValidationError(f'Amount must be from {pay_requsite.min_amount} to {pay_requsite.max_amount}')
         return data
@@ -109,32 +65,33 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
             ),
         ]
 
-#
-# class CardSerializer(serializers.ModelSerializer):
-#     cvv = serializers.CharField(required=True, min_length=3, max_length=4)
-#     class Meta:
-#         model = CreditCard
-#         fields = (
-#             'card_number',
-#             'owner_name',
-#             'expired_month',
-#             'expired_year',
-#             'cvv'
-#         )
-#
-#     def validate_card_number(self, data):
-#         card_number = ''.join([x for x in data if x.isdigit()])
-#         if all(
-#                 (card_number.isdigit(), len(card_number) == 16)
-#         ):
-#             return card_number
-#         raise ValidationError('card_number must be 16 digits')
-#
-#     def validate_cvv(self, data):
-#         if data.isdigit():
-#             return data
-#         else:
-#             raise ValidationError('cvv must be 3-4 digits')
+
+class CardSerializer(serializers.ModelSerializer):
+    cvv = serializers.CharField(required=False, min_length=3, max_length=4)
+
+    class Meta:
+        model = CreditCard
+        fields = (
+            'card_number',
+            'owner_name',
+            'expired_month',
+            'expired_year',
+            'cvv'
+        )
+
+    def validate_card_number(self, data):
+        card_number = ''.join([x for x in data if x.isdigit()])
+        if all(
+                (card_number.isdigit(), len(card_number) == 16)
+        ):
+            return card_number
+        raise ValidationError('card_number must be 16 digits')
+
+    def validate_cvv(self, data):
+        if data.isdigit():
+            return data
+        else:
+            raise ValidationError('cvv must be 3-4 digits')
 
 
 class PaymentInputCardSerializer(serializers.ModelSerializer):
@@ -193,3 +150,43 @@ class PaymentTypesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PayRequisite
         fields = ('pay_type', 'min_amount', 'max_amount', 'info')
+
+
+class WithdrawSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Withdraw
+        fields = ('id', 'withdraw_id', 'amount', 'status', 'payload')
+
+
+class WithdrawCreateSerializer(serializers.ModelSerializer):
+    """Передача данных карты для оплаты"""
+    card_data = CardSerializer()
+    # signature = serializers.CharField()
+
+    class Meta:
+        model = Withdraw
+        fields = (
+            'id',
+            'merchant',
+            'withdraw_id',
+            'card_data',
+            'amount',
+            'payload',
+            # 'signature'
+        )
+        read_only_fields = ('signature',)
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=Withdraw.objects.all(),
+                fields=('merchant', 'withdraw_id'),
+                message="withdraw_id must be Unique from user"
+            ),
+        ]
+
+    def validate(self, data):
+        merchant = data.get('merchant')
+        user = self.context['request'].user
+        if merchant.owner != user:
+            raise ValidationError('Is not your merchant')
+        return data
+

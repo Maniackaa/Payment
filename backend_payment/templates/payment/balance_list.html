@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Список заявок{% endblock %}
+
+
+{% block content %}
+<style>
+
+
+</style>
+
+{% include 'includes/operator_menu.html' %}
+<div class="container">
+{% if request.user.is_superuser %}
+    <form method="get">
+    {{ filter.form.as_p }}
+    <button type="submit">Фильтровать</button>
+    </form>
+    {% endif %}
+
+
+     {% include 'includes/paginator.html' %}
+     <div class="container">
+     <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">
+     <thead class="">
+     <tr class="">
+           <th>create time</th>
+           <th>user</th>
+           <th>Сумм</th>
+           <th>comment</th>
+       </tr>
+     </thead>
+     <tbody style="text-align: end" >
+         {% for obj in filter.qs %}
+
+            <td>{{ obj.create_at|date:"d.m H:i" }}</td>
+            <td>{{ obj.user}}</td>
+             <td>{{ obj.amount}}</td>
+             <td style="text-align: left">{{ obj.comment}}</td>
+
+
+         </tr>
+         {% endfor %}
+
+     </tbody>
+   </table>
+   </div>
+   {% include 'includes/paginator.html' %}
+
+</div>
+
+{% endblock %}

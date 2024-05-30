@@ -24,10 +24,10 @@ from django.views.generic import CreateView, DetailView, FormView, UpdateView, L
 
 from core.global_func import hash_gen, TZ
 from payment import forms
-from payment.filters import PaymentFilter
+from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
-    MerchantForm
-from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank
+    MerchantForm, WithdrawForm
+from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
 from payment.permissions import AuthorRequiredMixin
 from payment.task import send_merch_webhook
 
@@ -484,6 +484,77 @@ class PaymentEdit(UpdateView, ):
         # history = self.object.history.order_by('-id').all()
         # context['history'] = history
         return context
+
+
+class WithdrawListView(ListView):
+    """Спиок выводов"""
+    template_name = 'payment/withdraw_list.html'
+    model = Withdraw
+    # fields = ('confirmed_amount',
+    #           )
+    # filter = PaymentFilter
+
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            raise PermissionDenied('Недостаточно прав')
+        super(WithdrawListView, self).get_queryset()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = PaymentListConfirmForm()
+        context['form'] = form
+        filter = WithdrawFilter(self.request.GET, queryset=Withdraw.objects.filter(merchant__owner__balance__gt=0).all())
+        context['filter'] = filter
+        return context
+
+
+class BalanceListView(ListView):
+    """Список Изменения баланса"""
+    template_name = 'payment/balance_list.html'
+    model = BalanceChange
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return super().get_queryset()
+        if self.request.user.role not in ('merchant', 'operator'):
+            raise PermissionDenied('Недостаточно прав')
+        return BalanceChange.objects.filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filter'] = BalanceChangeFilter(self.request.GET, queryset=self.get_queryset())
+        return context
+
+
+class WithdrawEdit(UpdateView, ):
+    # Подробно о payment
+    model = Withdraw
+    form_class = WithdrawForm
+    success_url = reverse_lazy('payment:withdraw_list')
+    template_name = 'payment/withdraw_edit.html'
+
+    def get(self, request, *args, **kwargs):
+        if not self.request.user.is_staff:
+            raise PermissionDenied('Недостаточно прав')
+        self.object = self.get_object()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            self.object = self.get_object()
+            return super().post(request, *args, **kwargs)
+        return HttpResponseForbidden('У вас нет прав редактирования')
+
+    def get_context_data(self, **kwargs):
+        context = super(WithdrawEdit, self).get_context_data(**kwargs)
+        # history = self.object.history.order_by('-id').all()
+        # context['history'] = history
+        return context
+
+    def form_valid(self, form):
+        if form.instance.status != 0:
+            form.instance.confirmed_user = self.request.user
+        return super().form_valid(form)
 
 
 def get_bank_from_bin(bin_num) -> Bank:

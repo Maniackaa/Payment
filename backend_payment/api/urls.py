@@ -12,6 +12,8 @@ v1_router.register("payment", views.PaymentViewSet, basename='payment'),
 v1_router.register("payment_status", views.PaymentStatusView, basename='payment_status'),
 v1_router.register("payment_types", views.PaymentTypesView, basename='payment_types'),
 
+v1_router.register("withdraw", views.WithdrawViewSet, basename='withdraw'),
+
 urlpatterns = [
     path("", include(v1_router.urls)),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

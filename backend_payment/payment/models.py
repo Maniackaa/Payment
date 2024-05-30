@@ -52,7 +52,9 @@ class BalanceChange(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.FloatField('Изменение баланса')
     comment = models.CharField(null=True, blank=True)
-    payment = models.OneToOneField(to='Payment', null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ('-create_at',)
 
 
 class CreditCard(models.Model):
@@ -102,6 +104,66 @@ class PayRequisite(models.Model):
     def __str__(self):
         string = f'{self.pay_type} {self.id}. {self.card}'
         return string
+
+
+class Withdraw(models.Model):
+    WITHDRAW_STATUS = (
+        (-1, '-1. Decline'),
+        (0, '0. Created'),
+        (9, '9. Confirmed'),
+    )
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.cached_status = self.status
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, max_length=36, db_index=True,
+                          unique=True, )
+    merchant = models.ForeignKey('Merchant', verbose_name='Магазин мерча', on_delete=models.CASCADE, related_name='withdraws')
+    withdraw_id = models.CharField(max_length=36, db_index=True)
+    amount = models.IntegerField('Сумма заявки', validators=[MinValueValidator(30), MaxValueValidator(10000)])
+    payload = models.JSONField(default=str, blank=True, null=True)
+    create_at = models.DateTimeField('Время добавления в базу', auto_now_add=True)
+    status = models.IntegerField('Статус заявки',
+                                 default=0,
+                                 choices=WITHDRAW_STATUS)
+    change_time = models.DateTimeField('Время изменения в базе', auto_now=True)
+    card_data = models.JSONField(default=str, blank=True)
+    confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
+    confirmed_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    comment = models.CharField('Комментарий', max_length=1000, null=True, blank=True)
+    response_status_code = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('-create_at',)
+
+    def status_str(self):
+        for status_num, status_str in self.WITHDRAW_STATUS:
+            if status_num == self.status:
+                return status_str
+
+    def balance(self):
+        return self.merchant.owner.balance
+
+    def webhook_data(self):
+        if self.status == 9:
+            data = {
+                "id": str(self.id),
+                "withdraw_id": self.withdraw_id,
+                "amount": self.amount,
+                "create_at": self.create_at.isoformat(),
+                "status": self.status,
+                "confirmed_time": self.confirmed_time.isoformat(),
+            }
+        elif self.status == -1:
+            data = {
+                'withdraw_id': self.withdraw_id,
+                'id': str(self.id),
+                'status': -1,
+            }
+        else:
+            data = {}
+        return data
 
 
 class Payment(models.Model):
@@ -292,9 +354,53 @@ class Bank(models.Model):
     image = models.ImageField('Иконка банка', upload_to='bank_icons', null=True, blank=True)
 
 
-# @receiver(pre_save, sender=PhoneScript)
-# def after_save_script(sender, instance: PhoneScript, raw, using, update_fields, *args, **kwargs):
-#     instance.bins = sorted(instance.bins)
+@receiver(pre_save, sender=Withdraw)
+def pre_save_pay(sender, instance: Withdraw, raw, using, update_fields, *args, **kwargs):
+    logger.debug(f'pre_save_status = {instance.status} cashed: {instance.cached_status}')
+    # Если статус изменился на 9 (потвержден):
+    if instance.status == 9 and instance.cached_status != 9:
+        if not instance.confirmed_time:
+            instance.confirmed_time = timezone.now()
+
+
+@receiver(post_save, sender=Withdraw)
+def after_save_pay(sender, instance: Withdraw, created, raw, using, update_fields, *args, **kwargs):
+    try:
+        logger.debug(f'post_save_status = {instance.status}  cashed: {instance.cached_status}')
+        # Если статус изменился на 9 (потвержден):
+        if instance.status == 9 and instance.cached_status != 9:
+            logger.info('Выполняем действие полсле подтверждения выплаты')
+            # Минусуем баланс
+            with transaction.atomic():
+                user = User.objects.get(pk=instance.merchant.owner.id)
+                tax = round(instance.amount * user.withdraw_tax / 100, 2)
+                logger.info(f'user: {user}. {user.balance} -> {user.balance - instance.amount - tax}')
+                user.balance = F('balance') - instance.amount - tax
+                user.save()
+                user = User.objects.get(pk=instance.merchant.owner.id)
+                logger.info(f'New balance: {user.balance}')
+                # Фиксируем историю
+                new_log = BalanceChange.objects.create(
+                    user=user,
+                    amount=- instance.amount - tax,
+                    comment=f'Withdraw {instance.id}. {-instance.amount - tax} ₼. (Tax: {tax} ₼)'
+                )
+                new_log.save()
+
+            # Отправляем вэбхук
+            data = instance.webhook_data()
+            result = send_merch_webhook.delay(url=instance.merchant.host, data=data)
+            logger.info(f'answer: {result}')
+
+        # Если статус изменился на -1 (Отклонен):
+        if instance.status == -1 and instance.cached_status != -1:
+            logger.info('Выполняем действие после отклонения платежа')
+            data = instance.webhook_data()
+            result = send_merch_webhook.delay(url=instance.merchant.host, data=data)
+            logger.info(f'answer: {result}')
+    except Exception as err:
+        logger.error(f'Ошибка при сохранении Withdraw: {err}')
+
 
 @receiver(pre_save, sender=Payment)
 def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **kwargs):
@@ -319,15 +425,14 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         # Плюсуем баланс
         with transaction.atomic():
             user = User.objects.get(pk=instance.merchant.owner.id)
-            tax = instance.confirmed_amount * user.tax / 100
-            logger.info(f'user: {user}. {user.balance} -> {user.balance + instance.confirmed_amount - round(tax, 2)}')
-            user.balance = F('balance') + instance.confirmed_amount - round(tax, 2)
+            tax = round(instance.confirmed_amount * user.tax / 100, 2)
+            logger.info(f'user: {user}. {user.balance} -> {user.balance + instance.confirmed_amount - tax}')
+            user.balance = F('balance') + instance.confirmed_amount - tax
             user.save()
             # Фиксируем историю
             new_log = BalanceChange.objects.create(
                 user=user,
                 amount=instance.confirmed_amount - tax,
-                payment=instance,
                 comment=f'From payment {instance.id}. +{instance.confirmed_amount - tax} ₼. (Tax: {tax} ₼)'
             )
             new_log.save()
@@ -345,7 +450,7 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         logger.info(f'answer: {result}')
 
     # Если статус изменился на -1 (Отклонен):
-    if instance.status == -1 and instance.cached_status != 9:
+    if instance.status == -1 and instance.cached_status != -1:
         logger.info('Выполняем действие после отклонения платежа')
         data = instance.webhook_data()
         result = send_merch_webhook.delay(url=instance.merchant.host, data=data)

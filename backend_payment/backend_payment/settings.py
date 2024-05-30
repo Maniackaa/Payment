@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     # 'corsheaders',
     'django_better_admin_arrayfield',
     'drf_spectacular',
+    # 'd2a'
 ] + MY_APPS
 
 MIDDLEWARE = [

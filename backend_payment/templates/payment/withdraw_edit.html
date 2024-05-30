@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Подробно о withdraw{% endblock %}
+
+
+{% block content %}
+{% include 'includes/operator_menu.html' %}
+  <div class="container">
+    <div class="row justify-content-start ">
+      <div class="col col-md-auto">
+        <table class="table table-bordered table-sm" style="font-size: medium">
+        <thead class="thead-dark align-content-center">
+           <tr>
+               <th>Поле</th>
+               <th>Значение</th>
+           </tr>
+        </thead>
+        <tbody>
+
+            <tr>
+                <td>id</td>
+                <td>{{ withdraw.id }}</td>
+            </tr>
+            <tr>
+                <td>Поступил</td>
+                <td>{{ withdraw.create_at }}</td>
+            </tr>
+            <tr>
+                <td>merchant</td>
+                <td>{{ withdraw.merchant }}</td>
+            </tr>
+            <tr>
+                <td>withdraw_id</td>
+                <td>{{ withdraw.withdraw_id }}</td>
+            </tr>
+            <tr>
+                <td>Подтверждено</td>
+                <td>{{ withdraw.confirmed_time }}</td>
+            </tr>
+            <tr>
+                <td>Изменено оператором:</td>
+                <td>{{ withdraw.confirmed_user }}</td>
+            </tr>
+            <tr>
+                <td>change_time</td>
+                <td>{{ withdraw.change_time  }}</td>
+            </tr>
+            <tr>
+                <td>Статус</td>
+                <td>{{ withdraw.status_str }}</td>
+            </tr>
+            <tr>
+                <td>Сумма вывода</td>
+                <td>{{ withdraw.amount }}</td>
+            </tr>
+            {% for field, value in withdraw.card_data.items %}
+              <tr>
+                <td>{{field}}</td>
+                <td>{{value}}</td>
+              </tr>
+            {%endfor%}
+                    <tr>
+                <td>Комментарий</td>
+                <td>{{ withdraw.comment }}</td>
+            </tr>
+        </tbody>
+        </table>
+
+      </div>
+
+      <div class="col col-md-3">
+          {% if withdraw.screenshot %}
+        <img class="img" style="object-fit: cover; object-position: 0 0" src="/media/{{withdraw.screenshot}}" width="300" height="400">
+          {% endif %}
+      </div>
+    </div>
+
+{#    {% if withdraw.status == 0 and withdraw.merchant.owner.balance > 0 %} #}
+    <div class="row justify-content-start  col-md-12">
+        <div class="col">
+        <form method="POST">
+            {% csrf_token %}
+              {% include 'includes/form_fields.html' %}
+            <input type="submit" value="Сохранить">
+        </form>
+        </div>
+    </div>
+{#       {% endif %}#}
+
+  </div>
+
+
+{% endblock %}

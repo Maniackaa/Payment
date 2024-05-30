@@ -19,13 +19,12 @@
      <tr class="">
          <th>order_id</th>
          <th>id</th>
-
-           <th>Created</th>
-           <th>Merchant</th>
-           <th>Amount</th>
-           <th>Status</th>
-           <th>Confirmed<br>amount</th>
-           <th>Confirmed time</th>
+         <th>Created</th>
+         <th>Merchant</th>
+         <th>Amount</th>
+         <th>Status</th>
+         <th>Confirmed<br>amount</th>
+         <th>Confirmed time</th>
 
        </tr>
      </thead>
@@ -37,12 +36,13 @@
                  {% elif payment.confirmed_time%}
                      class="table-success"
                  {% endif %}>
-           <td>{{ payment.order_id }}
+            <td>{{ payment.order_id }}
             <td>{{ payment.id }}</td>
             <td>{{ payment.create_at|date:"Y.d.m H:i" }}</td>
             <td>{{ payment.merchant.name}}</td>
-              <td>{{ payment.amount }}</td>
-              <td style="white-space: nowrap">{{ payment.status_str }}</td>
+            <td>{{ payment.amount }}</td>
+            <td style="white-space: nowrap">{{ payment.status_str }}</td>
+            <td>{{ payment.confirmed_amount }}</td>
             <td>{{ payment.confirmed_time|default_if_none:"-"  }}</td>
 
          </tr>

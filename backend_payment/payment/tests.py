@@ -31,14 +31,12 @@ class TestPayment(TestCase):
 
     def test_create_payment(self):
         print('test')
-        print(self.user)
-        print(self.merch_user, self.merch_user.id)
-        merchant_id = self.merch_user.id
+        shop_id = self.shop.id
         order_id = 'b34823cc-6278-43c5-886a-f65b36c9b396'
-        string_value = f'{merchant_id}{order_id}'
-        merch = Merchant.objects.get(pk=merchant_id)
-        merch_hash = hash_gen(string_value, merch.secret)
-        url = f'/invoice/?merchant_id={merchant_id}&order_id={order_id}&amount=10&owner_name=John%20Dou&user_login=user_22216456&pay_type=card_2&signature={merch_hash}'
+        shop = Merchant.objects.get(pk=shop_id)
+        string_value = f'{shop.id}{order_id}'
+        merch_hash = hash_gen(string_value, shop.secret)
+        url = f'/invoice/?merchant_id={shop.id}&order_id={order_id}&amount=10&owner_name=John%20Dou&user_login=user_22216456&pay_type=card_2&signature={merch_hash}'
         response = self.client.get(url, follow=True)
         self.assertEqual(response.status_code, 400, 'Платеж создается без наличия типа')
         self.assertEqual(Payment.objects.count(), 0)
@@ -49,6 +47,7 @@ class TestPayment(TestCase):
         self.assertEqual(Payment.objects.count(), 1)
         payment = Payment.objects.last()
         self.assertEqual(payment.status, 0, 'Статус платежа не 0')
+
 
     def test_balance(self):
         amount = 100
@@ -77,4 +76,4 @@ class TestPayment(TestCase):
         self.assertEqual(withdraws.count(), 2)
         print('withdraws:', withdraws)
         for x in withdraws:
-            print(x.amount, x.comment, x.payment)
+            print(x.amount, x.comment)

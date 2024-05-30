@@ -59,6 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     balance = models.FloatField('Баланс', default=0)
     tax = models.FloatField('Комиссия', default=9)
+    withdraw_tax = models.FloatField('Комиссия на вывод', default=3)
 
     class Meta:
         verbose_name = "Пользователь"

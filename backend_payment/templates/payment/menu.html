@@ -7,20 +7,19 @@
 
     <div class="container">
         <div class="row">
-           {% if user.is_staff %}
-              <a class="nav-link" href="{% url 'payment:payment_list' %}">Пополнения</a>
-           {% endif %}
-           {% if user.role == 'merchant' %}
-            <div class="col-3">
-            <a class="" href="{% url 'payment:merchant_orders' %}">Заказы</a><br>
-            </div>
             <div class="col-3">
             Баланс: {{ request.user.balance }} ₼
             </div>
+           {% if user.is_staff %}
+             <a class="" href="{% url 'payment:payment_list' %}">Пополнения</a>
+             <a class="" href="{% url 'payment:withdraw_list' %}">Выводы</a>
            {% endif %}
+           {% if user.role == 'merchant' %}
+             <a class="" href="{% url 'payment:merchant_orders' %}">merchant_orders</a><br>
+           {% endif %}
+             <a class="" href="{% url 'payment:balance_list' %}">Изменения баланса</a><br>
         </div>
     </div>
-
 
     {% if user.role == 'merchant' %}
         <div class="container">

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Список заявок{% endblock %}
+
+
+{% block content %}
+<style>
+
+
+</style>
+
+{% include 'includes/operator_menu.html' %}
+<div class="container-fluid ">
+<form method="get">
+    {{ filter.form.as_p }}
+    <button type="submit">Фильтровать</button>
+</form>
+
+
+     {% include 'includes/paginator.html' %}
+     <div class="container-fluid ">
+     <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">
+     <thead class="">
+     <tr class="">
+           <th>id</th>
+           <th>create time</th>
+           <th>Merchant</th>
+           <th>Сумм</th>
+           <th>Статус</th>
+           <th>T подтв</th>
+         <th>Баланс</th>
+       </tr>
+     </thead>
+     <tbody style="text-align: end" >
+         {% for withdraw in filter.qs %}
+         <tr title="{{ withdraw.id }}" id="withdraw{{ withdraw.short_id }}"
+                 {% if withdraw.status == -1 %}
+                    class="table-secondary"
+                 {% elif withdraw.confirmed_time%}
+                     class="table-success"
+                 {% endif %}>
+
+            <td><a class="changelink" href="{% url 'payment:withdraw_edit' withdraw.id %}">{{ withdraw.id }}</a>
+                {% if withdraw.comment %}
+                  *
+                {% endif %}
+            </td>
+            <td>{{ withdraw.create_at|date:"d.m H:i" }}</td>
+            <td>{{ withdraw.merchant.name}}</td>
+             <td>{{ withdraw.amount}}</td>
+             <td>{{ withdraw.status}}</td>
+
+
+            <td>{{ withdraw.confirmed_time|default_if_none:"-"  }}</td>
+             <td>{{ withdraw.balance  }}</td>
+
+         </tr>
+         {% endfor %}
+
+     </tbody>
+   </table>
+   </div>
+   {% include 'includes/paginator.html' %}
+
+</div>
+
+{% endblock %}

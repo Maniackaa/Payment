@@ -3,7 +3,7 @@ import uuid
 from django import forms
 from django.core.exceptions import ValidationError
 
-from payment.models import Payment, CreditCard, Merchant
+from payment.models import Payment, CreditCard, Merchant, Withdraw
 
 
 class InvoiceForm(forms.ModelForm):
@@ -119,4 +119,12 @@ class PaymentForm(forms.ModelForm):
 
     class Meta:
         model = Payment
+        fields = ('comment', 'status')
+
+
+class WithdrawForm(forms.ModelForm):
+    comment = forms.CharField(widget=forms.Textarea, required=False)
+
+    class Meta:
+        model = Withdraw
         fields = ('comment', 'status')

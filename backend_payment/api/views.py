@@ -16,8 +16,10 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from api.permissions import PaymentOwnerOrStaff, IsStaff, IsStaffOrReadOnly
 from api.serializers import PaymentCreateSerializer, PaymentInputCardSerializer, \
-    PaymentInputSmsCodeSerializer, PaymentStaffSerializer, PaymentTypesSerializer
-from payment.models import Payment, PayRequisite
+    PaymentInputSmsCodeSerializer, PaymentStaffSerializer, PaymentTypesSerializer, WithdrawCreateSerializer, \
+    WithdrawSerializer
+from core.global_func import hash_gen
+from payment.models import Payment, PayRequisite, Withdraw
 from payment.views import get_phone_script, get_bank_from_bin
 
 logger = structlog.get_logger(__name__)
@@ -287,3 +289,38 @@ class PaymentStatusView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, view
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return self.update(request, *args, **kwargs)
+
+
+@extend_schema(tags=['Withdraw'])
+class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = WithdrawCreateSerializer
+    queryset = Withdraw.objects.all()
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [PaymentOwnerOrStaff]
+
+    def create(self, request, *args, **kwargs):
+        print(request.data)
+        if "signature" not in request.data:
+            return Response({"non_field_errors": ["Wrong signature"]},
+                            status=status.HTTP_400_BAD_REQUEST)
+        signature = request.data.pop("signature")
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            data = serializer.validated_data
+            shop = data["merchant"]
+            signature_string = f'{shop.id}{data["card_data"]["card_number"]}{data["amount"]}'
+            hash_s = hash_gen(signature_string, shop.secret)
+            if hash_s != signature:
+                return Response({"non_field_errors": ["Wrong signature"]},
+                                status=status.HTTP_400_BAD_REQUEST)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response({'status': 'success', 'id': serializer.data['id']},
+                            status=status.HTTP_201_CREATED,
+                            headers=headers)
+        return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = WithdrawSerializer(instance)
+        return Response(serializer.data)

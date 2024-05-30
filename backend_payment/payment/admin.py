@@ -1,10 +1,11 @@
+from django.conf import settings
 from django.contrib import admin
 from django.utils.html import format_html
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 from django_better_admin_arrayfield.forms.widgets import DynamicArrayWidget
 
-from payment.models import CreditCard, PayRequisite, Payment, Merchant, PhoneScript, Bank
+from payment.models import CreditCard, PayRequisite, Payment, Merchant, PhoneScript, Bank, Withdraw
 
 
 class CreditCardAdmin(admin.ModelAdmin):
@@ -25,6 +26,12 @@ class PaymentAdmin(admin.ModelAdmin):
     )
 
 
+class WithdrawAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'merchant', 'withdraw_id', 'amount', 'status', 'confirmed_time', 'comment'
+    )
+
+
 class MerchantAdmin(admin.ModelAdmin):
     pass
 
@@ -42,8 +49,8 @@ class BankAdmin(admin.ModelAdmin, DynamicArrayMixin):
     list_display_links = ('id', 'name')
 
     def pic(self, obj):  # receives the instance as an argument
-        return format_html('<img height="50" src="http://127.0.0.1:8000{thumb}"/>'.format(
-            thumb=obj.image.url,
+        return format_html('<img height="50" src="{host}{thumb}"/>'.format(
+            host='https://asu-payme.com', thumb=obj.image.url,
         ))
     pic.allow_tags = True
     pic.short_description = 'sometext'
@@ -52,6 +59,7 @@ class BankAdmin(admin.ModelAdmin, DynamicArrayMixin):
 admin.site.register(CreditCard, CreditCardAdmin)
 admin.site.register(PayRequisite, PayRequisiteAdmin)
 admin.site.register(Payment, PaymentAdmin)
+admin.site.register(Withdraw, WithdrawAdmin)
 admin.site.register(Merchant, MerchantAdmin)
 admin.site.register(PhoneScript, PhoneScriptAdmin)
 admin.site.register(Bank, BankAdmin)

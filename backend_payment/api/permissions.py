@@ -5,6 +5,7 @@ class PaymentOwnerOrStaff(permissions.BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
+        print('PaymentOwnerOrStaff has_permission', user)
         if user.is_staff or user.is_superuser:
             return True
         if not user.is_authenticated:
@@ -14,6 +15,7 @@ class PaymentOwnerOrStaff(permissions.BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
+        print('PaymentOwnerOrStaff has_object_permission')
         if obj.merchant.owner == request.user or request.user.is_staff:
             return True
 
