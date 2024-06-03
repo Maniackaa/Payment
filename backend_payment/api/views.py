@@ -26,6 +26,7 @@ logger = structlog.get_logger(__name__)
 
 
 class ResponseCreate(serializers.Serializer):
+    status = serializers.CharField()
     id = serializers.CharField()
 
 
@@ -291,13 +292,53 @@ class PaymentStatusView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, view
         return self.update(request, *args, **kwargs)
 
 
-@extend_schema(tags=['Withdraw'])
+@extend_schema(tags=['Withdraw'], summary='Заявки на выводы'
+               )
 class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = WithdrawCreateSerializer
     queryset = Withdraw.objects.all()
     authentication_classes = [JWTAuthentication]
     permission_classes = [PaymentOwnerOrStaff]
 
+    @extend_schema(tags=['Withdraw'],
+                   responses={
+                       status.HTTP_201_CREATED: OpenApiResponse(
+                           description='Created',
+                           response=ResponseCreate,
+                           examples=[
+                               OpenApiExample(
+                                   "Good example",
+                                   value={"status": "success",
+                                          "id": "f766758b-cb6a-4c4b-9d5d-342a97f7ac24"
+                                          },
+                                   status_codes=[201],
+                                   response_only=False,
+                               ),
+                           ]),
+
+                       status.HTTP_401_UNAUTHORIZED: OpenApiResponse(
+                           response=BadResponse,
+                           description='Some errors',
+                           examples=[
+                               OpenApiExample(
+                                   "Bad response",
+                                   value={
+                                       "detail": "Given token not valid for any token type",
+                                       "code": "token_not_valid",
+                                       "messages": [
+                                           {
+                                               "token_class": "AccessToken",
+                                               "token_type": "access",
+                                               "message": "Token is invalid or expired"
+                                           }
+                                       ]
+                                   },
+                                   status_codes=[401],
+                                   response_only=False,
+                               ),
+                           ]),
+                   },
+                   )
     def create(self, request, *args, **kwargs):
         print(request.data)
         if "signature" not in request.data:
@@ -320,6 +361,53 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
                             headers=headers)
         return Response({'status': 'error'}, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(tags=['Withdraw'],
+                   summary='Просмотр статуса заяки на вывод',
+                   responses={
+                       status.HTTP_200_OK: OpenApiResponse(
+                           description='Ok',
+                           response=ResponseCreate,
+                           examples=[
+                               OpenApiExample(
+                                   "Good example",
+                                   value={
+                                            "id": "f766758b-cb6a-4c4b-9d5d-342a97f7ac24",
+                                            "withdraw_id": "wddddda",
+                                            "amount": 30,
+                                            "status": 0,
+                                            "payload": {
+                                                "field1": "data1",
+                                                "field2": "data2"
+                                            }
+                                   },
+                                   status_codes=[200],
+                                   response_only=False,
+                               ),
+                           ]),
+
+                       status.HTTP_401_UNAUTHORIZED: OpenApiResponse(
+                           response=BadResponse,
+                           description='Some errors',
+                           examples=[
+                               OpenApiExample(
+                                   "Bad response",
+                                   value={
+                                       "detail": "Given token not valid for any token type",
+                                       "code": "token_not_valid",
+                                       "messages": [
+                                           {
+                                               "token_class": "AccessToken",
+                                               "token_type": "access",
+                                               "message": "Token is invalid or expired"
+                                           }
+                                       ]
+                                   },
+                                   status_codes=[401],
+                                   response_only=False,
+                               ),
+                           ]),
+                   },
+                   )
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = WithdrawSerializer(instance)

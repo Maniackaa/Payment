@@ -120,7 +120,7 @@ class Withdraw(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, max_length=36, db_index=True,
                           unique=True, )
-    merchant = models.ForeignKey('Merchant', verbose_name='Магазин мерча', on_delete=models.CASCADE, related_name='withdraws')
+    merchant = models.ForeignKey('Merchant', verbose_name='Shop', on_delete=models.CASCADE, related_name='withdraws')
     withdraw_id = models.CharField(max_length=36, db_index=True)
     amount = models.IntegerField('Сумма заявки', validators=[MinValueValidator(30), MaxValueValidator(10000)])
     payload = models.JSONField(default=str, blank=True, null=True)
