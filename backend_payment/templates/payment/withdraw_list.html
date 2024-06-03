@@ -31,7 +31,7 @@
        </tr>
      </thead>
      <tbody style="text-align: end" >
-         {% for withdraw in filter.qs %}
+         {% for withdraw in page_obj %}
          <tr title="{{ withdraw.id }}" id="withdraw{{ withdraw.short_id }}"
                  {% if withdraw.status == -1 %}
                     class="table-secondary"

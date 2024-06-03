@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -188,7 +190,7 @@ class TestAPI(APITestCase):
             "merchant": self.shop.id,
             "withdraw_id": "test_idee4rde4eee4errr3",
             "card_data": card_data,
-            "amount": "30.0",
+            "amount": amount,
             "signature": hash_gen(signature_string, self.shop.secret),
             "payload": {
                 "field1": "data1",
@@ -213,9 +215,9 @@ class TestAPI(APITestCase):
         withdraw.confirmed_user = self.operator
         withdraw.save()
         owner = User.objects.get(username=owner.username)
-        self.assertEqual(owner.balance, -30.9, 'Не верно меняетя баланс')
+        self.assertEqual(owner.balance, Decimal('-30.9'), 'Не верно меняетя баланс')
         self.assertNotEqual(withdraw.confirmed_time, None)
         # Сохраняется изменение баланса
         last_log = BalanceChange.objects.last()
-        self.assertEqual(last_log.amount, -30.9)
+        self.assertEqual(last_log.amount, Decimal('-30.9'), 'Не верно Сохраняется изменение баланса')
         self.assertEqual(last_log.user, owner)

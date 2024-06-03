@@ -9,6 +9,29 @@ class AuthorRequiredMixin(AccessMixin):
             return self.handle_no_permission()
         if request.user.is_authenticated:
             if request.user != self.get_object().owner or request.user.is_staff:
-                messages.info(request, 'Доступно только автору')
+                # messages.info(request, 'Доступно только автору')
                 return redirect('payment:menu')
+        return super().dispatch(request, *args, **kwargs)
+
+
+class StaffOnlyPerm(AccessMixin):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('payment:menu')
+        else:
+            if not request.user.is_staff:
+                # return self.handle_no_permission()
+                return redirect('payment:menu')
+
+        # if request.user.is_authenticated:
+        #     if request.user != self.get_object().owner or request.user.is_staff:
+        #         # messages.info(request, 'Доступно только автору')
+        #         return redirect('payment:menu')
+        return super().dispatch(request, *args, **kwargs)
+
+
+class MerchantOnlyPerm(AccessMixin):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.role == 'merchant':
+            return redirect('payment:menu')
         return super().dispatch(request, *args, **kwargs)

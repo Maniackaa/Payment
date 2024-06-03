@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Подробно о мерче{% endblock %}
+
+
+{% block content %}
+{% include 'includes/operator_menu.html' %}
+  <div class="container">
+      <div class="row">
+      <div class="col-md-auto">
+              <form method="get">
+        {{ filter.form }}
+                   <button type="submit">Фильтровать</button>
+        </form>
+      </div>
+
+  </div>
+    <div class="row justify-content-start ">
+      <div class="col col-md-auto">
+        <table class="table table-bordered table-sm" style="font-size: medium">
+        <thead class="thead-dark align-content-center">
+           <tr>
+               <th>Поле</th>
+               <th>Значение</th>
+           </tr>
+        </thead>
+        <tbody>
+
+            <tr>
+                <td>name</td>
+                <td>{{ merch_user.username }}</td>
+            </tr>
+            <tr>
+                <td>current_balance</td>
+                <td>{{ balance }}</td>
+            </tr>
+
+            <tr>
+                <td>total_payment_amount</td>
+                <td>{{stat.total_amount}}</td>
+            </tr>
+            <tr>
+                <td>total_payment_count</td>
+                <td>{{stat.count_total}}</td>
+            </tr>
+
+                    <tr>
+                <td>confirmed_payment_count</td>
+                <td>{{stat.count_confirmed}}</td>
+            </tr>
+            <tr>
+                <td>confirmed_amount</td>
+                <td>{{stat.confirmed_amount}}</td>
+            </tr>
+
+                    <tr>
+                <td>declined_payment_count</td>
+                <td>{{stat.count_declined}}</td>
+            </tr>
+
+<!--            <tr>-->
+<!--                <td>operator_avg_time</td>-->
+<!--                <td>{{stat.operator_avg_time}}</td>-->
+<!--            </tr>-->
+        <tr>
+                <td>conversion</td>
+                <td>{{stat.conversion}}</td>
+            </tr>
+
+        </tbody>
+        </table>
+
+      </div>
+
+
+    </div>
+
+     <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">
+              <thead class="">
+                   </thead>
+
+{% for payment in filter.qs|slice:":100" %}
+         <tr>
+             <td><a href="{% url 'payment:payment_edit' payment.id %}">{{payment}}</a></td>
+<td>{{payment.create_at|date:"d.m H:i"}}</td>
+<td>{{payment.amount}}</td>
+<td>{{payment.status_str}}</td>
+             <td>{{payment.oper_time}}</td>
+{% endfor %}
+         </tr>
+
+{% endblock %}

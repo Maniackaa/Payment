@@ -1,4 +1,5 @@
 import django_filters
+from django import forms
 from django.contrib.auth import get_user_model
 
 from payment.models import Payment, Withdraw
@@ -28,3 +29,22 @@ class BalanceChangeFilter(django_filters.FilterSet):
     class Meta:
         model = Payment
         fields = ['user']
+
+
+
+class MyDateInput(forms.DateInput):
+    input_type = 'date'
+    format = '%Y-%m-%d'
+
+
+class PaymentMerchStatFilter(django_filters.FilterSet):
+    create_start = django_filters.DateFilter(field_name='create_at', lookup_expr='gte',
+                                             widget=MyDateInput({'class': 'form-control'})
+                                             )
+    create_end = django_filters.DateFilter(field_name='create_at', lookup_expr='lte',
+                                             widget=MyDateInput({'class': 'form-control'})
+                                             )
+
+    class Meta:
+        model = Payment
+        fields = ['create_start']

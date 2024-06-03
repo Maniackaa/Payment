@@ -1,3 +1,5 @@
+{% load l10n %}
+{% localize off %}
 {% if page_obj.has_other_pages %}
 <nav aria-label="Page navigation" class="">
   <ul class="pagination">
@@ -82,3 +84,4 @@
   </ul>
 </nav>
 {% endif %}
+{% endlocalize %}

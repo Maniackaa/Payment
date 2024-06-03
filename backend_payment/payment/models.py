@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import uuid
+from decimal import Decimal
 
 import requests
 import structlog
@@ -50,7 +51,7 @@ class Merchant(models.Model):
 class BalanceChange(models.Model):
     create_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    amount = models.FloatField('Изменение баланса')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Изменение баланса')
     comment = models.CharField(null=True, blank=True)
 
     class Meta:
@@ -195,10 +196,11 @@ class Payment(models.Model):
     screenshot = models.ImageField(upload_to='uploaded_pay_screens/',
                       verbose_name='Ваша квитанция', null=True, blank=True, help_text='Приложите скриншот квитанции после оплаты')
     create_at = models.DateTimeField('Время добавления в базу', auto_now_add=True)
+    # create_at = models.DateTimeField('Время добавления в базу', auto_now_add=False)
     status = models.IntegerField('Статус заявки',
                                  default=0,
                                  choices=PAYMENT_STATUS)
-    change_time = models.DateTimeField('Время изменения в базе', auto_now=True)
+    change_time = models.DateTimeField('Время изменения в базе', auto_now=False, default=timezone.now())
     cc_data_input_time = models.DateTimeField('Время ввода данных карты', null=True, blank=True)
 
     # Данные отправителя
@@ -355,7 +357,7 @@ class Bank(models.Model):
 
 
 @receiver(pre_save, sender=Withdraw)
-def pre_save_pay(sender, instance: Withdraw, raw, using, update_fields, *args, **kwargs):
+def pre_save_withdraw(sender, instance: Withdraw, raw, using, update_fields, *args, **kwargs):
     logger.debug(f'pre_save_status = {instance.status} cashed: {instance.cached_status}')
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
@@ -364,18 +366,18 @@ def pre_save_pay(sender, instance: Withdraw, raw, using, update_fields, *args, *
 
 
 @receiver(post_save, sender=Withdraw)
-def after_save_pay(sender, instance: Withdraw, created, raw, using, update_fields, *args, **kwargs):
+def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_fields, *args, **kwargs):
     try:
         logger.debug(f'post_save_status = {instance.status}  cashed: {instance.cached_status}')
         # Если статус изменился на 9 (потвержден):
         if instance.status == 9 and instance.cached_status != 9:
-            logger.info('Выполняем действие полсле подтверждения выплаты')
+            logger.info('Выполняем действие после подтверждения выплаты')
             # Минусуем баланс
             with transaction.atomic():
                 user = User.objects.get(pk=instance.merchant.owner.id)
                 tax = round(instance.amount * user.withdraw_tax / 100, 2)
-                logger.info(f'user: {user}. {user.balance} -> {user.balance - instance.amount - tax}')
-                user.balance = F('balance') - instance.amount - tax
+                logger.info(f'user: {user}. {user.balance} -> {user.balance - Decimal(f"{instance.amount}") - Decimal(f"{tax}")}')
+                user.balance = F('balance') - Decimal(f"{instance.amount}") - Decimal(f"{tax}")
                 user.save()
                 user = User.objects.get(pk=instance.merchant.owner.id)
                 logger.info(f'New balance: {user.balance}')
@@ -425,9 +427,10 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         # Плюсуем баланс
         with transaction.atomic():
             user = User.objects.get(pk=instance.merchant.owner.id)
-            tax = round(instance.confirmed_amount * user.tax / 100, 2)
-            logger.info(f'user: {user}. {user.balance} -> {user.balance + instance.confirmed_amount - tax}')
-            user.balance = F('balance') + instance.confirmed_amount - tax
+            tax = round(instance.confirmed_amount * user.tax / 100)
+
+            logger.info(f'user: {user}. {user.balance} -> {user.balance} + {instance.confirmed_amount} - {tax} = {user.balance + instance.confirmed_amount - tax}')
+            user.balance = F('balance') + Decimal(str(instance.confirmed_amount)) - Decimal(str(tax))
             user.save()
             # Фиксируем историю
             new_log = BalanceChange.objects.create(

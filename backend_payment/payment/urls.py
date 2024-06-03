@@ -18,16 +18,17 @@ urlpatterns = [
     path('withdraws/', views.WithdrawListView.as_view(), name='withdraw_list'),
     path('withdraws/<str:pk>/', views.WithdrawEdit.as_view(), name='withdraw_edit'),
     path('balance/', views.BalanceListView.as_view(), name='balance_list'),
+    # path('merch_stat/<int:pk>', views.MerchStatView.as_view(), name='merch_stats'),
 
     path('payment_type_not_worked/', views.payment_type_not_worked, name='payment_type_not_worked'),
 
 
-    path('invoice_test_start/', views.invoice_test, name='invoice_test'),
+    # path('invoice_test_start/', views.invoice_test, name='invoice_test'),
     path('get_bank/<str:bin_num>/', views.get_bank, name='get_bank'),
 
     # Merh
     path('create_merchant/', views.MerchantCreate.as_view(), name='create_merchant'),
-    path('merchant/<str:pk>/', views.MerchantDetail.as_view(), name='merchant_detail'),
+    path('merchant/<str:pk>/', views.MerchantDetail.as_view(), name='merchant_detail'), # Shop
     path('merchant_delete/<str:pk>/', views.MerchantDelete.as_view(), name='merchant_delete'),
     path('merchant_orders/', views.MerchantOrders.as_view(), name='merchant_orders'),
     path('merchant_test_webhook/', views.merchant_test_webhook, name='merchant_test_webhook'),

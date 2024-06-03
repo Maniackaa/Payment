@@ -128,3 +128,19 @@ class WithdrawForm(forms.ModelForm):
     class Meta:
         model = Withdraw
         fields = ('comment', 'status')
+
+
+class MyDateInput(forms.DateInput):
+    input_type = 'date'
+    format = '%Y-%m-%d'
+
+
+class DateFilterForm(forms.Form):
+    begin = forms.DateField(label='От', required=True,
+                           widget=MyDateInput({
+                               'class': 'form-control'
+                           }))
+    end = forms.DateField(label='До', required=True,
+                           widget=MyDateInput({
+                               'class': 'form-control'
+                           }))

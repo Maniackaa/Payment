@@ -8,13 +8,16 @@ from http import HTTPStatus
 import requests
 import structlog
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import PermissionRequiredMixin, AccessMixin, LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
+from django.db.models import F, Avg, Sum
 
 from django.http import HttpResponse, QueryDict, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, \
-    JsonResponse, HttpResponseRedirect
+    JsonResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
@@ -24,14 +27,15 @@ from django.views.generic import CreateView, DetailView, FormView, UpdateView, L
 
 from core.global_func import hash_gen, TZ
 from payment import forms
-from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter
+from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
-    MerchantForm, WithdrawForm
+    MerchantForm, WithdrawForm, DateFilterForm
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
-from payment.permissions import AuthorRequiredMixin
+from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm
 from payment.task import send_merch_webhook
 
 logger = structlog.get_logger(__name__)
+User = get_user_model()
 
 
 def make_page_obj(request, objects, numbers_of_posts=settings.PAGINATE):
@@ -40,6 +44,7 @@ def make_page_obj(request, objects, numbers_of_posts=settings.PAGINATE):
     return paginator.get_page(page_number)
 
 
+@login_required()
 def menu(request, *args, **kwargs):
     template = 'payment/menu.html'
     user = request.user
@@ -384,24 +389,30 @@ class PayResultView(DetailView):
         return context
 
 
-class PaymentListView(ListView):
-    """Спиок заявок"""
+class PaymentListView(StaffOnlyPerm, ListView, ):
+    """Спиcок заявок"""
     template_name = 'payment/payment_list.html'
     model = Payment
     fields = ('confirmed_amount',
               'confirmed_incoming')
     filter = PaymentFilter
+    # permission_required = [TestPerm()]
+    raise_exception = False
+    paginate_by = settings.PAGINATE
+
 
     def get_queryset(self):
-        if not self.request.user.is_staff:
-            raise PermissionDenied('Недостаточно прав')
-        super(PaymentListView, self).get_queryset()
+        # if not self.request.user.is_staff:
+        #     # raise PermissionDenied('Недостаточно прав')
+        #     return []
+        # super(PaymentListView, self).get_queryset()
+        return PaymentFilter(self.request.GET, queryset=Payment.objects).qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         form = PaymentListConfirmForm()
         context['form'] = form
-        filter = PaymentFilter(self.request.GET, queryset=Payment.objects.all())
+        filter = PaymentFilter(self.request.GET, queryset=self.get_queryset())
         context['filter'] = filter
         return context
 
@@ -460,7 +471,7 @@ class PaymentListView(ListView):
         return redirect(reverse('payment:payment_list'))
 
 
-class PaymentEdit(UpdateView, ):
+class PaymentEdit(StaffOnlyPerm, UpdateView, ):
     # Подробно о payment
     model = Payment
     form_class = PaymentForm
@@ -486,47 +497,51 @@ class PaymentEdit(UpdateView, ):
         return context
 
 
-class WithdrawListView(ListView):
+class WithdrawListView(StaffOnlyPerm,  ListView):
     """Спиок выводов"""
     template_name = 'payment/withdraw_list.html'
     model = Withdraw
-    # fields = ('confirmed_amount',
-    #           )
-    # filter = PaymentFilter
+    paginate_by = settings.PAGINATE
 
     def get_queryset(self):
-        if not self.request.user.is_staff:
-            raise PermissionDenied('Недостаточно прав')
-        super(WithdrawListView, self).get_queryset()
+        if self.request.user.is_staff:
+            return WithdrawFilter(self.request.GET, queryset=Withdraw.objects).qs
+        if self.request.user.role == 'merchant':
+            return WithdrawFilter(self.request.GET,
+                                  queryset=Withdraw.objects.filter(merchant__owner=self.request.user)).qs
+        return Withdraw.objects.none()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         form = PaymentListConfirmForm()
         context['form'] = form
-        filter = WithdrawFilter(self.request.GET, queryset=Withdraw.objects.filter(merchant__owner__balance__gt=0).all())
+        # filter = WithdrawFilter(self.request.GET, queryset=Withdraw.objects.filter(merchant__owner__balance__gt=0).all())
+        filter = WithdrawFilter(self.request.GET, queryset=self.get_queryset())
         context['filter'] = filter
         return context
 
 
-class BalanceListView(ListView):
+class BalanceListView(LoginRequiredMixin, ListView):
     """Список Изменения баланса"""
     template_name = 'payment/balance_list.html'
     model = BalanceChange
+    paginate_by = settings.PAGINATE
 
     def get_queryset(self):
         if self.request.user.is_superuser:
             return super().get_queryset()
         if self.request.user.role not in ('merchant', 'operator'):
-            raise PermissionDenied('Недостаточно прав')
+            return BalanceChange.objects.none()
         return BalanceChange.objects.filter(user=self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['filter'] = BalanceChangeFilter(self.request.GET, queryset=self.get_queryset())
+        print(len(self.get_queryset()))
+        # context['filter'] = BalanceChangeFilter(self.request.GET, queryset=self.get_queryset()[:100])
         return context
 
 
-class WithdrawEdit(UpdateView, ):
+class WithdrawEdit(StaffOnlyPerm, UpdateView, ):
     # Подробно о payment
     model = Withdraw
     form_class = WithdrawForm
@@ -603,7 +618,7 @@ def invoice_test(request, *args, **kwargs):
                   context={'host': http_host, 'uid': uuid.uuid4(), 'form': form})
 
 
-class MerchantCreate(CreateView):
+class MerchantCreate(LoginRequiredMixin, MerchantOnlyPerm, CreateView):
     form_class = MerchantForm
     template_name = 'payment/merchant.html'
     success_url = reverse_lazy('payment:menu')
@@ -615,7 +630,8 @@ class MerchantCreate(CreateView):
         return super().form_valid(form)
 
 
-class MerchantOrders(ListView):
+class MerchantOrders(LoginRequiredMixin, MerchantOnlyPerm, ListView):
+    # Список поступлений (Payments) юзера.
     template_name = 'payment/merchant_orders.html'
     model = Payment
     filter = PaymentFilter
@@ -631,7 +647,6 @@ class MerchantOrders(ListView):
         context = super().get_context_data(**kwargs)
         filter = PaymentFilter(self.request.GET, queryset=self.get_queryset())
         context['filter'] = filter
-        # context['page_obj'] = filter
         return context
 
 
@@ -660,12 +675,17 @@ class MerchantDelete(AuthorRequiredMixin, SuccessMessageMixin, DeleteView):
             return self.form_invalid(form)
 
 
+@login_required()
 def merchant_test_webhook(request, *args, **kwargs):
+    if request.user.role != 'merchant':
+        return HttpResponseBadRequest()
     print(request.POST)
     print(args, kwargs)
     order_id = str(uuid.uuid4())
     pk = str(uuid.uuid4())
     merchant_id = request.POST.get('decline') or request.POST.get('accept')
+    if not merchant_id:
+        return HttpResponseBadRequest()
     merchant = Merchant.objects.get(pk=merchant_id)
     payment = Payment(merchant=merchant,
                       id=pk,
@@ -684,3 +704,62 @@ def merchant_test_webhook(request, *args, **kwargs):
         data = payment.webhook_data()
     send_merch_webhook.delay(merchant.host, data)
     return JsonResponse(json.dumps(data), safe=False)
+
+
+class MerchStatView(DetailView, ):
+    template_name = 'payment/merch_stat.html'
+    model = User
+    context_object_name = 'merch_user'
+    filter = PaymentMerchStatFilter
+
+
+    # def get_queryset(self):
+    #     return Payment.objects.all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.object
+        payments = Payment.objects.filter(merchant__owner=user).annotate(oper_time=F('confirmed_time') - F('create_at')).all()
+        p1 = payments.first()
+        t1 = p1.create_at
+        t2 = p1.confirmed_time
+        print(t2-t1)
+        filter = PaymentMerchStatFilter(self.request.GET, queryset=payments)
+        context['filter'] = filter
+        filtered_payments = filter.qs
+        total = filtered_payments.filter()
+        confirmed = filtered_payments.filter(status=9)
+        declined = filtered_payments.filter(status=-1)
+
+        count_total = total.count()
+        total_amount = total.aggregate(total_amount=Sum('amount'))['total_amount']
+        confirmed_amount = confirmed.aggregate(confirmed_amount=Sum('amount'))['confirmed_amount']
+        count_confirmed = confirmed.count()
+        count_declined = declined.count()
+        conversion = int(round(count_confirmed / count_total * 100, 0))
+        operator_avg_time = filtered_payments.aggregate(operator_avg_time=Avg('oper_time'))['operator_avg_time'].total_seconds()
+
+
+
+        context['stat'] = {
+            'count_total': count_total,
+            'total_amount': total_amount,
+            'count_confirmed': count_confirmed,
+            'confirmed_amount': confirmed_amount,
+            'count_declined': count_declined,
+            'conversion': conversion,
+            'operator_avg_time': int(operator_avg_time)
+        }
+        context['stat'] = {
+            'count_total': 89952,
+            'total_amount': 6431875,
+            'count_confirmed': 87338,
+            'confirmed_amount': 6245350,
+            'count_declined': 2614,
+            'conversion': 97,
+            'operator_avg_time': 61
+        }
+        context['balance'] = 84030.07
+        return context
+
+

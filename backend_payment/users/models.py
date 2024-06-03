@@ -57,7 +57,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    balance = models.FloatField('Баланс', default=0)
+    balance = models.DecimalField('Баланс', max_digits=18, decimal_places=2, default=0)
     tax = models.FloatField('Комиссия', default=9)
     withdraw_tax = models.FloatField('Комиссия на вывод', default=3)
 

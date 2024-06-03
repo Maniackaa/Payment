@@ -13,10 +13,17 @@
 
 {% include 'includes/operator_menu.html' %}
 <div class="container-fluid ">
-<form method="get">
-    {{ filter.form.as_p }}
-    <button type="submit">Фильтровать</button>
-</form>
+<div class="row">
+    <div class="col-3">
+        <form method="get">
+        {{ filter.form.as_p }}
+        <button type="submit">Фильтровать</button>
+        </form>
+    </div>
+    <div class="col-6">
+        total_payments
+    </div>
+</div>
 
 
      {% include 'includes/paginator.html' %}
@@ -37,7 +44,7 @@
        </tr>
      </thead>
      <tbody style="text-align: end" >
-         {% for payment in filter.qs %}
+         {% for payment in page_obj %}
          <tr title="{{ payment.id }}" id="payment{{ payment.short_id }}"
                  {% if payment.status == -1 %}
                     class="table-secondary"
