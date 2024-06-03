@@ -22,8 +22,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, DetailView, FormView, UpdateView, ListView, DeleteView
+from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
 from core.global_func import hash_gen, TZ
@@ -33,7 +33,6 @@ from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, Invo
     MerchantForm, WithdrawForm, DateFilterForm
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm
-from payment.task import send_merch_webhook
 
 logger = structlog.get_logger(__name__)
 User = get_user_model()
@@ -772,5 +771,6 @@ class WebhookReceive(APIView):
 
     def post(self, request, *args, **kwargs):
         logger.debug('WebhookReceive')
-        logger.debug(f'{request.POST} {args} {kwargs}')
+        data = request.data
+        logger.debug(data)
         return JsonResponse({'status': 'succes'})

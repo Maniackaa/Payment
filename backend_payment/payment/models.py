@@ -1,10 +1,7 @@
-import datetime
 import json
-import logging
 import uuid
 from decimal import Decimal
 
-import requests
 import structlog
 from django.contrib.auth import get_user_model
 
@@ -17,7 +14,7 @@ from django.utils import timezone
 from django_better_admin_arrayfield.models.fields import ArrayField
 
 from core.global_func import hash_gen, TZ
-from payment.task import send_merch_webhook
+from payment.task import send_payment_webhook, send_withdraw_webhook
 
 logger = structlog.get_logger(__name__)
 
@@ -391,14 +388,14 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
 
             # Отправляем вэбхук
             data = instance.webhook_data()
-            result = send_merch_webhook.delay(url=instance.merchant.host, data=data)
+            result = send_withdraw_webhook.delay(url=instance.merchant.host, data=data)
             logger.info(f'answer: {result}')
 
         # Если статус изменился на -1 (Отклонен):
         if instance.status == -1 and instance.cached_status != -1:
             logger.info('Выполняем действие после отклонения платежа')
             data = instance.webhook_data()
-            result = send_merch_webhook.delay(url=instance.merchant.host, data=data)
+            result = send_withdraw_webhook.delay(url=instance.merchant.host, data=data)
             logger.info(f'answer: {result}')
     except Exception as err:
         logger.error(f'Ошибка при сохранении Withdraw: {err}')
@@ -443,18 +440,18 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
 
         # Отправляем вэбхук
         data = instance.webhook_data()
-        result = send_merch_webhook.delay(url=instance.merchant.host, data=data)
+        result = send_payment_webhook.delay(url=instance.merchant.host, data=data)
         logger.info(f'answer: {result}')
     
     # Отправка вэбхука если статус изменился на 5 - ожидание смс и api:
     if instance.source == 'api' and instance.status == 5 and instance.cached_status != 5:
         data = instance.webhook_data()
-        result = send_merch_webhook.delay(url=instance.merchant.host, data=data)
+        result = send_payment_webhook.delay(url=instance.merchant.host, data=data)
         logger.info(f'answer: {result}')
 
     # Если статус изменился на -1 (Отклонен):
     if instance.status == -1 and instance.cached_status != -1:
         logger.info('Выполняем действие после отклонения платежа')
         data = instance.webhook_data()
-        result = send_merch_webhook.delay(url=instance.merchant.host, data=data)
+        result = send_payment_webhook.delay(url=instance.merchant.host, data=data)
         logger.info(f'answer: {result}')
