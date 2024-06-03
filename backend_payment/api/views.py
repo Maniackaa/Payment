@@ -1,6 +1,7 @@
 import json
 
 import structlog
+from django.http import JsonResponse
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, extend_schema_view
 
 from rest_framework import viewsets, status, generics, serializers
@@ -11,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
 from rest_framework import mixins
+from rest_framework.views import APIView
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 

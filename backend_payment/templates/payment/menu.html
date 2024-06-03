@@ -12,7 +12,7 @@
             </div>
            {% if user.is_staff %}
              <a class="" href="{% url 'payment:payment_list' %}">Пополнения</a>
-             <a class="" href="{% url 'payment:withdraw_list' %}">Выводы</a>
+             <a class="" href="{% url 'payment:withdraw_list' %}">Заявки на Выводы</a>
            {% endif %}
            {% if user.role == 'merchant' %}
              <a class="" href="{% url 'payment:merchant_orders' %}">merchant_orders</a><br>

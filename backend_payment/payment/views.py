@@ -24,6 +24,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, DetailView, FormView, UpdateView, ListView, DeleteView
+from rest_framework.views import APIView
 
 from core.global_func import hash_gen, TZ
 from payment import forms
@@ -763,3 +764,13 @@ class MerchStatView(DetailView, ):
         return context
 
 
+class WebhookReceive(APIView):
+
+    def get(self, request, *args, **kwargs):
+        logger.debug('WebhookReceive')
+        return HttpResponse('ok')
+
+    def post(self, request, *args, **kwargs):
+        logger.debug('WebhookReceive')
+        logger.debug(f'{request.POST} {args} {kwargs}')
+        return JsonResponse({'status': 'succes'})
