@@ -331,7 +331,7 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
                                    "expired_year": "26"
                                },
                                "amount": "30",
-                               "signature": "79f7d455c7bcbb19756be5f091e7604ec87556d632088d42ff225cbe36e68532",
+                               "signature": "218c2bbb12b28975f1db5ca8ff5fa740653a607896aa78308c7b7d29aaf30cd9",
                                "payload": {
                                    "field1": "data1",
                                    "field2": "data2"
