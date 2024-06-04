@@ -155,6 +155,7 @@ def invoice(request, *args, **kwargs):
         owner_name = request.GET.get('owner_name')
         amount = request.GET.get('amount') or None
         pay_type = request.GET.get('pay_type')
+        back_url = request.GET.get('back_url')
         signature = request.GET.get('signature')
         query_params = request.GET.urlencode()
         logger.debug(f'GET {args} {kwargs} {request.GET.dict()}'
@@ -208,6 +209,7 @@ def invoice(request, *args, **kwargs):
                 # Перенаправляем на извинения
                 return redirect(reverse('payment:payment_type_not_worked'))
             payment.pay_requisite = requisite
+            payment.referrer = back_url
             payment.save()
 
         if pay_type == 'card-to-card':
@@ -612,7 +614,8 @@ def invoice_test(request, *args, **kwargs):
         merch = Merchant.objects.get(pk=request_dict['merchant_id'])
         string_value = f'{request_dict["merchant_id"]}{request_dict["order_id"]}'
         signature = hash_gen(string_value, merch.secret)
-        return redirect(reverse('payment:pay_check') + '?' + '&'.join(x) + '&pay_type=card_2' + f'&signature={signature}')
+        return redirect(
+            reverse('payment:pay_check') + '?' + '&'.join(x) + '&pay_type=card_2' + f'&signature={signature}' + '&back_url=https://stackoverflow.com/questions')
 
     return render(request,
                   template_name='payment/test_send.html',

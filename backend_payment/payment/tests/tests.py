@@ -40,7 +40,7 @@ class TestPayment(TestCase):
         shop = Merchant.objects.get(pk=shop_id)
         string_value = f'{shop.id}{order_id}'
         merch_hash = hash_gen(string_value, shop.secret)
-        url = f'/invoice/?merchant_id={shop.id}&order_id={order_id}&amount=10&owner_name=John%20Dou&user_login=user_22216456&pay_type=card_2&signature={merch_hash}'
+        url = f'/invoice/?merchant_id={shop.id}&order_id={order_id}&amount=10&owner_name=John%20Dou&user_login=user_22216456&pay_type=card_2&signature={merch_hash}&back_url=https://stackoverflow.com/questions'
         response = self.client.get(url, follow=True)
         self.assertEqual(response.status_code, 400, 'Платеж создается без наличия типа')
         self.assertEqual(Payment.objects.count(), 0)
@@ -51,6 +51,7 @@ class TestPayment(TestCase):
         self.assertEqual(Payment.objects.count(), 1)
         payment = Payment.objects.last()
         self.assertEqual(payment.status, 0, 'Статус платежа не 0')
+        self.assertEqual(payment.referrer, 'https://stackoverflow.com/questions', 'Не сохраняется back_url')
 
     def test_balance(self):
         amount = 100

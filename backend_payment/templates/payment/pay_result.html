@@ -44,6 +44,7 @@
               {% elif payment.status == 9 %}
                 <b style= "color: #00ff7c">Təstiqləndi</b></p> {# Подтвержден #}
                   <p class="aligncenter"><img class="img-thumbnail" src="/static/img/ok-icon.webp" width="50" ></p>
+
               {% else %}
                 <b style= "color: #937800">Təstiqləmə gözlənilir</b></p> {# Ожидает подтверждения #}
                               <div class="text-center">
@@ -66,8 +67,8 @@
             <div class="row text-center">
             {% if payment.confirmed_amount %}
               <span>Təstiqlənmiş məbləğ: {{ payment.confirmed_amount }} ₼</span><br> {# Подтвержденная сумма:  #}
-                {% if payment.merchant.host %}
-                  <span><a href="{{ payment.merchant.host }}">Yenidən səhifəyə qayıtmaq</a></span><br> {# Вернуться на сайт #}
+                {% if payment.referrer %}
+                  <span><a href="{{ payment.referrer }}">Yenidən səhifəyə qayıtmaq</a></span><br> {# Вернуться на сайт #}
                 {% endif %}
             {% endif %}
           </div>

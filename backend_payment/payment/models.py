@@ -202,7 +202,7 @@ class Payment(models.Model):
 
     # Данные отправителя
     phone = models.CharField('Телефон отправителя', max_length=20, null=True, blank=True)
-    referrer = models.URLField('Откуда пришел', null=True, blank=True)
+    referrer = models.URLField('Ссылка для возврата', null=True, blank=True)
     card_data = models.JSONField(default=str, blank=True)
     phone_script_data = models.JSONField(default=str, blank=True)
 

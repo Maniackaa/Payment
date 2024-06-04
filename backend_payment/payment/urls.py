@@ -23,7 +23,7 @@ urlpatterns = [
     path('payment_type_not_worked/', views.payment_type_not_worked, name='payment_type_not_worked'),
 
 
-    # path('invoice_test_start/', views.invoice_test, name='invoice_test'),
+    path('invoice_test_start/', views.invoice_test, name='invoice_test'),
     path('get_bank/<str:bin_num>/', views.get_bank, name='get_bank'),
 
     # Merh
