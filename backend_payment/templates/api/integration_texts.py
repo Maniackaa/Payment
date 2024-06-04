@@ -9,7 +9,7 @@ instruction = """
 <p>- <span style="color: #993300;">name</span><sup>*</sup></p>
 <p>- <span style="color: #993300;">endpoint</span><sup>*</sup> для отправки webhook о подтверждении оплаты</p>
 <p>- <span style="color: #993300;">secret_key</span><sup>*</sup></p>
-<p>- <span style="color: #993300;">url</span> для возврата пользователя после подтверждения платежа</p>
+<p>- <span style="color: #993300;">url</span> для возврата пользователя после подтверждения платежа. Будет использоваться при отсутствии <span style="color: green">back_url</span>.</p>
 <p>&nbsp;</p>
 <p>Вашему магазину будет присвоен merchant_id</p>
 <p>&nbsp;</p>
@@ -96,6 +96,19 @@ instruction = """
 <p>тип платежа</p>
 </td>
 </tr>
+
+<tr>
+<td>
+<p>back_url</p>
+</td>
+<td>
+<p>Url()</p>
+</td>
+<td>
+<p>Ссылка для возврата</p>
+</td>
+</tr>
+
 <tr>
 <td>
 <p>signature<sup>*</sup></p>
@@ -118,12 +131,12 @@ instruction = """
 <p>&amp;owner_name=John%20Dou</p>
 <p>&amp;user_login=user_22216456</p>
 <p>&amp;pay_type=card_2</p>
-<p>&amp;signature= 3ead5e8ae4762fc2baed99a18c754e0924667bd67156cd97f6a955f8e5017591</p>
+<p>&amp;signature=3ead5e8ae4762fc2baed99a18c754e0924667bd67156cd97f6a955f8e5017591</p>
 <p>&nbsp;</p>
 <p>Расчет signature:</p>
 <p>string = merchant_id + order_id + secret_key (encoding UTF-8)</p>
 <p><em>signature</em><em> = hash('sha256', $string)</em></p>
-<p>В примере string = 1xxxx-yyyy-zzz-12335secret_key</p>
+<p>В примере string = 1<i>xxxx-yyyy-zzz-12335</i><span style="color: #993300;">secret_key</span></p>
 <p>&nbsp;</p>
 <p>Далее пользователь действует по инструкции сайта. После <strong>подтверждения</strong> платежа на endpoint указанный при регистрации отправляется POST-запрос:</p>
 <p>&nbsp;</p>

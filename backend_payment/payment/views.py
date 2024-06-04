@@ -209,7 +209,7 @@ def invoice(request, *args, **kwargs):
                 # Перенаправляем на извинения
                 return redirect(reverse('payment:payment_type_not_worked'))
             payment.pay_requisite = requisite
-            payment.referrer = back_url
+            payment.referrer = back_url or merch.pay_success_endpoint
             payment.save()
 
         if pay_type == 'card-to-card':

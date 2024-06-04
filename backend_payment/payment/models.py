@@ -27,7 +27,7 @@ class Merchant(models.Model):
     host = models.URLField('Адрес для отправки вэбхук')
     secret = models.CharField('Your secret key', max_length=1000)
     # Endpoints
-    pay_success_endpoint = models.URLField('Url for redirect user back to your site', null=True, blank=True)
+    pay_success_endpoint = models.URLField('Default Url for redirect user back to your site', null=True, blank=True)
 
     def stat(self):
         confirmed_payments = self.payments.filter(status=9)
