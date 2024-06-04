@@ -131,6 +131,7 @@ instruction = """
 <p>&amp;owner_name=John%20Dou</p>
 <p>&amp;user_login=user_22216456</p>
 <p>&amp;pay_type=card_2</p>
+<p>&amp;back_url=https://stackoverflow.com/questions/</p>
 <p>&amp;signature=3ead5e8ae4762fc2baed99a18c754e0924667bd67156cd97f6a955f8e5017591</p>
 <p>&nbsp;</p>
 <p>Расчет signature:</p>
