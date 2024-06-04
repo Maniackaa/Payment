@@ -46,6 +46,11 @@ class TestPayment(TestCase):
         self.assertEqual(Payment.objects.count(), 0)
 
         PayRequisite.objects.create(pay_type='card_2', min_amount=3, max_amount=3000, is_active=True)
+
+        bad_sign_url = f'/invoice/?merchant_id={shop.id}&order_id={order_id}&amount=10&owner_name=John%20Dou&user_login=user_22216456&pay_type=card_2&signature={merch_hash}x&back_url=https://stackoverflow.com/questions'
+        response = self.client.get(bad_sign_url, follow=True)
+        self.assertEqual(response.status_code, 400, 'Создается платеж с неверной сигнатурой')
+
         response = self.client.get(url, follow=True)
         self.assertEqual(response.status_code, 200, 'Не создается платеж')
         self.assertEqual(Payment.objects.count(), 1)

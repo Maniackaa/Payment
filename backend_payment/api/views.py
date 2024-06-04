@@ -30,11 +30,6 @@ logger = structlog.get_logger(__name__)
 
 
 class ResponseCreate(serializers.Serializer):
-    field_custom = serializers.SerializerMethodField()
-
-    @extend_schema_field(OpenApiTypes.DATETIME)
-    def get_field_custom(self, object):
-        return '2020-03-06 20:54:00.104248'
     status = serializers.CharField()
     id = serializers.CharField()
 
