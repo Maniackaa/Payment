@@ -2,7 +2,9 @@ import json
 
 import structlog
 from django.http import JsonResponse
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, extend_schema_view
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, extend_schema_view, \
+    extend_schema_serializer, extend_schema_field, inline_serializer
 
 from rest_framework import viewsets, status, generics, serializers
 from rest_framework.authentication import SessionAuthentication
@@ -28,6 +30,11 @@ logger = structlog.get_logger(__name__)
 
 
 class ResponseCreate(serializers.Serializer):
+    field_custom = serializers.SerializerMethodField()
+
+    @extend_schema_field(OpenApiTypes.DATETIME)
+    def get_field_custom(self, object):
+        return '2020-03-06 20:54:00.104248'
     status = serializers.CharField()
     id = serializers.CharField()
 
@@ -294,8 +301,15 @@ class PaymentStatusView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, view
         return self.update(request, *args, **kwargs)
 
 
-@extend_schema(tags=['Withdraw'], summary='Заявки на выводы'
-               )
+signature_text = """<p><b>signature</b>* - required field (string)<br><br></p>
+<p>Расчет signature:<br></p>
+<p>string = merchant + card_number + amount + secret_key (encoding UTF-8)</p>
+<p>signature = hash('sha256', $string)</p>
+В примере string = "2111122223333444430secret_key"
+"""
+
+
+@extend_schema(tags=['Withdraw'], summary='Заявки на выводы')
 class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = WithdrawCreateSerializer
     queryset = Withdraw.objects.all()
@@ -303,6 +317,28 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
     permission_classes = [PaymentOwnerOrStaff]
 
     @extend_schema(tags=['Withdraw'],
+                   summary='Создание withdraw',
+                   description=signature_text,
+                   examples=[OpenApiExample(
+                       request_only=True, name='Good Example',
+                       value={
+                               "merchant": "2",
+                               "withdraw_id": "your_withdraw_id-aaaa15320",
+                               "card_data": {
+                                   "owner_name": "Vasya Pupkin",
+                                   "card_number": "1111222233334444",
+                                   "expired_month": "12",
+                                   "expired_year": "26"
+                               },
+                               "amount": "30",
+                               "signature": "79f7d455c7bcbb19756be5f091e7604ec87556d632088d42ff225cbe36e68532",
+                               "payload": {
+                                   "field1": "data1",
+                                   "field2": "data2"
+                               }
+                           },
+                   )],
+                   request=WithdrawCreateSerializer,
                    responses={
                        status.HTTP_201_CREATED: OpenApiResponse(
                            description='Created',
@@ -314,7 +350,7 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
                                           "id": "f766758b-cb6a-4c4b-9d5d-342a97f7ac24"
                                           },
                                    status_codes=[201],
-                                   response_only=False,
+                                   response_only=True,
                                ),
                            ]),
 

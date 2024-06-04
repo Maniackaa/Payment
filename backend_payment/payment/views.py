@@ -33,6 +33,7 @@ from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, Invo
     MerchantForm, WithdrawForm, DateFilterForm
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm
+from payment.task import send_payment_webhook
 
 logger = structlog.get_logger(__name__)
 User = get_user_model()
@@ -702,7 +703,7 @@ def merchant_test_webhook(request, *args, **kwargs):
         # payment.confirmed_time = datetime.datetime.now(tz=TZ)
         payment.confirmed_time = timezone.now()
         data = payment.webhook_data()
-    send_merch_webhook.delay(merchant.host, data)
+    send_payment_webhook.delay(merchant.host, data)
     return JsonResponse(json.dumps(data), safe=False)
 
 

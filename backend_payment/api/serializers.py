@@ -4,6 +4,9 @@ import structlog
 from django.contrib.auth import get_user_model
 from django.core.validators import EmailValidator, MinValueValidator
 from django.db import transaction
+from django.utils.http import urlsafe_base64_encode
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_serializer, OpenApiExample, extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import as_serializer_error
@@ -172,9 +175,7 @@ class WithdrawCreateSerializer(serializers.ModelSerializer):
             'card_data',
             'amount',
             'payload',
-            # 'signature'
         )
-        read_only_fields = ('signature',)
         validators = [
             validators.UniqueTogetherValidator(
                 queryset=Withdraw.objects.all(),
