@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Список платежей{% endblock %}
+
+
+{% block content %}
+{% include 'includes/operator_menu.html' %}
+<div class="container">
+
+  {% with request.resolver_match.view_name as view_name %}
+
+    <span class="row justify-content-start">
+      <div class="col-6">
+        <form method="GET">
+
+          {% if search_form %}
+            {{ search_form.as_p }}
+          {% endif %}
+          <input class="btn btn-success " type="submit" name="date_search" value="Найти">
+       </form>
+      </div>
+      <p id="last_id" hidden>{{ last_id }}</p>
+      <p id="last_bad_id" hidden>{{ last_bad_id }}</p>
+      <p id="filter" hidden>{{ filter }}</p>
+      {% if view_name == 'deposit:incomings' or view_name == 'deposit:incomings_filter' %}
+       <div class="col-3" role="alert" id="warnings" style="padding:  6px 0 6px 0; margin: 0 0 0 10px">
+         <!-- Здесь будут отображаться уведомления -->
+        </div>
+      {% endif %}
+    </span>
+
+
+     {% include 'includes/paginator.html' %}
+     <div class="container-fluid ">
+     <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">
+     <thead class="">
+     <tr class="">
+           <th>id</th>
+           <th>T прих</th>
+           <th>T на чеке</th>
+           <th>Получатель</th>
+           <th>Отправитель</th>
+           <th>Pay</th>
+           <th>Б</th>
+           <th>Payment_id</th>
+       </tr>
+     </thead>
+     <tbody style="text-align: end" >
+         {% for incoming in page_obj %}
+         <tr title="{{incoming.comment|default_if_none:'' }}" id="pay{{ incoming.id }}"
+                 {% if incoming.confirmed_payment %}
+                 class="table-success"
+                 {% endif %}>
+
+            <td><a class="changelink" href="{% url 'deposit:incoming_edit' incoming.id %}">{{ incoming.id }}</a>
+                {% if incoming.comment %}
+                  *
+                {% endif %}
+            </td>
+            <td>{{ incoming.register_date|date:"d.m H:i" }}</td>
+            <td>{{ incoming.response_date|date:"d.m H:i" }}</td>
+            <td>{{ incoming.recipient }}</td>
+
+            <td>{{ incoming.sender }}</td>
+            <td>{{ incoming.pay }}</td>
+            <td>{{ incoming.balance|floatformat:0  }}</td>
+
+         {% load l10n %}
+         {% localize off %}
+            <td class="text-nowrap">
+                <form action="{% url 'deposit:incomings' %}" method="post">
+                                    {% csrf_token %}
+                    <input type="text" style="margin-bottom: -0px; margin-top: -10px; font-size: 14px; height: 20px" minlength="0" maxlength="36" size="32"  value="{{incoming.link_payment.id}}" name="incoming_id:{{ incoming.id }}">
+
+                    {% if incoming.confirmed_payment %}
+                      <button disabled style="margin-bottom: -10px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-success btn-sm">---</button>
+                    {% else %}
+                      <button style="margin-bottom: -00px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-warning btn-sm">Ok</button>
+                    {% endif %}
+                </form>
+            </td>
+         {% endlocalize %}
+
+         </tr>
+         {% endfor %}
+     </tbody>
+   </table>
+   </div>
+   {% include 'includes/paginator.html' %}
+  {% endwith %}
+</div>
+
+{% endblock %}

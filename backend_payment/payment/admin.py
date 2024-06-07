@@ -33,7 +33,9 @@ class WithdrawAdmin(admin.ModelAdmin):
 
 
 class MerchantAdmin(admin.ModelAdmin):
-    pass
+    list_display = (
+        'id', 'name', 'owner', 'host', 'is_new'
+    )
 
 
 class PhoneScriptAdmin(admin.ModelAdmin, DynamicArrayMixin):

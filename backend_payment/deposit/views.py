@@ -5,19 +5,23 @@ from http import HTTPStatus
 
 import pytz
 from django.conf import settings
-from django.http import HttpResponse
-from rest_framework import status
+from django.http import HttpResponse, HttpResponseForbidden
+from django.shortcuts import redirect
+from django.urls import reverse_lazy, reverse
+from django.views.generic import ListView, UpdateView
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 
-from backend_deposit.settings import TIME_ZONE
+from backend_payment.settings import TIME_ZONE
 from core.global_func import send_message_tg
-from ocr.ocr_func import bytes_to_str, make_after_incoming_save
-from deposit.models import BadScreen, Incoming, TrashIncoming, Setting
-from ocr.screen_response import screen_text_to_pay
-from deposit.serializers import IncomingSerializer
+from deposit.forms import IncomingForm
+
+from deposit.models import  Incoming, TrashIncoming
+
 from deposit.text_response_func import response_sms1, response_sms2, response_sms3, response_sms4, response_sms5, \
     response_sms6, response_sms7, response_sms8, response_sms9, response_sms10, response_sms11, response_sms12
+from payment.models import Payment
+from payment.permissions import StaffOnlyPerm
 
 logger = logging.getLogger(__name__)
 TZ = pytz.timezone(TIME_ZONE)
@@ -117,7 +121,8 @@ def analyse_sms_text_and_save(text, params=None, *args, **kwargs):
         params = {}
     response_errors = []
     fields = ['response_date', 'recipient', 'sender', 'pay', 'balance',
-              'transaction', 'type']
+              'transaction',
+              'type']
 
     text_sms_type = find_text_sms_type(text)
     if text_sms_type:
@@ -163,10 +168,10 @@ def sms(request: Request):
         sms_id = post.get('id')
         imei = post.get('imei')
         params = {'sms_id': sms_id, 'imei': imei}
-
+        logger.info(f'sms: {text}, params: {params}')
         result = analyse_sms_text_and_save(text, params)
         save_result = result.get('save_result')
-        errors = save_result.get('errors')
+        errors = result.get('errors')
 
         if save_result == 'created':
             response = HttpResponse(status=HTTPStatus.CREATED, content=sms_id)
@@ -188,37 +193,103 @@ def sms(request: Request):
             send_message_tg(message=msg, chat_ids=settings.ALARM_IDS)
 
 
-@api_view(['POST'])
-def sms_forwarder(request: Request):
-    """
-    Прием sms_forwarder
-    """
-    errors = []
-    text = ''
-    try:
-        host = request.META["HTTP_HOST"]  # получаем адрес сервера
-        user_agent = request.META.get("HTTP_USER_AGENT")  # получаем данные бразера
-        forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-        path = request.path
-        logger.info(f'request.data: {request.data},'
-                     f' host: {host},'
-                     f' user_agent: {user_agent},'
-                     f' path: {path},'
-                     f' forwarded: {forwarded}')
-        post = request.POST
-        text = post.get('message')
-        sms_id = post.get('id')
-        imei = post.get('imei')
-        result = analyse_sms_text_and_save(text, imei, sms_id)
-        response = result.get('response')
-        errors = result.get('errors')
-        return response
+# @api_view(['POST'])
+# def sms_forwarder(request: Request):
+#     """
+#     Прием sms_forwarder
+#     """
+#     errors = []
+#     text = ''
+#     try:
+#         host = request.META["HTTP_HOST"]  # получаем адрес сервера
+#         user_agent = request.META.get("HTTP_USER_AGENT")  # получаем данные бразера
+#         forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+#         path = request.path
+#         logger.info(f'request.data: {request.data},'
+#                      f' host: {host},'
+#                      f' user_agent: {user_agent},'
+#                      f' path: {path},'
+#                      f' forwarded: {forwarded}')
+#         post = request.POST
+#         text = post.get('message')
+#         sms_id = post.get('id')
+#         imei = post.get('imei')
+#         result = analyse_sms_text_and_save(text, imei, sms_id)
+#         response = result.get('response')
+#         errors = result.get('errors')
+#         return response
+#
+#     except Exception as err:
+#         logger.info(f'Неизвестная ошибка при распознавании сообщения: {err}')
+#         logger.error(f'Неизвестная ошибка при распознавании сообщения: {err}\n', exc_info=True)
+#         raise err
+#     finally:
+#         if errors:
+#             msg = f'Ошибки при распознавании sms:\n{errors}\n\n{text}'
+#             send_message_tg(message=msg, chat_ids=settings.ALARM_IDS)
 
-    except Exception as err:
-        logger.info(f'Неизвестная ошибка при распознавании сообщения: {err}')
-        logger.error(f'Неизвестная ошибка при распознавании сообщения: {err}\n', exc_info=True)
-        raise err
-    finally:
-        if errors:
-            msg = f'Ошибки при распознавании sms:\n{errors}\n\n{text}'
-            send_message_tg(message=msg, chat_ids=settings.ALARM_IDS)
+
+class IncomingListView(StaffOnlyPerm, ListView, ):
+    """Спиcок платежей"""
+    template_name = 'deposit/incomings_list.html'
+    model = Incoming
+    paginate_by = settings.PAGINATE
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        incoming = Incoming.objects.first()
+        print(incoming.link_payment)
+        # form = PaymentListConfirmForm()
+        # context['form'] = form
+        # filter = PaymentFilter(self.request.GET, queryset=self.get_queryset())
+        # context['filter'] = filter
+        return context
+
+    def post(self, request):
+        print('post')
+        print(request.POST)
+        for key, val in request.POST.dict().items():
+            if 'incoming_id:' in key:
+                incoming_id = int(key.split('incoming_id:')[1])
+                input_payment_id = val
+        print(incoming_id, input_payment_id)
+        incoming = Incoming.objects.get(pk=incoming_id)
+        payment = Payment.objects.filter(pk=input_payment_id).first()
+        if payment:
+            incoming.confirmed_payment = payment
+            incoming.save()
+
+        return redirect(reverse('deposit:incomings'))
+
+
+class IncomingEdit(UpdateView, ):
+    # Ручная корректировка платежа
+    model = Incoming
+    form_class = IncomingForm
+    success_url = reverse_lazy('deposit:incomings')
+    template_name = 'deposit/incoming_edit.html'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if request.user.has_perm('deposit.can_hand_edit'):
+            self.object = self.get_object()
+            return super().post(request, *args, **kwargs)
+        return HttpResponseForbidden('У вас нет прав делать ручную корректировку')
+
+    def get_context_data(self, **kwargs):
+        context = super(IncomingEdit, self).get_context_data(**kwargs)
+        # history = self.object.history.order_by('-id').all()
+        # context['history'] = history
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            old_incoming = Incoming.objects.get(pk=self.object.id)
+            incoming: Incoming = self.object
+            # # Сохраняем историю
+            # IncomingChange().save_incoming_history(old_incoming, incoming, self.request.user)
+
+            return super(IncomingEdit, self).form_valid(form)

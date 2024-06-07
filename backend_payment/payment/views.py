@@ -56,7 +56,7 @@ def menu(request, *args, **kwargs):
     return render(request, template_name=template, context=context)
 
 
-def get_pay_requisite(pay_type: str) -> PayRequisite:
+def get_pay_requisite(pay_type: str, amount=None) -> PayRequisite:
     """Выдает реквизиты по типу
     [card-to-card]
     [card_2]
@@ -64,9 +64,29 @@ def get_pay_requisite(pay_type: str) -> PayRequisite:
     active_requsite = PayRequisite.objects.filter(pay_type=pay_type, is_active=True).all()
     logger.debug(f'active_requsite {pay_type}: {active_requsite}')
     if active_requsite:
-        selected_requisite = random.choice(active_requsite)
-        logger.debug(f'get_pay_requisite {pay_type}: {selected_requisite.id} из {active_requsite}')
-        return selected_requisite
+        if pay_type == 'card-to-card':
+            payments_with_req = Payment.objects.filter(pay_type='card-to-card', pay_requisite__isnull=False).all()
+            if amount:
+                payments_with_req = payments_with_req.filter(amount=amount)
+            logger.debug(f'payments_with_req amount {amount}: {payments_with_req}')
+            payments_with_req = payments_with_req.values('pay_requisite')
+            used_pay_req_ids = list(set([x['pay_requisite'] for x in payments_with_req]))
+            free = active_requsite.exclude(pk__in=used_pay_req_ids)
+            logger.debug(
+                         f'Занятые реквизиты c суммой {amount}: {used_pay_req_ids}\n'
+                         f'Свободные реквизиты: {free}'
+                         )
+            if free:
+                logger.debug(f'Debug: {settings.DEBUG} к выдаче: {free[0]}')
+                if settings.DEBUG:
+                    return free[0]
+                else:
+                    return random.choice(free)
+            logger.debug(f'к выдаче нет')
+        else:
+            selected_requisite = random.choice(active_requsite)
+            logger.debug(f'get_pay_requisite {pay_type}: {selected_requisite.id} из {active_requsite}')
+            return selected_requisite
 
 
 def get_phone_script(card_num) -> PhoneScript:
@@ -158,15 +178,19 @@ def invoice(request, *args, **kwargs):
         back_url = request.GET.get('back_url')
         signature = request.GET.get('signature')
         query_params = request.GET.urlencode()
-        logger.debug(f'GET {args} {kwargs} {request.GET.dict()}'
+        logger.debug(f'invoice GET {args} {kwargs} {request.GET.dict()}'
                      f' {request.META.get("HTTP_REFERER")}')
-        required_values = [merchant_id, order_id, pay_type]
+        if pay_type == 'card_2':
+            required_values = [merchant_id, order_id, pay_type]
+        elif pay_type == 'card-to-card':
+            required_values = [merchant_id, order_id, pay_type, amount]
+        else:
+            required_values = [False]
         #Проверка сигнатуры
         try:
             merch = Merchant.objects.get(pk=merchant_id)
             string_value = f'{merchant_id}{order_id}'
             merch_hash = hash_gen(string_value, merch.secret)
-            print(string_value, signature, merch_hash)
             assert signature == merch_hash
 
         except Exception as err:
@@ -183,6 +207,7 @@ def invoice(request, *args, **kwargs):
         # Проверка что pay_type действует
         pay_requsites = PayRequisite.objects.filter(pay_type=pay_type, is_active=True).exists()
         if not pay_requsites:
+            logger.debug(f'Нет действующих реквизитов {pay_type}')
             return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='This pay_type not worked',
                                           content='This pay_type not worked')
 
@@ -193,6 +218,7 @@ def invoice(request, *args, **kwargs):
                 user_login=user_login,
                 amount=amount,
                 owner_name=owner_name,
+                pay_type=pay_type
             )
             logger.debug(f'payment, status: {payment} {status}')
         except Exception as err:
@@ -203,14 +229,17 @@ def invoice(request, *args, **kwargs):
 
         # Сохраняем реквизит к платежу
         if not payment.pay_requisite:
-            requisite = get_pay_requisite(pay_type)
-            # Если нет активных реквизитов
+            requisite = get_pay_requisite(pay_type, amount=amount)
             if not requisite:
-                # Перенаправляем на извинения
-                return redirect(reverse('payment:payment_type_not_worked'))
+                # Перенаправляем на страницу ожидания
+                logger.debug('Перенаправляем на страницу ожидания')
+                return redirect(reverse('payment:wait_requisite', args=(payment.id,)))
+            logger.debug(f'Сохраняем реквизит к платежу: {requisite}')
+            # Если нет активных реквизитов
             payment.pay_requisite = requisite
             payment.referrer = back_url or merch.pay_success_endpoint
             payment.save()
+
 
         if pay_type == 'card-to-card':
             return redirect(reverse('payment:pay_to_card_create') + f'?payment_id={payment.id}')
@@ -223,8 +252,22 @@ def invoice(request, *args, **kwargs):
                                   )
 
 
+def wait_requisite(request, pk, *args, **kwargs):
+    if request.method == 'GET':
+        payment = Payment.objects.filter(pk=pk).first()
+        if payment.status in [-1, 9]:
+            return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
+        requsite = get_pay_requisite(pay_type=payment.pay_type, amount=payment.amount)
+        payment.pay_requisite = requsite
+        payment.save()
+        if requsite:
+            return redirect(reverse('payment:pay_to_card_create') + f'?payment_id={payment.id}')
+        context = {'payment': payment}
+        return render(request, template_name='payment/wait_requsite.html', context=context)
+
+
 def pay_to_card_create(request, *args, **kwargs):
-    """Создание платежа со стотусом 0 и идентификатором
+    """Создание платежа со статусом 0 и идентификатором
 
     Parameters
     ----------
@@ -239,19 +282,26 @@ def pay_to_card_create(request, *args, **kwargs):
     """
 
     if request.method == 'GET':
-        merchant_id = request.GET.get('merchant_id')
-        order_id = request.GET.get('order_id')
-        user_login = request.GET.get('user_login')
-        amount = request.GET.get('amount')
-        pay_type = request.GET.get('pay_type')
-        logger.debug(f'GET {request.GET.dict()} {merchant_id} {order_id} {user_login} {amount} {pay_type}'
-                     f' {request.META.get("HTTP_REFERER")}')
-        required_key = ['merchant_id', 'order_id', 'user_login', 'amount', 'pay_type']
+        payment = Payment.objects.filter(pk=request.GET.get('payment_id')).first()
+        logger.debug(f'pay_to_card_create: {payment}')
+        if not payment:
+            return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, content='Wrong data')
+        if payment.status > 0 or payment.status == -1:
+            return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
+
+        merchant_id = payment.merchant.id
+        order_id = payment.order_id
+        user_login = payment.user_login
+        amount = payment.amount
+        pay_type = payment.pay_type
+        logger.debug(f'GET merchant_id:{merchant_id} order_id:{order_id} amount:{amount} pay_type:{pay_type} user_login:{user_login}')
+
         # Проверяем наличие всех данных для создания платежа
-        for key in required_key:
-            if key not in request.GET:
-                return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='Not enough info for create pay',
-                                              content='Not enough info for create pay')
+        is_all_key = all((merchant_id, order_id, amount, pay_type, payment.pay_requisite))
+        if not is_all_key:
+            logger.debug(f'Not enough key: ')
+            return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='Not enough info for create pay',
+                                          content='Not enough info for create pay')
         logger.debug('Key ok')
         try:
             payment, status = Payment.objects.get_or_create(
@@ -267,19 +317,17 @@ def pay_to_card_create(request, *args, **kwargs):
             return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='Not correct data',
                                           content='Not correct data'
                                           )
-        if payment.status > 0 or payment.status == -1:
-            return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
 
-        requisite = get_pay_requisite(pay_type)
-        # Если нет активных реквизитов
-        if not requisite:
-            # Перенаправляем на извинения
-            return redirect(reverse('payment:payment_type_not_worked'))
+        # requisite = payment.pay_requisite
+        # # Если нет активных реквизитов
+        # if not requisite:
+        #     # Перенаправляем на извинения
+        #     return redirect(reverse('payment:wait_requisite', args=(payment.id,)))
 
-        # Сохраняем реквизит к платежу
-        if not payment.pay_requisite:
-            payment.pay_requisite = requisite
-            payment.save()
+        # # Сохраняем реквизит к платежу
+        # if not payment.pay_requisite:
+        #     payment.pay_requisite = requisite
+        #     payment.save()
 
         form = forms.InvoiceForm(instance=payment, )
         context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment)}
@@ -293,9 +341,9 @@ def pay_to_card_create(request, *args, **kwargs):
         logger.debug(f': {payment} s: {status}')
         form = InvoiceForm(request.POST or None, instance=payment, files=request.FILES or None)
         if form.is_valid():
-            # Сохраняем данные и скриншот, меняем статус
+            # Сохраняем данные и меняем статус
             logger.debug('form_save')
-            payment.status = 1
+            payment.status = 3
             form.save()
             return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
         else:
@@ -393,7 +441,7 @@ class PayResultView(DetailView):
 
 
 class PaymentListView(StaffOnlyPerm, ListView, ):
-    """Спиcок заявок"""
+    """Спиcок заявок для оператора"""
     template_name = 'payment/payment_list.html'
     model = Payment
     fields = ('confirmed_amount',
@@ -402,7 +450,6 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
     # permission_required = [TestPerm()]
     raise_exception = False
     paginate_by = settings.PAGINATE
-
 
     def get_queryset(self):
         # if not self.request.user.is_staff:
@@ -417,6 +464,9 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         context['form'] = form
         filter = PaymentFilter(self.request.GET, queryset=self.get_queryset())
         context['filter'] = filter
+        # Количество заявок с занятыми реквизитами
+        used = Payment.objects.filter(status__in=[-1, 9], pay_requisite__isnull=False)
+        context['used'] = used.count()
         return context
 
     def post(self, request, *args, **kwargs):
@@ -609,13 +659,15 @@ def invoice_test(request, *args, **kwargs):
     if request.method == 'POST':
         print('post')
         request_dict = request.POST.dict()
+        logger.debug(f'request_dict: {request_dict}')
         request_dict.pop('csrfmiddlewaretoken')
         x = [f'{k}={v}' for k, v in request_dict.items()]
         merch = Merchant.objects.get(pk=request_dict['merchant_id'])
         string_value = f'{request_dict["merchant_id"]}{request_dict["order_id"]}'
+        logger.debug(f'string: {string_value}')
         signature = hash_gen(string_value, merch.secret)
         return redirect(
-            reverse('payment:pay_check') + '?' + '&'.join(x) + '&pay_type=card_2' + f'&signature={signature}' + '&back_url=https://stackoverflow.com/questions')
+            reverse('payment:pay_check') + '?' + '&'.join(x) + f'&signature={signature}' + '&back_url=https://stackoverflow.com/questions')
 
     return render(request,
                   template_name='payment/test_send.html',

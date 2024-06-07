@@ -21,7 +21,8 @@
         </form>
     </div>
     <div class="col-6">
-        total_payments
+        <p>Всего: {{ filter.qs.count }}</p>
+        used: {{ used }}
     </div>
 </div>
 
@@ -34,6 +35,7 @@
            <th>id</th>
            <th>create time</th>
            <th>Merchant</th>
+           <th>Type</th>
            <th>Сумм</th>
            <th>Статус</th>
            <th>Подтв.<br>Сумм</th>
@@ -58,7 +60,8 @@
                 {% endif %}
             </td>
             <td>{{ payment.create_at|date:"d.m H:i" }}</td>
-            <td>{{ payment.merchant.name}}</td>
+            <td>{{ payment.merchant.name}}{% if payment.merchant.is_new %}🍼{% endif %}</td>
+            <td>{{ payment.pay_type}}</td>
             {% if payment.screenshot %}
               <td><a target="_blank" href="/media/{{ payment.screenshot }}">{{ payment.amount }}</a></td>
             {% else %}
@@ -106,7 +109,7 @@
 
                     <input type="text"
                            value="{{ payment.confirmed_incoming.id }}"
-                           name="confirmed_incoming_id_value:{{ payment.id }}"
+                               name="confirmed_incoming_id_value:{{ payment.id }}"
                            size="7">
                     {% if payment.status == 9 %}
                       <button disabled name="payment_id:{{ payment.id }}" type="submit" class="btn btn-warning btn-sm">---</button>

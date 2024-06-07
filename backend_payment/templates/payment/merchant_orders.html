@@ -19,6 +19,7 @@
      <tr class="">
          <th>order_id</th>
          <th>id</th>
+         <th>type</th>
          <th>Created</th>
          <th>Merchant</th>
          <th>Amount</th>
@@ -38,11 +39,12 @@
                  {% endif %}>
             <td>{{ payment.order_id }}
             <td>{{ payment.id }}</td>
+             <td>{{ payment.pay_type }}</td>
             <td>{{ payment.create_at|date:"Y.d.m H:i" }}</td>
             <td>{{ payment.merchant.name}}</td>
             <td>{{ payment.amount }}</td>
             <td style="white-space: nowrap">{{ payment.status_str }}</td>
-            <td>{{ payment.confirmed_amount }}</td>
+            <td>{{ payment.confirmed_amount|default_if_none:"-" }}</td>
             <td>{{ payment.confirmed_time|default_if_none:"-"  }}</td>
 
          </tr>

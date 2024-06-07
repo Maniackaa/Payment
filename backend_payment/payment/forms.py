@@ -9,7 +9,7 @@ from payment.models import Payment, CreditCard, Merchant, Withdraw
 class InvoiceForm(forms.ModelForm):
     amount = forms.CharField(widget=forms.HiddenInput())
     order_id = forms.CharField(widget=forms.HiddenInput())
-    screenshot = forms.ImageField(widget=forms.ClearableFileInput(), required=True, label='Скриншот об оплате')
+    # screenshot = forms.ImageField(widget=forms.ClearableFileInput(), required=True, label='Скриншот об оплате')
 
     class Meta:
         model = Payment
@@ -17,7 +17,7 @@ class InvoiceForm(forms.ModelForm):
                   'order_id',
                   'amount',
                   'phone',
-                  'screenshot',
+                  # 'screenshot',
                   )
 
 
@@ -33,7 +33,7 @@ class InvoiceTestForm(forms.ModelForm):
 
     class Meta:
         model = Payment
-        fields = ('amount', 'owner_name', 'user_login')
+        fields = ('amount', 'owner_name', 'user_login', 'pay_type')
 
 
 class InvoiceM10Form(forms.ModelForm):
@@ -100,11 +100,13 @@ class InvoiceM10Form(forms.ModelForm):
 
 
 class PaymentListConfirmForm(forms.ModelForm):
+    confirmed_incoming = forms.CharField(required=False)
 
     class Meta:
         model = Payment
         fields = (
-                  'confirmed_amount',
+            'confirmed_amount',
+            'confirmed_incoming'
         )
 
 

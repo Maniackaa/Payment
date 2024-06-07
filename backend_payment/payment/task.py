@@ -1,15 +1,21 @@
+import datetime
 import json
 
 import structlog
 from celery import shared_task
+from django.conf import settings
+from django.utils import timezone
 from requests import request
 
 import payment.models as models
+from core.global_func import send_message_tg
+
 logger = structlog.get_logger(__name__)
 
 
 @shared_task()
 def send_payment_webhook(url, data: dict):
+    """Отправка вебхука принятия или отклонения заявки payment"""
     try:
         logger.info(f'Отправка webhook на {url}: {json.dumps(data)}')
         headers = {"Content-Type": "application/json"}
@@ -40,3 +46,25 @@ def send_withdraw_webhook(url, data: dict):
         return response.status_code
     except Exception as err:
         logger.error(err)
+
+
+@shared_task()
+def automatic_decline_expired_payment():
+    """
+    Автоматическое отклонение заявок
+    :return:
+    """
+    PAYMENT_EXPIRED = 11 * 60
+    expired_time = timezone.now() - datetime.timedelta(seconds=PAYMENT_EXPIRED)
+    logger.info(f'Удаляем payment ранее {expired_time}')
+    expired_payment = models.Payment.objects.filter(create_at__lt=expired_time, status__range=(0, 8))
+    logger.info(f'Найдено для удаления: {expired_payment}')
+    expired_payment.update(status=-1, pay_requisite=None)
+    not_free_req = models.Payment.objects.filter(status__in=[-1, 9], pay_requisite__isnull=False)
+    not_free_req.update(pay_requisite=None)
+
+
+@shared_task()
+def send_message_tg_task(message: str, chat_ids: list = settings.ADMIN_IDS):
+    logger.debug(f'Запуск send_message_tg_task: {message} to {chat_ids}')
+    send_message_tg(message, chat_ids)

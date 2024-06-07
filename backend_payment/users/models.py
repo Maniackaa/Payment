@@ -70,7 +70,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.username
+        return f'{self.id}. {self.username}'
 
     def get_short_name(self):
         return self.email

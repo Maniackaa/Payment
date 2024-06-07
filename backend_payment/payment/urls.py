@@ -20,6 +20,7 @@ urlpatterns = [
     path('balance/', views.BalanceListView.as_view(), name='balance_list'),
     # path('merch_stat/<int:pk>', views.MerchStatView.as_view(), name='merch_stats'),
 
+    path('wait_requisite/<str:pk>/', views.wait_requisite, name='wait_requisite'),
     path('payment_type_not_worked/', views.payment_type_not_worked, name='payment_type_not_worked'),
 
 

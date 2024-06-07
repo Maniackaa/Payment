@@ -3,7 +3,7 @@ import logging
 
 import pytz
 
-from backend_deposit.settings import TIME_ZONE
+from backend_payment.settings import TIME_ZONE
 
 logger = logging.getLogger(__name__)
 err_log = logging.getLogger(__name__)

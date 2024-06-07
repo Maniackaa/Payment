@@ -11,8 +11,9 @@
   font-family: Share Tech Mono;
   background-color: #9BA7B2;
   display: block;
-  padding 25px 100px;
-  width: 350px;
+  padding 0px 100px;
+
+  max-width: 350px;
   border-radius: 10px;
   -webkit-box-shadow: 0px 0px 10px 0px rgb(210, 50, 124);
 -moz-box-shadow: 0px 0px 10px 0px rgb(224, 20, 20);
@@ -43,9 +44,9 @@ img.chip {
 .mc {
   position: absolute;
   max-width: 380px;
-  padding-top: 150px;
-  padding-left: 250px;
-  padding-right: 50px;
+  padding-top: 130px;
+  padding-left: 230px;
+  padding-right: 70px;
 }
 
 .title {
@@ -129,8 +130,8 @@ animation: Logo 4s ease infinite;
   z-index: 19;
   border-radius: 55px;
   position: absolute;
-  top: 50px;
-  left: 265px;
+  top: 40px;
+  left: 240px;
 }
 @-webkit-keyframes Logo {
     0%{background-position:0% 50%}
@@ -196,7 +197,7 @@ span {
 
             <span class="emboss exp">{{ payment.pay_requisite.card.expired_month }}/{{ payment.pay_requisite.card.expired_year }}</span><br>
               {% endlocalize %}
-            <span class="emboss name">{{ payment.pay_requisite.card.owner_name }}</span>
+            <span class="emboss name">{{ payment.pay_requisite.card.owner_name|default_if_none:'' }}</span>
           </div>
 
 </div>

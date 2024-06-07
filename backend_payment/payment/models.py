@@ -3,6 +3,7 @@ import uuid
 from decimal import Decimal
 
 import structlog
+from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -14,7 +15,7 @@ from django.utils import timezone
 from django_better_admin_arrayfield.models.fields import ArrayField
 
 from core.global_func import hash_gen, TZ
-from payment.task import send_payment_webhook, send_withdraw_webhook
+from payment.task import send_payment_webhook, send_withdraw_webhook, send_message_tg_task
 
 logger = structlog.get_logger(__name__)
 
@@ -22,6 +23,7 @@ User = get_user_model()
 
 
 class Merchant(models.Model):
+    is_new = models.BooleanField(verbose_name='Новенький', default=1)
     name = models.CharField('Название', max_length=100)
     owner = models.ForeignKey(to=User, related_name='merchants', on_delete=models.CASCADE)
     host = models.URLField('Адрес для отправки вэбхук')
@@ -39,10 +41,20 @@ class Merchant(models.Model):
             'total_sum': result['total_sum']}
 
     def __str__(self):
-        return f'{self.id}. {self.name} {self.host}'
+        return f'Shop {self.id}. ({self.owner}) {self.name}'
 
     class Meta:
         ordering = ('id',)
+
+
+@receiver(post_save, sender=Merchant)
+def after_save_shop(sender, instance: Merchant, created, raw, using, update_fields, *args, **kwargs):
+    logger.debug(f'after_save_shop {created}')
+    if created:
+        text = (f'Создан новый магазин id {instance.id}:\n'
+                f'{instance.name}\n'
+                f'{instance.owner}')
+        send_message_tg_task.delay(text, settings.ADMIN_IDS)
 
 
 class BalanceChange(models.Model):
@@ -89,7 +101,8 @@ PAY_TYPE = (
 class PayRequisite(models.Model):
 
     pay_type = models.CharField('Тип платежа', choices=PAY_TYPE)
-    card = models.ForeignKey(CreditCard, on_delete=models.CASCADE, null=True, blank=True)
+    # card = models.ForeignKey(CreditCard, on_delete=models.CASCADE, null=True, blank=True)
+    card = models.OneToOneField(to=CreditCard, on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     info = models.CharField('Инструкция', null=True, blank=True)
     min_amount = models.IntegerField(default=0)
@@ -197,7 +210,7 @@ class Payment(models.Model):
     status = models.IntegerField('Статус заявки',
                                  default=0,
                                  choices=PAYMENT_STATUS)
-    change_time = models.DateTimeField('Время изменения в базе', auto_now=False, default=timezone.now())
+    change_time = models.DateTimeField('Время изменения в базе', auto_now=True)
     cc_data_input_time = models.DateTimeField('Время ввода данных карты', null=True, blank=True)
 
     # Данные отправителя
@@ -210,6 +223,9 @@ class Payment(models.Model):
     confirmed_amount = models.IntegerField('Подтвержденная сумма заявки', null=True, blank=True)
     confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
     confirmed_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    confirmed_incoming = models.OneToOneField(
+        verbose_name='Связанное смс Incoming', to='deposit.Incoming', on_delete=models.SET_NULL, null=True,
+        related_name='link_payment')
     comment = models.CharField('Комментарий', max_length=1000, null=True, blank=True)
     response_status_code = models.IntegerField(null=True, blank=True)
     source = models.CharField(max_length=5, default='form', null=True, blank=True)
@@ -411,13 +427,19 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
             instance.confirmed_time = timezone.now()
         if not instance.confirmed_amount:
             instance.confirmed_amount = instance.amount
+        # Осободим реквизиты
+        instance.pay_requisite = None
 
+    # Если статус изменился на -1 (Отклонен):
+    if instance.status == -1 and instance.cached_status != -1:
+        # Осободим реквизиты
+        instance.pay_requisite = None
 
-        # user.balance = F('balance') + instance.confirmed_amount - round(tax, 2)
 
 @receiver(post_save, sender=Payment)
 def after_save_pay(sender, instance: Payment, created, raw, using, update_fields, *args, **kwargs):
     logger.debug(f'post_save_status = {instance.status}  cashed: {instance.cached_status}')
+
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
         logger.info('Выполняем действие полсле подтверждения платежа')
@@ -455,3 +477,11 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         data = instance.webhook_data()
         result = send_payment_webhook.delay(url=instance.merchant.host, data=data)
         logger.info(f'answer: {result}')
+
+    if created:
+        try:
+            if instance.merchant and instance.merchant.is_new is True:
+                text = f'Новая заявка payment\nОт {instance.merchant}\nТип {instance.pay_type} на {instance.amount}'
+                send_message_tg_task.delay(text, settings.ADMIN_IDS)
+        except Merchant.DoesNotExist:
+            pass

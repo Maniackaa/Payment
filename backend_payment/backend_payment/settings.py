@@ -22,6 +22,7 @@ CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS').split(',')
 MY_APPS = [
     'users.apps.UsersConfig',
     'payment.apps.PaymentConfig',
+    'deposit.apps.DepositConfig',
     'api.apps.ApiConfig',
 ]
 
@@ -264,6 +265,11 @@ LOGGING = {
             "propagate": False,
         },
         "payment": {
+            "handlers": ["console", "console_file"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "deposit": {
             "handlers": ["console", "console_file"],
             "level": "DEBUG",
             "propagate": False,
