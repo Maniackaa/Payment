@@ -261,7 +261,7 @@ class IncomingListView(StaffOnlyPerm, ListView, ):
         return redirect(reverse('deposit:incomings'))
 
 
-class IncomingEdit(UpdateView, ):
+class IncomingEdit(StaffOnlyPerm, UpdateView, ):
     # Ручная корректировка платежа
     model = Incoming
     form_class = IncomingForm
@@ -290,18 +290,17 @@ class IncomingEdit(UpdateView, ):
             incoming: Incoming = self.object
             # # Сохраняем историю
             # IncomingChange().save_incoming_history(old_incoming, incoming, self.request.user)
-
             return super(IncomingEdit, self).form_valid(form)
 
 
-class IncomingTrashList(ListView):
+class IncomingTrashList(StaffOnlyPerm, ListView):
     # Мусор
     model = Incoming
     template_name = 'deposit/trash_list.html'
     paginate_by = settings.PAGINATE
 
     def get_queryset(self, *args, **kwargs):
-        if not self.request.user.is_staff:
-            raise PermissionDenied('Недостаточно прав')
+        # if not self.request.user.is_staff:
+        #     raise PermissionDenied('Недостаточно прав')
         trash_list = TrashIncoming.objects.order_by('-id').all()
         return trash_list
