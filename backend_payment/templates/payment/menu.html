@@ -11,8 +11,11 @@
             Баланс: {{ request.user.balance }} ₼
             </div>
            {% if user.is_staff %}
-             <a class="" href="{% url 'payment:payment_list' %}">Пополнения</a>
-             <a class="" href="{% url 'payment:withdraw_list' %}">Заявки на Выводы</a>
+             <a class="" href="{% url 'payment:payment_list' %}">Заявки payment</a>
+             <a class="" href="{% url 'payment:withdraw_list' %}">Заявки на Выводы withdraw</a>
+            <hr>
+             <a class="" href="{% url 'deposit:incomings' %}">Пополнения смс incomings</a>
+             <a class="" href="{% url 'deposit:trash' %}">Смс мусор incomings </a>
            {% endif %}
            {% if user.role == 'merchant' %}
              <a class="" href="{% url 'payment:merchant_orders' %}">merchant_orders</a><br>

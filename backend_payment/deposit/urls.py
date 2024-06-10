@@ -12,6 +12,7 @@ urlpatterns = [
     # path('sms_forwarder/', views.sms_forwarder, name='sms_forwarder'),
     path('incomings/', views.IncomingListView.as_view(), name='incomings'),
     path('incomings/<int:pk>/', views.IncomingEdit.as_view(), name='incoming_edit'),
+    path('trash/', views.IncomingTrashList.as_view(), name='trash'),
     ]
 
 if settings.DEBUG:

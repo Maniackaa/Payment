@@ -111,7 +111,7 @@
                            value="{{ payment.confirmed_incoming.id }}"
                                name="confirmed_incoming_id_value:{{ payment.id }}"
                            size="7">
-                    {% if payment.status == 9 %}
+                    {% if payment.status == 9 or payment.status == -1 %}
                       <button disabled name="payment_id:{{ payment.id }}" type="submit" class="btn btn-warning btn-sm">---</button>
                      {% else %}
                         <button name="payment_id:{{ payment.id }}" type="submit" class="btn btn-warning btn-sm">OK</button>

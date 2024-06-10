@@ -77,11 +77,9 @@ def get_pay_requisite(pay_type: str, amount=None) -> PayRequisite:
                          f'Свободные реквизиты: {free}'
                          )
             if free:
-                logger.debug(f'Debug: {settings.DEBUG} к выдаче: {free[0]}')
-                if settings.DEBUG:
-                    return free[0]
-                else:
-                    return random.choice(free)
+                result = random.choice(free)
+                logger.debug(f'Реквизиты к выдаче: {result}')
+                return result
             logger.debug(f'к выдаче нет')
         else:
             selected_requisite = random.choice(active_requsite)
@@ -188,7 +186,8 @@ def invoice(request, *args, **kwargs):
             required_values = [False]
         #Проверка сигнатуры
         try:
-            merch = Merchant.objects.get(pk=merchant_id)
+            # merch = Merchant.objects.get(pk=merchant_id)
+            merch = get_object_or_404(Merchant, pk=merchant_id)
             string_value = f'{merchant_id}{order_id}'
             merch_hash = hash_gen(string_value, merch.secret)
             assert signature == merch_hash
@@ -662,7 +661,8 @@ def invoice_test(request, *args, **kwargs):
         logger.debug(f'request_dict: {request_dict}')
         request_dict.pop('csrfmiddlewaretoken')
         x = [f'{k}={v}' for k, v in request_dict.items()]
-        merch = Merchant.objects.get(pk=request_dict['merchant_id'])
+        # merch = Merchant.objects.get(pk=request_dict['merchant_id'])
+        merch = get_object_or_404(Merchant, pk=request_dict['merchant_id'])
         string_value = f'{request_dict["merchant_id"]}{request_dict["order_id"]}'
         logger.debug(f'string: {string_value}')
         signature = hash_gen(string_value, merch.secret)
