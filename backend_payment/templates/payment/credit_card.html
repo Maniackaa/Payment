@@ -22,7 +22,7 @@
   position: relative;
   top: 0; left: 0;   bottom: 0; right: 0;
   height: 215px;
-    background: linear-gradient(-125deg, rgba(230, 238, 217, 0.99), rgba(197, 253, 214, 0.99) 50%);
+    background: linear-gradient(-125deg, rgba(230, 238, 217, 0.52), rgba(197, 253, 214, 0.51) 50%);
 }
 
 .bank-logo svg {
@@ -51,7 +51,7 @@ img.chip {
 .title {
   font-family: Signika;
   color: black;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 200;
   opacity: 0.8;
   padding-left: 10px;
@@ -84,17 +84,18 @@ img.chip {
 .name {
   font-size: 18px;
   padding-left: 20px;
-  text-shadow: -2px -1px 1px rgba(255,255,255,1),
-                1px 1px 1px rgba(0,0,0,1),
-                1px 0px 1px rgba(255,255,255,1),
-                -1px -1px 1px rgba(0,0,0,1),
-                -1px 1px 1px rgba(0,0,0,1);
-  -webkit-text-stroke: 1px rgba(0,0,0,0.2);
-  display: inline-block;
+  /*text-shadow: -2px -1px 1px rgba(255,255,255,1),*/
+  /*              1px 1px 1px rgba(0,0,0,1),*/
+  /*              1px 0px 1px rgba(255,255,255,1),*/
+  /*              -1px -1px 1px rgba(0,0,0,1),*/
+  /*              -1px 1px 1px rgba(0,0,0,1);*/
+  /*-webkit-text-stroke: 1px rgba(0,0,0,0.2);*/
+  /*display: inline-block;*/
   padding-bottom: 10px;
 }
 
 .small-type {
+    font-size: 14px;
   font-family: sans-serif;
   text-transform: uppercase;
   color: black;
@@ -107,11 +108,11 @@ img.chip {
 .exp {
     font-size: 18px;
   padding-left: 50px;
-  text-shadow: -2px -1px 1px rgba(255,255,255,1),
-                1px 1px 1px rgba(0,0,0,1),
-                1px 0px 1px rgba(255,255,255,1),
-                -1px -1px 1px rgba(0,0,0,1),
-                -1px 1px 1px rgba(0,0,0,1);
+  /*text-shadow: -2px -1px 1px rgba(255,255,255,1),*/
+  /*              1px 1px 1px rgba(0,0,0,1),*/
+  /*              1px 0px 1px rgba(255,255,255,1),*/
+  /*              -1px -1px 1px rgba(0,0,0,1),*/
+  /*              -1px 1px 1px rgba(0,0,0,1);*/
   -webkit-text-stroke: 1px rgba(0,0,0,0.2);
   -webkit-text-stroke: 1px rgba(0,0,0,0.2);
 }
@@ -196,9 +197,9 @@ span {
               {% localize off %}
 
 
-            <span class="emboss exp">{{ payment.pay_requisite.card.expired_month }}/{{ payment.pay_requisite.card.expired_year }}</span><br>
+            <span class="exp">{{ payment.pay_requisite.card.expired_month }}/{{ payment.pay_requisite.card.expired_year }}</span><br>
               {% endlocalize %}
-            <span class="emboss name">{{ payment.pay_requisite.card.owner_name|default_if_none:'' }}</span>
+            <span class="name">{{ payment.pay_requisite.card.owner_name|default_if_none:'' }}</span>
           </div>
 
 </div>
