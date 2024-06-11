@@ -4,7 +4,7 @@
 {% block content %}
 
 <div class="container margin: auto" style="max-width: 500px;">
-  <div class="card" style="padding-left: 1px; padding-right: 1px; padding-bottom:1px; background: #efefef">
+  <div class="card" style="padding-left: 1px; padding-right: 1px; padding-bottom:10px; background: #efefef">
 
 
 
@@ -28,13 +28,18 @@
       </div>
       <div class="row">
         <div class="col-12 mx-auto" style="display: flex; align-items: center; text-align: center">
-            <p>Проиведите оплату на сумму {{ payment.amount }} ₼ согласно  инструкциии</p>
+            <p>Qeyd olunmuş vaxt ərzində dəqiq məbləği ödəyin, əgər məbləğ fərqlidirsə, ödəniş avtomatik keçməyəcək.</p>  {# совершите оплату точной суммы в течении указанного времени, если сумма будет другая, платеж не пройдёт автоматически. #}
         </div>
 
       </div>
     </div>
 
 {% include 'includes/timer.html' %}
+          <div class="row">
+                  <div class="col-12 justify-center" style="text-align: center">
+                      <p>Ödəniş məbləği: <span style="color: #e44d26">{{ payment.amount }} ₼</span></p>
+            </div>
+    </div>
     <div class="row ">
         <div class="">
         {% include 'payment/credit_card.html' %}
@@ -47,7 +52,7 @@
               <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                       {% include 'includes/form_fields.html' %}
-                    <input id="confirm_btn" class="btn btn-success btn-lg" type="submit" value="Оплатил">
+                    <input id="confirm_btn" class="btn btn-success btn-lg" type="submit" value="Ödədim">
                 </form>
          </div>
     </div>
@@ -55,7 +60,7 @@
 
     <div class="row justify-content-center">
           <div class="col-12 justify-center" style="text-align: center">
-              <span id="time_exp_info1" style="display: none"><p>Время вышло</p></span>
+              <span id="time_exp_info1" style="display: none"><p>Vaxt bitdi</p></span> {# Время вышло #}
           </div>
     </div>
 

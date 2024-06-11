@@ -133,7 +133,7 @@ def get_time_remaining_data(pay: Payment) -> dict:
         seconds = time_remaining.seconds % 60
 
         data = {
-            'name': 'Время до оплаты',
+            'name': 'Ödəniş üçün vaxt', # Время на оплату
             'hours': hours,
             'minutes': minutes,
             'seconds': seconds,
@@ -143,7 +143,7 @@ def get_time_remaining_data(pay: Payment) -> dict:
         }
     else:
         data = {
-            'name': "Время до оплаты",
+            'name': "Ödəniş üçün vaxt", # Время на оплату
             'hours': 0,
             'minutes': 0,
             'seconds': 0,
