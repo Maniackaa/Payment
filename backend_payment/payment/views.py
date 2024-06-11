@@ -342,8 +342,9 @@ def pay_to_card_create(request, *args, **kwargs):
         if form.is_valid():
             # Сохраняем данные и меняем статус
             logger.debug('form_save')
-            payment.status = 3
-            form.save()
+            if payment.status == 0:
+                payment.status = 3
+                form.save()
             return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
         else:
             logger.debug(f'{form.errors}')

@@ -16,7 +16,7 @@ class InvoiceForm(forms.ModelForm):
         fields = (
                   'order_id',
                   'amount',
-                  'phone',
+                  # 'phone',
                   # 'screenshot',
                   )
 
