@@ -103,8 +103,8 @@ def get_phone_script(card_num) -> PhoneScript:
 
 
 def get_time_remaining(pay: Payment) -> tuple[datetime.timedelta, int]:
-    TIMER_SECONDS = 300
-    TIMER_SMS_SECONDS = 120
+    TIMER_SECONDS = 600
+    TIMER_SMS_SECONDS = 180
     STATUS_WAIT_TIMER = 600
     if pay.card_data and json.loads(f'{pay.card_data}').get('sms_code'):
         time_remaining = pay.cc_data_input_time + datetime.timedelta(seconds=STATUS_WAIT_TIMER) - timezone.now()

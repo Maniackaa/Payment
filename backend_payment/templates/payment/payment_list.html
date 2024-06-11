@@ -106,9 +106,8 @@
             </td>
 
             <td class="text-nowrap">
-
                     <input type="text"
-                           value="{{ payment.confirmed_incoming.id }}"
+                           value="{{ payment.link_incoming.id }}"
                                name="confirmed_incoming_id_value:{{ payment.id }}"
                            size="7">
                     {% if payment.status == 9 or payment.status == -1 %}
