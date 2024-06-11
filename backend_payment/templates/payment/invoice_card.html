@@ -4,16 +4,36 @@
 {% block content %}
 
 <div class="container margin: auto" style="max-width: 500px;">
-  <div class="card" style="padding-left: 20px; padding-right: 20px; padding-bottom:20px; background: #efefef">
+  <div class="card" style="padding-left: 1px; padding-right: 1px; padding-bottom:1px; background: #efefef">
 
 
 
-    <div class="row">
-        <div class="card-header">
-            <span>Проиведите оплату на сумму {{ payment.amount }} ₼ согласно инструкции<br></span><br>
 
+<!--        <div class="card-header">-->
+<!--            <span>Проиведите оплату на сумму {{ payment.amount }} ₼ согласно инструкции<br></span><br>-->
+
+<!--        </div>-->
+
+          <div class="card-header">
+      <div class="row">
+          <div class="col-4" style="padding: 0 0 0 0">
+          </div>
+          <div class="col-4 d-flex justify-content-center"  style="padding: 0 0 0 0; margin: 0 0 0 0px">
+{#            <div style="background-image: url('/static/img/AsuPay125.png'); width:125px; height: 125px; object-position: center">#}
+              <img class="mx-auto d-flex justify-content-center" src="/static/img/AsuPay125.png" height="125" width="125">
+{#            </div>#}
+          </div>
+          <div class="col-4" style="padding: 0 0 0 0; margin: 0 0 0 0">
+          </div>
+      </div>
+      <div class="row">
+        <div class="col-12 mx-auto" style="display: flex; align-items: center; text-align: center">
+            <p>Проиведите оплату на сумму {{ payment.amount }} ₼ согласно  инструкциии</p>
         </div>
+
+      </div>
     </div>
+
 {% include 'includes/timer.html' %}
     <div class="row ">
         <div class="">
@@ -22,7 +42,7 @@
     </div>
 
     <div class="row">
-          <div id="pay_input">
+          <div id="pay_input" style="text-align: center">
               <span>{{ payment.pay_requisite.info }}</span>
               <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
@@ -34,7 +54,7 @@
 
 
     <div class="row justify-content-center">
-          <div class="col-12 justify-center">
+          <div class="col-12 justify-center" style="text-align: center">
               <span id="time_exp_info1" style="display: none"><p>Время вышло</p></span>
           </div>
     </div>
