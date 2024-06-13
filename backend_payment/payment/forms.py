@@ -100,7 +100,7 @@ class InvoiceM10Form(forms.ModelForm):
 
 
 class PaymentListConfirmForm(forms.ModelForm):
-    confirmed_incoming = forms.CharField(required=False)
+    # confirmed_incoming = forms.CharField(required=False)
 
     class Meta:
         model = Payment
@@ -121,7 +121,7 @@ class PaymentForm(forms.ModelForm):
 
     class Meta:
         model = Payment
-        fields = ('comment', 'status')
+        fields = ('confirmed_amount', 'comment', 'status')
 
 
 class WithdrawForm(forms.ModelForm):

@@ -58,10 +58,18 @@ def automatic_decline_expired_payment():
     expired_time = timezone.now() - datetime.timedelta(seconds=PAYMENT_EXPIRED)
     logger.info(f'Удаляем payment ранее {expired_time}')
     expired_payment = models.Payment.objects.filter(create_at__lt=expired_time, status__range=(0, 8))
-    logger.info(f'Найдено для удаления: {expired_payment}')
-    expired_payment.update(status=-1, pay_requisite=None)
+    logger.info(f'Найдено для отклонениz: {expired_payment}')
+    for p in expired_payment:
+        p.status = -1
+        p.pay_requisite = None
+        p.save()
+    # expired_payment.update(status=-1, pay_requisite=None)
+    # Особождаем реквизиты
     not_free_req = models.Payment.objects.filter(status__in=[-1, 9], pay_requisite__isnull=False)
-    not_free_req.update(pay_requisite=None)
+    # not_free_req.update(pay_requisite=None)
+    for p in not_free_req:
+        p.pay_requisite = None
+        p.save()
 
 
 @shared_task()

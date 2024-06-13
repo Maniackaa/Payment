@@ -14,6 +14,7 @@ from rest_framework import validators
 
 from core.global_func import hash_gen
 from payment.models import Payment, Merchant, CreditCard, PayRequisite, Withdraw
+from payment.views import get_pay_requisite
 
 logger = structlog.get_logger(__name__)
 
@@ -35,11 +36,15 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
 
         pay_type = data.get('pay_type')
         amount = data.get('amount')
-        pay_requsite = PayRequisite.objects.filter(pay_type=pay_type).first()
-        if not pay_requsite:
+        all_pay_requisite = PayRequisite.objects.filter(pay_type=pay_type).first()
+        if not all_pay_requisite:
             raise ValidationError(f'Sorry, service not available in this moment.')
-        if amount < pay_requsite.min_amount or amount > pay_requsite.max_amount:
-            raise ValidationError(f'Amount must be from {pay_requsite.min_amount} to {pay_requsite.max_amount}')
+        pay_requisite = get_pay_requisite(pay_type, amount)
+        if not pay_requisite:
+            raise ValidationError({'warning': 'Try again after 5 seconds'})
+        if amount < pay_requisite.min_amount or amount > pay_requisite.max_amount:
+            raise ValidationError(f'Amount must be from {pay_requisite.min_amount} to {pay_requisite.max_amount}')
+        data['pay_requisite'] = pay_requisite
         return data
 
     def save(self, **kwargs):
@@ -152,7 +157,7 @@ class PaymentStaffSerializer(serializers.ModelSerializer):
 class PaymentTypesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PayRequisite
-        fields = ('pay_type', 'min_amount', 'max_amount', 'info')
+        fields = ('pay_type', 'min_amount', 'max_amount', 'method_info')
 
 
 class WithdrawSerializer(serializers.ModelSerializer):

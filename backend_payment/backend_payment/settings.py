@@ -65,6 +65,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django_structlog.middlewares.RequestMiddleware',
+    'django_currentuser.middleware.ThreadLocalUserMiddleware',
     'better_exceptions.integrations.django.BetterExceptionsMiddleware',
 ]
 

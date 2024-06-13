@@ -1,7 +1,9 @@
 import json
+import threading
 import uuid
 from decimal import Decimal
 
+import pytz
 import structlog
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -13,8 +15,10 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django_better_admin_arrayfield.models.fields import ArrayField
+from django_currentuser.middleware import get_current_user, get_current_authenticated_user
 
 from core.global_func import hash_gen, TZ
+from deposit.text_response_func import tz
 from payment.task import send_payment_webhook, send_withdraw_webhook, send_message_tg_task
 
 logger = structlog.get_logger(__name__)
@@ -101,10 +105,10 @@ PAY_TYPE = (
 class PayRequisite(models.Model):
 
     pay_type = models.CharField('Тип платежа', choices=PAY_TYPE)
-    # card = models.ForeignKey(CreditCard, on_delete=models.CASCADE, null=True, blank=True)
-    card = models.OneToOneField(to=CreditCard, on_delete=models.SET_NULL, null=True, blank=True)
+    card = models.OneToOneField(to=CreditCard, on_delete=models.CASCADE, null=True, blank=True)
     is_active = models.BooleanField(default=False)
-    info = models.CharField('Инструкция', null=True, blank=True)
+    info = models.CharField('Инструкция для пользователя', null=True, blank=True)
+    method_info = models.CharField('Описание метода', null=True, blank=True)
     min_amount = models.IntegerField(default=0)
     max_amount = models.IntegerField(default=10000)
 
@@ -224,7 +228,7 @@ class Payment(models.Model):
     confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
     confirmed_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     confirmed_incoming = models.OneToOneField(
-        verbose_name='Связанное смс Incoming', to='deposit.Incoming', on_delete=models.SET_NULL, null=True,
+        verbose_name='Связанное смс Incoming', to='deposit.Incoming', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='link_payment')
     comment = models.CharField('Комментарий', max_length=1000, null=True, blank=True)
     response_status_code = models.IntegerField(null=True, blank=True)
@@ -233,6 +237,15 @@ class Payment(models.Model):
     def __str__(self):
         string = f'{self.__class__.__name__} {self.id}'
         return string
+
+    def get_pay_data(self):
+        card = self.pay_requisite.card
+        return {
+            'card_number': card.card_number,
+            'card_bank': card.card_bank,
+            'expired_month': card.expired_month,
+            'expired_year': card.expired_year,
+        }
 
     def status_str(self):
         for status_num, status_str in self.PAYMENT_STATUS:
@@ -335,6 +348,16 @@ class Payment(models.Model):
         ordering = ('-create_at',)
 
 
+class PaymentLog(models.Model):
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name='logs')
+    user = models.ForeignKey(to=User, null=True, blank=True, on_delete=models.CASCADE)
+    create_at = models.DateTimeField('Время добавления в базу', auto_now_add=True)
+    changes = models.JSONField()
+
+    def __str__(self):
+        return f'{self.create_at.astimezone(tz=TZ)} {self.user} {self.changes}'
+
+
 class PhoneScript(models.Model):
     name = models.CharField('Наименование', unique=True)
     step_1 = models.BooleanField('Шаг 1. Ввод карты', default=1)
@@ -434,6 +457,25 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
     if instance.status == -1 and instance.cached_status != -1:
         # Осободим реквизиты
         instance.pay_requisite = None
+
+    # Сохранение лога
+    try:
+        logger.debug('Сохранение лога')
+        old = Payment.objects.filter(pk=instance.id).first()
+        if old:
+            changes = {}
+            fields = ['amount', 'confirmed_amount', 'status', 'comment']
+            for field in fields:
+                if hasattr(instance, field):
+                    new_value = getattr(instance, field)
+                    if new_value != getattr(old, field):
+                        changes[field] = new_value
+            logger.debug(f'Изменения {get_current_user()}: {changes} ')
+            if changes:
+                log = PaymentLog.objects.create(payment=instance, user=get_current_user(), changes=json.dumps(changes))
+
+    except Exception as err:
+        logger.error(f'Ошибка сохранения лога: {err}')
 
 
 @receiver(post_save, sender=Payment)

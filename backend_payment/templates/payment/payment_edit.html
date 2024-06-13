@@ -65,6 +65,10 @@
                 <td>{{ payment.confirmed_user  }}</td>
             </tr>
             <tr>
+                <td>source</td>
+                <td>{{ payment.source }}</td>
+            </tr>
+            <tr>
                 <td>Статус</td>
                 <td>{{ payment.status_str }}</td>
             </tr>
@@ -77,10 +81,14 @@
 
       </div>
 
-      <div class="col col-md-3">
+      <div class="col col-md-6">
           {% if payment.screenshot %}
         <img class="img" style="object-fit: cover; object-position: 0 0" src="/media/{{payment.screenshot}}" width="300" height="400">
           {% endif %}
+
+          {% for log in payment.logs.all %}
+          {{ log }}<br>
+          {% endfor %}
       </div>
     </div>
 

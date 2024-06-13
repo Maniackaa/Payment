@@ -104,6 +104,14 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
     authentication_classes = [JWTAuthentication]
     permission_classes = [PaymentOwnerOrStaff]
 
+    # def get_serializer_class(self):
+    #     pay_type = self.request.data.get('pay_type')
+    #     if pay_type == 'card_2':
+    #         return PaymentCreateSerializer
+    #     if pay_type == 'card-to-card':
+    #         return PaymentToCardCreateSerializer
+    #     raise serializers.ValidationError({'error': f'Type {pay_type} is not present'})
+
     @extend_schema(tags=['Payment check'], summary='Просмотр данных о платеже',
                    request=[
                        OpenApiExample(
@@ -128,12 +136,28 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
                            response=ResponseCreate,
                            examples=[
                                OpenApiExample(
-                                   "Good example",
-                                   value={"id": "4caed007-2d31-489c-9f3d-a2af6ccf07e4"},
+                                   "Good example card_2",
+                                   value={"status": "success", "id": "4caed007-2d31-489c-9f3d-a2af6ccf07e4",
+                                          },
+                                   status_codes=[201],
+                                   response_only=False,
+                               ),
+                               OpenApiExample(
+                                   "Good example card-to-card",
+                                   value={"status": "success", "id": "4caed007-2d31-489c-9f3d-a2af6ccf07e4",
+                                          "pay_data": {
+                                              "card_number": "1111111111119999",
+                                              "card_bank": "Kapital Bank",
+                                              "expired_month": 12,
+                                              "expired_year": 25
+                                          }
+                                          },
+
                                    status_codes=[201],
                                    response_only=False,
                                ),
                            ]),
+
 
                        status.HTTP_400_BAD_REQUEST: OpenApiResponse(
                            response=BadResponse,
@@ -154,6 +178,15 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
         if serializer.is_valid(raise_exception=True):
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
+            if serializer.data['pay_type'] == 'card-to-card':
+                payment: Payment = serializer.instance
+                card_data = payment.get_pay_data()
+                return Response({'status': 'success',
+                                 'id': serializer.data['id'],
+                                 'pay_data': card_data
+                                 },
+                                status=status.HTTP_201_CREATED,
+                                headers=headers)
             return Response({'status': 'success', 'id': serializer.data['id']},
                             status=status.HTTP_201_CREATED,
                             headers=headers)

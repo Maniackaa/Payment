@@ -468,8 +468,10 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         filter = PaymentFilter(self.request.GET, queryset=self.get_queryset())
         context['filter'] = filter
         # Количество заявок с занятыми реквизитами
-        used = Payment.objects.filter(status__in=[-1, 9], pay_requisite__isnull=False)
+        in_work = Payment.objects.filter(status__range=(0, 8), pay_type='card-to-card', pay_requisite__isnull=False)
+        used = Payment.objects.filter(status__in=[-1, 9], pay_type='card-to-card', pay_requisite__isnull=False)
         context['used'] = used.count()
+        context['in_work'] = in_work.count()
         return context
 
     def post(self, request, *args, **kwargs):
@@ -523,6 +525,7 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
             payment.confirmed_time = timezone.now()
             form.save()
         else:
+            logger.warning('form invalid')
             return HttpResponseBadRequest(str(form.errors))
         return redirect(reverse('payment:payment_list'))
 

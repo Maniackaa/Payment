@@ -22,7 +22,8 @@
     </div>
     <div class="col-6">
         <p>Всего: {{ filter.qs.count }}</p>
-        used: {{ used }}
+        used: {{ used }}<br>
+        in_work: {{ in_work }}
     </div>
 </div>
 
@@ -107,7 +108,11 @@
 
             <td class="text-nowrap">
                     <input type="text"
-                           value="{{ payment.link_incoming.id }}"
+                           {% if payment.link_incoming.id > 0 %}
+                            value="{{payment.link_incoming.id}}"
+                            {% else %}
+                            value="{{payment.confirmed_incoming.id}}"
+                           {% endif %}
                                name="confirmed_incoming_id_value:{{ payment.id }}"
                            size="7">
                     {% if payment.status == 9 or payment.status == -1 %}
