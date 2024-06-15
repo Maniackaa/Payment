@@ -4,76 +4,51 @@
 {% block content %}
 
 <style>
-    p {
-        margin-bottom: 1px;
-        font-family: "Times New Roman";
-    }
-
+    * {
+    font-family: "Arial";
+    font-size: medium;
+}
 </style>
 
 <div class="container margin: auto" style="max-width: 500px;">
-  <div class="card" style="padding-left: 1px; padding-right: 1px; padding-bottom:10px; background: #efefef">
-
-
-
-
-<!--        <div class="card-header">-->
-<!--            <span>Проиведите оплату на сумму {{ payment.amount }} ₼ согласно инструкции<br></span><br>-->
-
-<!--        </div>-->
-
-          <div class="card-header">
-      <div class="row">
-          <div class="col-4" style="padding: 0 0 0 0">
+  <div class="card" style="margin-top: 20px">
+    <div class="card-header">
+      <div class="row justify-content-center align-items-center text-center">
+          <div class="col-3">
+              <img class="mx-auto d-flex justify-content-center" src="/static/img/AsuPay125.png" height="100%" width="100%">
           </div>
-          <div class="col-4 d-flex justify-content-center"  style="padding: 0 0 0 0; margin: 0 0 0 0px">
-{#            <div style="background-image: url('/static/img/AsuPay125.png'); width:125px; height: 125px; object-position: center">#}
-              <img class="mx-auto d-flex justify-content-center" src="/static/img/AsuPay125.png" height="125" width="125">
-{#            </div>#}
-          </div>
-          <div class="col-4" style="padding: 0 0 0 0; margin: 0 0 0 0">
+          <div class="col-9 " text-align: center;">
+              Qeyd olunmuş vaxt ərzində dəqiq məbləği ödəyin, əgər məbləğ fərqlidirsə, ödəniş avtomatik keçməyəcək.  {# совершите оплату точной суммы в течении указанного времени, если сумма будет другая, платеж не пройдёт автоматически. #}
           </div>
       </div>
-      <div class="row">
-        <div class="col-12 mx-auto" style="display: flex; align-items: center; text-align: center">
-            <p>Qeyd olunmuş vaxt ərzində dəqiq məbləği ödəyin, əgər məbləğ fərqlidirsə, ödəniş avtomatik keçməyəcək.</p>  {# совершите оплату точной суммы в течении указанного времени, если сумма будет другая, платеж не пройдёт автоматически. #}
-        </div>
 
-      </div>
     </div>
-
-{% include 'includes/timer.html' %}
-          <div class="row">
-                  <div class="col-12 justify-center" style="text-align: center">
-                      <p>Ödəniş məbləği: <span style="color: #e44d26">{{ payment.amount }} ₼</span></p>
-            </div>
+    <div class="row">
+      {% include 'includes/timer_horizontal.html' %}
     </div>
     <div class="row ">
-        <div class="">
+      <div class="">
         {% include 'payment/credit_card.html' %}
-        </div>
+      </div>
     </div>
 
     <div class="row">
-          <div id="pay_input" style="text-align: center">
-              <span>{{ payment.pay_requisite.info }}</span>
-              <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                      {% include 'includes/form_fields.html' %}
-                    <input id="confirm_btn" class="btn btn-success btn-lg" type="submit" value="Ödədim">
-                </form>
-         </div>
+      <div id="pay_input" style="text-align: center">
+        <span>{{ payment.pay_requisite.info }}</span>
+        <form method="POST" enctype="multipart/form-data" style="height:100%; padding: 1px; margin: 1px">
+          {% csrf_token %}
+          {% include 'includes/form_fields.html' %}
+          <input style="margin-bottom: 20px; margin-top: -20px" id="confirm_btn" class="btn btn-success btn" type="submit" value="Ödədim">
+        </form>
+      </div>
     </div>
 
-
-    <div class="row justify-content-center">
-          <div class="col-12 justify-center" style="text-align: center">
-              <span id="time_exp_info1" style="display: none"><p>Vaxt bitdi</p></span> {# Время вышло #}
-          </div>
+    <div class="row justify-content-center align-items-center text-center">
+        <div class="col" style="display: none" id="time_exp_info1">Vaxt bitdi</div> {# Время вышло #}
     </div>
 
   </div>
-</div>
+
 
 
 {% endblock %}

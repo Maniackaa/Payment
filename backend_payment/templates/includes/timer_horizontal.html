@@ -1,7 +1,4 @@
 <style>
-    {#body {#}
-    {#    font-family: Arial, sans-serif;#}
-    {#}#}
 
     h1 {
         color: #333;
@@ -14,7 +11,7 @@
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         padding: 10px;
         margin: 10px auto;
-        max-width: 300px;
+        max-width: 80%;
     }
 
     #countdown {
@@ -24,16 +21,15 @@
     }
 
     #event {
-        font-size: 18px;
+        font-size: medium;
 
         color: #221d1c;
     }
 </style>
 
-    <div id="timer">
-        <h3 id="event">{{ data.name }}</h3>
-<!--        <h4>Time Remaining:</h4>-->
-        <div id="countdown">
+    <div class="row justify-content-center align-items-center text-center" id="timer">
+        <div id="event" class="col-6">{{ data.name }}</div>
+        <div class="col-6" id="countdown">
             {{ data.hours|stringformat:"02d" }} : {{ data.minutes|stringformat:"02d" }} : {{ data.seconds|stringformat:"02d" }}
         </div>
     </div>

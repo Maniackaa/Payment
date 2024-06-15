@@ -1,0 +1,152 @@
+
+<link href='https://fonts.googleapis.com/css?family=Share+Tech+Mono' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Signika:400' rel='stylesheet' type='text/css'>
+<style type="text/css">
+	.st0{fill:#FFFFFF;}
+	body {
+{#background: linear-gradient(125deg, #207A89, #17A3BA 55%);#}
+}
+
+
+.ccard {
+    display: block;
+  padding 0px 100px;
+
+  max-width: 350px;
+  border-radius: 10px;
+  /*-webkit-box-shadow: 0px 0px 10px 0px rgb(210, 50, 124);*/
+/*-moz-box-shadow: 0px 0px 10px 0px rgb(224, 20, 20);*/
+/*box-shadow: 0px 0px 10px 0px rgb(84, 239, 50);*/
+/*  border: 1px solid grey;*/
+    margin: auto;
+  position: relative;
+  top: 0; left: 0;   bottom: 0; right: 0;
+  height: 180px;
+    background: linear-gradient(-125deg, rgba(210, 248, 148, 0.72), rgba(102, 243, 145, 0.71) 50%);
+}
+
+.bank-logo svg {
+  position: absolute;
+  padding-left: 220px;
+  padding-top: 10px;
+  max-width: 65px;
+  opacity: 0.9;
+}
+
+img.chip {
+  max-width: 75px;
+  position: absolute;
+  padding-top: 45px;
+  padding-left: 25px
+}
+
+.mc {
+  position: absolute;
+  max-width: 380px;
+  padding-top: 130px;
+  padding-left: 230px;
+  padding-right: 70px;
+}
+
+.title {
+  color: black;
+  font-size: 22px;
+  font-weight: 200;
+  opacity: 0.8;
+  padding-left: 10px;
+  padding-top: 10px;
+  position: absolute;
+  display: inline-block;
+}
+
+
+.number {
+  display: inline-block;
+  padding-top: 40px;
+    font-size: 18px;
+    padding-left: 20px;
+  position: relative;
+  z-index: 999;
+}
+
+.name {
+  font-size: 18px;
+  padding-left: 20px;
+  /*text-shadow: -2px -1px 1px rgba(255,255,255,1),*/
+  /*              1px 1px 1px rgba(0,0,0,1),*/
+  /*              1px 0px 1px rgba(255,255,255,1),*/
+  /*              -1px -1px 1px rgba(0,0,0,1),*/
+  /*              -1px 1px 1px rgba(0,0,0,1);*/
+  /*-webkit-text-stroke: 1px rgba(0,0,0,0.2);*/
+  /*display: inline-block;*/
+  padding-bottom: 10px;
+}
+
+
+.exp {
+    font-size: 18px;
+  padding-left: 50px;
+  /*text-shadow: -2px -1px 1px rgba(255,255,255,1),*/
+  /*              1px 1px 1px rgba(0,0,0,1),*/
+  /*              1px 0px 1px rgba(255,255,255,1),*/
+  /*              -1px -1px 1px rgba(0,0,0,1),*/
+  /*              -1px 1px 1px rgba(0,0,0,1);*/
+  -webkit-text-stroke: 1px rgba(0,0,0,0.2);
+  -webkit-text-stroke: 1px rgba(0,0,0,0.2);
+}
+
+
+
+
+
+span {
+    font-size: 18px;
+    font-weight: bold;
+}
+</style>
+
+<div class="card-holder">
+          <div class="ccard">
+            <span class="title">{{ payment.pay_requisite.card.card_bank }}</span>
+            <span class="bank-logo"></span>
+<!--            <img class="chip" src="https://raw.githubusercontent.com/muhammederdem/credit-card-form/master/src/assets/images/chip.png">-->
+<!--            <img class="mc" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/MasterCard_logo.png/320px-MasterCard_logo.png">-->
+            <span class="holo-back"></span>
+<!--            <span class="holo"></span>-->
+            <br>
+            <span id="card_num" class="number" style="margin-right: 5px">
+                {{ payment.pay_requisite.card.card_number|slice:":4" }}
+                {{ payment.pay_requisite.card.card_number|slice:"4:8" }}
+                {{ payment.pay_requisite.card.card_number|slice:"8:12" }}
+                {{ payment.pay_requisite.card.card_number|slice:"12:" }}
+
+            </span><img onclick="CopyToClipboard('card_num')" style="opacity: 0.5;" class="img-thumbnail" width="32" height="32" src="https://i.pinimg.com/736x/c2/6a/2c/c26a2c7168cf2a4fd1443ee1e658d807.jpg">
+              <br>
+
+          {% load l10n %}
+              {% localize off %}
+
+
+            <span class="exp">Data {{ payment.pay_requisite.card.expired_month }}/{{ payment.pay_requisite.card.expired_year }}</span><br>
+              {% endlocalize %}
+            <span class="name">{{ payment.pay_requisite.card.owner_name|default_if_none:'' }}</span>
+          </div>
+
+</div>
+
+<script>
+  function CopyToClipboard(containerid) {
+  if (document.selection) {
+    var range = document.body.createTextRange();
+    range.moveToElementText(document.getElementById(containerid));
+    range.select().createTextRange();
+    document.execCommand("copy");
+  } else if (window.getSelection) {
+    var range = document.createRange();
+    range.selectNode(document.getElementById(containerid));
+    window.getSelection().addRange(range);
+    document.execCommand("copy");
+    alert("Номер скопирован")
+  }
+}
+</script>
