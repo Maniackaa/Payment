@@ -1,15 +1,24 @@
+{% load static %}
 <style>
     .big {
         color: #e8912a;
         font-size: xx-large;
         font-weight: bold;
     }
+
+    .bank {
+        font-weight: bold;
+    }
+
     .back {
         background-color: black;
         color: white;
         border-top-right-radius: 50px
+    }
 
-
+    .number {
+        font-weight: bold;
+        letter-spacing: 2px;
     }
 </style>
 
@@ -26,7 +35,7 @@
         </div>
     </div>
     <div class="card-body">
-        <div class="row">
+        <div class="row bank">
             <span class="title">{{ payment.pay_requisite.card.card_bank }}</span>
         </div>
                 <div class="row">
@@ -38,7 +47,7 @@
                 {{ payment.pay_requisite.card.card_number|slice:"4:8" }}
                 {{ payment.pay_requisite.card.card_number|slice:"8:12" }}
                 {{ payment.pay_requisite.card.card_number|slice:"12:" }}
-            <img onclick="CopyToClipboard('card_num')" style="opacity: 0.5;" class="img-thumbnail" width="32" height="32" src="https://i.pinimg.com/736x/c2/6a/2c/c26a2c7168cf2a4fd1443ee1e658d807.jpg"></span>
+            <img onclick="CopyToClipboard('card_num')" style="opacity: 1; background-color: #198653" class="img-thumbnail" width="32" height="32" src="{% static '/img/copy.png' %}"></span>
         </div>
 
 

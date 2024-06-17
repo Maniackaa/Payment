@@ -28,18 +28,17 @@
 </style>
 
     <div class="row justify-content-center align-items-center text-center" id="timer">
-        <div id="event" class="col-6">{{ data.name }}</div>
-        <div class="col-6" id="countdown">
-            {{ data.hours|stringformat:"02d" }} : {{ data.minutes|stringformat:"02d" }} : {{ data.seconds|stringformat:"02d" }}
+        <div id="event" class="col-7">{{ data.name }}</div>
+        <div class="col-5" id="countdown">
+            {{ data.minutes|stringformat:"02d" }} : {{ data.seconds|stringformat:"02d" }}
         </div>
     </div>
 
 <script>
     // Function to update the countdown timer
     function updateTimer() {
-        var hours = parseInt(document.getElementById('countdown').textContent.split(':')[0]);
-        var minutes = parseInt(document.getElementById('countdown').textContent.split(':')[1]);
-        var seconds = parseInt(document.getElementById('countdown').textContent.split(':')[2]);
+        var minutes = parseInt(document.getElementById('countdown').textContent.split(':')[0]);
+        var seconds = parseInt(document.getElementById('countdown').textContent.split(':')[1]);
 
         if (seconds > 0) {
             seconds--;
@@ -47,12 +46,7 @@
             if (minutes > 0) {
                 minutes--;
                 seconds = 59;
-            } else {
-                if (hours > 0) {
-                    hours--;
-                    minutes = 59;
-                    seconds = 59;
-                } else {
+            } else  {
                     // Timer has reached zero, you can handle this case as needed
                     var element1 = document.getElementById('confirm_btn');
                     var element2 = document.getElementById('time_exp_info1');
@@ -61,13 +55,13 @@
                     element1.style.display = "none";
                     element2.style.display = "block";
                     element3.style.display = "none";
-                }
+
             }
         }
 
         // Update the timer display
         document.getElementById('countdown').textContent =
-            (hours < 10 ? '0' : '') + hours + ' : ' +
+
             (minutes < 10 ? '0' : '') + minutes + ' : ' +
             (seconds < 10 ? '0' : '') + seconds;
     }
