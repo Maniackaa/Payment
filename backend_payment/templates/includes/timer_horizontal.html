@@ -28,8 +28,8 @@
 </style>
 
     <div class="row justify-content-center align-items-center text-center" id="timer">
-        <div id="event" class="col-7">{{ data.name }}</div>
-        <div class="col-5" id="countdown">
+{#        <div id="event" class="col-7">{{ data.name }}</div> #}
+        <div class="col-12" id="countdown">
             {{ data.minutes|stringformat:"02d" }} : {{ data.seconds|stringformat:"02d" }}
         </div>
     </div>
