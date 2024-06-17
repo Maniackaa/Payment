@@ -62,24 +62,25 @@
     <div class="row align-items-center justify-content-center ">
       <div class="col-12" id="pay_input" style="text-align: center; width: 90%">
                     <p>Ödənişinizin cari statusu:<br> {# Текущий статус вашего платежа #}
-
               {% if payment.status == -1 %}
                 <b style= "color: #fa3131"> Imtina olundu</b></p> {# Отклонен #}
               {% elif payment.status == 9 %}
                 <b style= "color: #017000">Təstiqləndi</b></p> {# Подтвержден #}
                   <div class="aligncenter"><img class="img-thumbnail" src="/static/img/ok-icon.webp" width="50%" ></div>
-
               {% else %}
                 <b style= "color: #937800">Təstiqləmə gözlənilir</b></p> {# Ожидает подтверждения #}
-                              <div class="text-center">
-                  <div class="aligncenter"><img class="img-thumbnail" src="/static/img/wait.gif" width="50%" ></div>
-            </div>
+                <div class="text-center">
+                  <div class="aligncenter"><img class="img-thumbnail" src="/static/img/vert128.gif" width="50%" ></div>
+                </div>
               {% endif %}
 
-
+           {% if payment.status == -1 or payment.status == 9 %}
+             {% if payment.referrer %}
+                  <span><a href="{{ payment.referrer }}">Yenidən səhifəyə qayıtmaq</a></span><br> {# Вернуться на сайт #}
+             {% endif %}
+           {% endif %}
       </div>
     </div>
-
 
   </div>
 </div>
