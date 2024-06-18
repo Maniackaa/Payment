@@ -202,7 +202,18 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
                            response=PaymentInputCardSerializer,
                            examples=[
                                OpenApiExample(
-                                   "Good example",
+                                   "Good example1",
+                                   value={
+                                       "sms_required": True,
+                                       "instruction": None,
+                                       "bank_icon": "http://127.0.0.1:8000/media/bank_icons/leo_C6uBNoS.jpg",
+                                       "signature": "1bc6b5702f4fdce1f93590dc9a561aafbb227307b988ffd1c5e564ebef7ee9f6"
+                                   },
+                                   status_codes=[200],
+                                   response_only=False,
+                               ),
+                               OpenApiExample(
+                                   "Good example2",
                                    value={
     "sms_required": False,
     "instruction": "Ödənişi təstiqləmək üçün Leobank mobil tədbiqində Sizə bildiriş gələcək. Zəhmət olmasa, Leobank mobil tədbiqinə keçid edin və köçürməni təstiq edin.",
