@@ -445,7 +445,7 @@ class PayResultView(DetailView):
 
 
 class PaymentListCount(ListView):
-    """Количество заявок c фильтром"""
+    """Количество заявок c фильтро"""
     model = Payment
     filter = PaymentFilter
 
@@ -485,6 +485,11 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         filter_url = urlencode(self.request.GET, doseq=True)
         context['count_url'] = f'{reverse("payment:payment_count")}?{filter_url}'
         return context
+
+    def get(self, request, *args, **kwargs):
+        filter_url = urlencode(self.request.GET, doseq=True)
+        print('reverse', reverse('payment:payment_list') + filter_url)
+        return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         logger.debug('Обработка нажатия кнопки списка заявок')
@@ -539,7 +544,8 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         else:
             logger.warning('form invalid')
             return HttpResponseBadRequest(str(form.errors))
-        return redirect(reverse('payment:payment_list'))
+        filter_url = urlencode(self.request.GET)
+        return redirect(reverse('payment:payment_list') + '?' + filter_url)
 
 
 class PaymentEdit(StaffOnlyPerm, UpdateView, ):

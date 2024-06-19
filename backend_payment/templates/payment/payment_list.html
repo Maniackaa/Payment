@@ -28,6 +28,7 @@
 </div>
        <p hidden id="html_count">{{ html_count }}</p>
        <div class="col-3" role="alert" id="warnings">
+           Новых платежей:
         </div>
 
 
@@ -154,13 +155,9 @@
                 dataType: 'json',
                 data: {},
                 success: function(response) {
-                        console.log(response)
                         var html_count = $('#html_count').text().replace(/\D/g, '')
-                        console.log(html_count)
                         var new_count = response.new_count
-                        console.log(new_count)
                         var count = new_count - html_count
-                        console.log(count)
                         var div = $('#warnings')
                         div.html(`Новых платежей: ${count}`);
                         if (count >= 1) {
@@ -169,7 +166,6 @@
                 }
             });
         }
-        // Вызываем функцию для получения списка постов
         getPosts();
         setInterval(getPosts, 5000)
     </script>
