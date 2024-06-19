@@ -22,6 +22,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.template.response import TemplateResponse
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.http import urlencode
 from django.views.generic import CreateView, DetailView, FormView, UpdateView, ListView, DeleteView
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
@@ -443,6 +444,19 @@ class PayResultView(DetailView):
         return context
 
 
+class PaymentListCount(ListView):
+    """Количество заявок c фильтром"""
+    model = Payment
+    filter = PaymentFilter
+
+    def get_queryset(self):
+        return PaymentFilter(self.request.GET, queryset=Payment.objects).qs
+
+    def get(self, *args, **kwargs):
+        count = self.get_queryset().count()
+        return JsonResponse({'new_count': count})
+
+
 class PaymentListView(StaffOnlyPerm, ListView, ):
     """Спиcок заявок для оператора"""
     template_name = 'payment/payment_list.html'
@@ -450,15 +464,10 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
     fields = ('confirmed_amount',
               'confirmed_incoming')
     filter = PaymentFilter
-    # permission_required = [TestPerm()]
     raise_exception = False
     paginate_by = settings.PAGINATE
 
     def get_queryset(self):
-        # if not self.request.user.is_staff:
-        #     # raise PermissionDenied('Недостаточно прав')
-        #     return []
-        # super(PaymentListView, self).get_queryset()
         return PaymentFilter(self.request.GET, queryset=Payment.objects).qs
 
     def get_context_data(self, **kwargs):
@@ -472,6 +481,9 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         used = Payment.objects.filter(status__in=[-1, 9], pay_type='card-to-card', pay_requisite__isnull=False)
         context['used'] = used.count()
         context['in_work'] = in_work.count()
+        context['html_count'] = filter.qs.count()
+        filter_url = urlencode(self.request.GET, doseq=True)
+        context['count_url'] = f'{reverse("payment:payment_count")}?{filter_url}'
         return context
 
     def post(self, request, *args, **kwargs):

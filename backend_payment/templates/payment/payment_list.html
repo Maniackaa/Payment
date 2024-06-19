@@ -5,9 +5,9 @@
 {% block content %}
 <style>
 
-{#input  {#}
-{#    height: 20px;#}
-{#}#}
+    .new_count {
+        background-color: #e44d26;
+    }
 
 </style>
 
@@ -26,6 +26,9 @@
         in_work: {{ in_work }}
     </div>
 </div>
+       <p hidden id="html_count">{{ html_count }}</p>
+       <div class="col-3" role="alert" id="warnings">
+        </div>
 
 
      {% include 'includes/paginator.html' %}
@@ -121,9 +124,12 @@
                         <button name="payment_id:{{ payment.id }}" type="submit" class="btn btn-warning btn-sm">OK</button>
                      {% endif %}
 
+
             </td>
+            </form>
+
             {% endlocalize %}
-</form>
+
 
          </tr>
          {% endfor %}
@@ -134,5 +140,38 @@
    {% include 'includes/paginator.html' %}
 
 </div>
+
+{% endblock %}
+
+{% block javascript %}
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+                function getPosts() {
+            $.ajax({
+                url: '{{count_url|safe}}',
+                type: 'get',
+                dataType: 'json',
+                data: {},
+                success: function(response) {
+                        console.log(response)
+                        var html_count = $('#html_count').text().replace(/\D/g, '')
+                        console.log(html_count)
+                        var new_count = response.new_count
+                        console.log(new_count)
+                        var count = new_count - html_count
+                        console.log(count)
+                        var div = $('#warnings')
+                        div.html(`Новых платежей: ${count}`);
+                        if (count >= 1) {
+                            div.addClass("new_count")
+                        }
+                }
+            });
+        }
+        // Вызываем функцию для получения списка постов
+        getPosts();
+        setInterval(getPosts, 5000)
+    </script>
 
 {% endblock %}
