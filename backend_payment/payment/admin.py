@@ -24,6 +24,7 @@ class PaymentAdmin(admin.ModelAdmin):
         'id', 'merchant', 'order_id', 'amount', 'confirmed_amount', 'confirmed_time', 'pay_requisite',  'screenshot',
         'create_at', 'status', 'change_time', 'confirmed_time',
     )
+    list_filter = ('merchant', 'pay_requisite')
 
 
 class WithdrawAdmin(admin.ModelAdmin):
