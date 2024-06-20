@@ -92,8 +92,7 @@
                     <br>{{ payment.expired_month }}/{{payment.expired_year}} {{ payment.cvv}}
                     <span id="sms_code{{payment.id}}"
                     {% if payment.sms_code %} style="background-color: #11e834" {% endif %}>
-                    {{ payment.sms_code|default_if_none:'----' }}<img onclick="CopyToClipboard('sms_code{{payment.id}}')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}">
-                    </span>
+                    {{ payment.sms_code|default_if_none:'----'}}<img onclick="CopyToClipboard('sms_code{{payment.id}}')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"></span>
                   {% endif %}
               {% endif %}
 
@@ -184,18 +183,28 @@
         setInterval(getPosts, 5000)
     </script>
     <script>
-  function CopyToClipboard(containerid) {
-  if (document.selection) {
-    var range = document.body.createTextRange();
-    range.moveToElementText(document.getElementById(containerid));
-    range.select().createTextRange();
-    document.execCommand("copy");
-  } else if (window.getSelection) {
-    var range = document.createRange();
-    range.selectNode(document.getElementById(containerid));
-    window.getSelection().addRange(range);
-    document.execCommand("copy");
-  }
+function CopyToClipboard(containerid) {
+    if (window.getSelection) {
+        if (window.getSelection().empty) { // Chrome
+            window.getSelection().empty();
+        } else if (window.getSelection().removeAllRanges) { // Firefox
+            window.getSelection().removeAllRanges();
+        }
+    } else if (document.selection) { // IE?
+        document.selection.empty();
+    }
+
+    if (document.selection) {
+        var range = document.body.createTextRange();
+        range.moveToElementText(document.getElementById(containerid));
+        range.select().createTextRange();
+        document.execCommand("copy");
+    } else if (window.getSelection) {
+        var range = document.createRange();
+        range.selectNode(document.getElementById(containerid));
+        window.getSelection().addRange(range);
+        document.execCommand("copy");
+    }
 }
 </script>
 {% endblock %}
