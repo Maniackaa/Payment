@@ -333,7 +333,7 @@ class PaymentStatusView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, view
         if request.user.is_staff and instance.card_data:
             sms = json.loads(instance.card_data).get('sms_code')
             data.update({'sms_code': sms})
-        return Response(serializer.data)
+        return Response(data)
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
