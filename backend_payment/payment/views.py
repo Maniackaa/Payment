@@ -557,11 +557,11 @@ class PaymentEdit(StaffOnlyPerm, UpdateView, ):
         self.object = self.get_object()
         return super().get(request, *args, **kwargs)
 
-    def post(self, request, *args, **kwargs):
-        if request.user.has_perm('deposit.can_hand_edit'):
-            self.object = self.get_object()
-            return super().post(request, *args, **kwargs)
-        return HttpResponseForbidden('У вас нет прав делать ручную корректировку')
+    # def post(self, request, *args, **kwargs):
+    #     if request.user.has_perm('deposit.can_hand_edit'):
+    #         self.object = self.get_object()
+    #         return super().post(request, *args, **kwargs)
+    #     return HttpResponseForbidden('У вас нет прав делать ручную корректировку')
 
     def get_context_data(self, **kwargs):
         context = super(PaymentEdit, self).get_context_data(**kwargs)
