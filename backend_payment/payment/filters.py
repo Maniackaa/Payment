@@ -13,7 +13,7 @@ class PaymentFilter(django_filters.FilterSet):
     status = django_filters.MultipleChoiceFilter(choices=Payment.PAYMENT_STATUS)
     class Meta:
         model = Payment
-        fields = ['id', 'order_id', 'status', 'pay_type']
+        fields = ['id', 'order_id', 'status', 'pay_type', 'amount']
 
 
 class WithdrawFilter(django_filters.FilterSet):

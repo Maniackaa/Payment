@@ -12,20 +12,25 @@
 </style>
 
 {% include 'includes/operator_menu.html' %}
-<div class="container-fluid ">
-<div class="row">
-    <div class="col-3">
-        <form method="get">
-        {{ filter.form.as_p }}
-        <button type="submit">Фильтровать</button>
-        </form>
-    </div>
-    <div class="col-6">
-        <p>Всего: {{ filter.qs.count }}</p>
-        used: {{ used }}<br>
-        in_work: {{ in_work }}
-    </div>
-</div>
+<div class="container">
+
+  <div class="container">
+      <form method="get">
+        <div class="row">
+
+            {% for field in form  %}
+                <div class="col-auto">
+                <b>{{ field.label_tag }}</b> - {{ field }}
+                </div>
+            {% endfor %}
+            <div class="row">
+
+            <button class="btn btn-info btn-light" type="submit">Фильтровать</button>
+            </div>
+        </div>
+    </form>
+  </div>
+
        <p hidden id="html_count">{{ html_count }}</p>
        <div class="col-3" role="alert" id="warnings">
            Новых платежей:
@@ -159,7 +164,7 @@
                         var new_count = response.new_count
                         var count = new_count - html_count
                         var div = $('#warnings')
-                        div.html(`Новых платежей: ${count}`);
+                        div.html(`Новых платежей: ${count} / ${new_count}`);
                         if (count >= 1) {
                             div.addClass("new_count")
                         }

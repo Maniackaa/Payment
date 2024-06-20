@@ -473,7 +473,7 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         form = PaymentListConfirmForm()
-        context['form'] = form
+        # context['form'] = form
         filter = PaymentFilter(self.request.GET, queryset=self.get_queryset())
         context['filter'] = filter
         # Количество заявок с занятыми реквизитами
@@ -484,12 +484,8 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         context['html_count'] = filter.qs.count()
         filter_url = urlencode(self.request.GET, doseq=True)
         context['count_url'] = f'{reverse("payment:payment_count")}?{filter_url}'
+        context['form'] = filter.form
         return context
-
-    def get(self, request, *args, **kwargs):
-        filter_url = urlencode(self.request.GET, doseq=True)
-        print('reverse', reverse('payment:payment_list') + filter_url)
-        return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         logger.debug('Обработка нажатия кнопки списка заявок')
