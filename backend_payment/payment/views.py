@@ -540,7 +540,7 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         else:
             logger.warning('form invalid')
             return HttpResponseBadRequest(str(form.errors))
-        filter_url = urlencode(self.request.GET)
+        filter_url = urlencode(self.request.GET, doseq=True)
         return redirect(reverse('payment:payment_list') + '?' + filter_url)
 
 
