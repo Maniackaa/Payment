@@ -277,7 +277,13 @@ class Payment(models.Model):
         if not self.card_data:
             return ''
         data = json.loads(self.card_data)
-        return data.get('expired_month')
+        return data.get('expired_year')
+
+    def sms_code(self):
+        if not self.card_data:
+            return ''
+        data = json.loads(self.card_data)
+        return data.get('sms_code')
 
     def cvv(self):
         if not self.card_data:
