@@ -448,6 +448,8 @@ def pay_to_m10_wait_work(request, *args, **kwargs):
 def pay_to_m10_sms_input(request, *args, **kwargs):
     payment_id = request.GET.get('payment_id')
     payment = get_object_or_404(Payment, pk=payment_id)
+    if payment.status in [-1, 9]:
+        return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
     card_data = json.loads(payment.card_data)
     card_number = card_data.get('card_number')
     phone_script = get_phone_script(card_number)

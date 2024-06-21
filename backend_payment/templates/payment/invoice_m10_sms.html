@@ -69,8 +69,27 @@
                     </div>
   </div>
 </div>
+{{ payment.status }}
+<script>
 
+var status = {{ payment.status }};
 
+function getStatus() {
+fetch('https://asu-payme.com/api/v1/payment_status/{{payment.id}}/', {
+    method: 'GET',
+    headers: {'Content-Type': 'application/json'},
+}).then(response => response.json())
+       .then(result => { if (status.toString() !== result['status'].toString()) {
+           location.reload()
+       } else {
+           if (status.toString() !== '9') {
+               setTimeout(() => {getStatus()}, 3000);
+           }
+       }
+       })
+}
+        setTimeout(() => { getStatus() }, 3000);
+</script>
 
 {% endblock %}
 
