@@ -584,6 +584,8 @@ class PaymentInput(StaffOnlyPerm, UpdateView, ):
 
     def get(self, request, *args, **kwargs):
         payment = self.object = self.get_object()
+        if payment.status in [-1, 9]:
+            return redirect(reverse('payment:payment_edit', args=(payment.id,)))
         card_data = json.loads(payment.card_data)
         if not payment.operator():
             card_data.update(operator=request.user.id)

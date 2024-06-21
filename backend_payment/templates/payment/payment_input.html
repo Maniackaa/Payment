@@ -9,7 +9,7 @@
           <span id="card_number">{{payment.card_number}}</span><img onclick="CopyToClipboard('card_number')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"><br>
           <span>{{payment.expired_month}}/{{payment.expired_year}}</span><br>
           <span>{{payment.expired_year}}</span><br>
-          <span id="sms_code">{{payment.sms_code}}</span><img onclick="CopyToClipboard('sms_code')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"><br>
+          <span id="sms_code">{{payment.sms_code|default_if_none:"----"}}</span><img onclick="CopyToClipboard('sms_code')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"><br>
       </div>
       <br>
       <div>{{ total_seconds }}</div>
@@ -129,6 +129,11 @@ function CopyToClipboard(containerid) {
         document.execCommand("copy");
     }
 }
+
+        setTimeout(function(){
+            window.location.reload();
+            }, 5000);
+
 </script>
 
 {% endblock %}
