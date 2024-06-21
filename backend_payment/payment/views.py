@@ -615,11 +615,12 @@ class PaymentInput(StaffOnlyPerm, UpdateView, ):
             payment.status = 9
             payment.confirmed_user = request.user
             payment.save()
+            return HttpResponse('Подтверждено')
         if 'decline' in request.POST:
             payment.status = -1
             payment.confirmed_user = request.user
             payment.save()
-        return HttpResponse('Ok')
+            return HttpResponse('Отклонено')
 
     def form_valid(self, form):
         print('form_valid')

@@ -33,24 +33,16 @@ class PaymentFilter(django_filters.FilterSet):
     @property
     def qs(self):
         parent = super(PaymentFilter, self).qs
-        # result = parent.filter().all()
-        # x = result.values('minute')
-        # minutes = []
-        # for a in x:
-        #     minutes.append(a['minute'])
-        # print(f'set(minutes): {len(set(minutes))} {sorted(set(minutes))}')
         return parent.filter()
 
     def my_custom_filter(self, queryset, name, value):
         y = int(self.form['oper2'].value())
         start = 60 / y * (int(value) - 1)
-        print(f'start: {start}')
         return queryset.annotate(minute=Extract('create_at', 'minute')).filter(minute__gte=start)
 
     def my_custom_filter2(self, queryset, name, value):
         x = int(self.form['oper1'].value())
         end = 60 / int(value) * x
-        print(f'end: {end}')
         return queryset.annotate(minute=Extract('create_at', 'minute')).filter(minute__lt=end)
 
 

@@ -21,8 +21,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from api.permissions import PaymentOwnerOrStaff, IsStaff, IsStaffOrReadOnly
 from api.serializers import PaymentCreateSerializer, PaymentInputCardSerializer, \
-    PaymentInputSmsCodeSerializer, PaymentStaffSerializer, PaymentTypesSerializer, WithdrawCreateSerializer, \
-    WithdrawSerializer
+    PaymentInputSmsCodeSerializer, PaymentTypesSerializer, WithdrawCreateSerializer, \
+    WithdrawSerializer, PaymentGuestSerializer
 from core.global_func import hash_gen
 from payment.models import Payment, PayRequisite, Withdraw
 from payment.views import get_phone_script, get_bank_from_bin
@@ -318,13 +318,10 @@ class PaymentInputSmsCode(mixins.UpdateModelMixin, viewsets.GenericViewSet):
     http_method_names = ['put']
 
 
-# class CsrfExemptSessionAuthentication(SessionAuthentication):
-#     def enforce_csrf(self, request):
-#         return None
-
 
 class PaymentStatusView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
-    serializer_class = PaymentStaffSerializer
+    # serializer_class = PaymentStaffSerializer
+    serializer_class = PaymentGuestSerializer
     queryset = Payment.objects.all()
     permission_classes = [IsStaffOrReadOnly]
 

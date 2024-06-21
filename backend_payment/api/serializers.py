@@ -135,16 +135,29 @@ class PaymentInputSmsCodeSerializer(serializers.ModelSerializer):
             'sms_code',
         )
 
+
 class DummyDetailSerializer(serializers.Serializer):
     status = serializers.IntegerField()
     amount = serializers.CharField()
 
 
-class PaymentStaffSerializer(serializers.ModelSerializer):
-    sms_code = serializers.CharField(min_length=4, max_length=6, read_only=True)
+# class PaymentStaffSerializer(serializers.ModelSerializer):
+#     sms_code = serializers.CharField(min_length=4, max_length=6, read_only=True)
+#
+#     class Meta:
+#         fields = ('id', 'status', 'sms_code')
+#         model = Payment
+#
+#     def validate_status(self, value):
+#         logger.debug(f'validate {self}')
+#         if self.instance.status in (-1, 9):
+#             raise serializers.ValidationError("Платеж уже обработан")
+#         return value
 
+
+class PaymentGuestSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('id', 'status', 'sms_code')
+        fields = ('id', 'status')
         model = Payment
 
     def validate_status(self, value):
