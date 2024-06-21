@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}wait
+{% endblock %}
+{% block content %}
+wait
+    <script>
+        setTimeout(function(){
+            window.location.reload();
+            }, 5000);
+    </script>
+{% endblock %}
+

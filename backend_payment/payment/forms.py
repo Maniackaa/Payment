@@ -99,6 +99,18 @@ class InvoiceM10Form(forms.ModelForm):
             raise ValidationError('Qeyd etdiyiniz ay yalnışdır')
 
 
+class InvoiceM10SmsForm(forms.ModelForm):
+
+    sms_code = forms.CharField(label='sms_code', required=True,
+                               widget=forms.TextInput(attrs={'minlength': 4,
+                                                             'maxlength': 6})
+                               )
+
+    class Meta:
+        model = Payment
+        fields = ('sms_code',)
+
+
 class PaymentListConfirmForm(forms.ModelForm):
     # confirmed_incoming = forms.CharField(required=False)
 

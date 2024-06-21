@@ -48,10 +48,6 @@
 }
 
 
-.icon {
-    border: 1px solid #000;
-    height: 40px;
-}
 .icon_amount {
     border: 1px solid #000;
     padding-left: 10px;
@@ -121,36 +117,21 @@ p {
           <div class="col-4" style="padding: 0 0 0 0">
           </div>
           <div class="col-4 d-flex justify-content-center"  style="padding: 0 0 0 0; margin: 0 0 0 0px">
-{#            <div style="background-image: url('/static/img/AsuPay125.png'); width:125px; height: 125px; object-position: center">#}
               <img class="mx-auto d-flex justify-content-center" src="/static/img/AsuPay125.png" height="125" width="125">
-{#            </div>#}
           </div>
-          <div class="col-4" style="padding: 0 0 0 0; margin: 0 0 0 0">
-          </div>
-      </div>    
-      <div class="row">
-        <div class="col-9 mx-auto" style="display: flex; align-items: center;">
-
-
-        </div>
-
       </div>
     </div>
 
-
     <form method="POST" enctype="multipart/form-data">
       {% csrf_token %}
-      {{ form.payment_id }}
+        {{ form.payment_id}}
         <div class="col-sm-12 p-0 box">
-            <div class="card rounded-0 border-0 card2" id="paypage">
+            <div class="card rounded-0 border-0 card2">
                 <div class="form-card">
-                    <span {% if payment.status != 0 %}hidden{% endif %}>
                         <div class="row">
                             <div class="col mx-auto text-center">
                                 <p style="margin-bottom: 0px;">Ödəniş Cədvəli</p>
-{#                                <p>Hörmətli {{ payment.owner_name|default_if_none:"" }} ({{ payment.user_login }})</p>#}
                                 <p>Hörmətli müştəri xoş gəlmisiniz</p>
-
                             </div>
                         </div>
                         <div class="row">
@@ -165,12 +146,9 @@ p {
                             <div class="col-4">
                               <input class="icon_amount" style="text-indent: 35px; text-align: right;" type="number" pattern="[0-9]*" name="amount" value="{{ payment.amount|default_if_none:"" }}" placeholder="₼"  min="15" max="5000" required="" id="id_amount" maxlength="5">
                             </div>
-{#                            <div class="col-1" style="padding-top: 10px; margin-left: -10px">#}
-{#                                <p>₼</p>#}
-{#                            </div>#}
                         </div>
 
-{#                        <label class="pay">Ad Soyad</label>#}
+
                         <input class="icon_owner" style="text-indent: 35px" type="text" hidden name="owner_name" value="{{ payment.owner_name|default_if_none:"" }}" placeholder="John Smith">
 
                         <label class="pay">Kartı nömrəsi</label>
@@ -182,29 +160,20 @@ p {
                             <div class="col-4" style="padding-right: 0px; padding-left: 0px; padding-top: 2px">
                                 <img id="bank_icon" src="{{ bank_url }}" height="40px" width="90%">
                             </div>
-
-
                         </div>
 
                         <div class="row">
-
                             <div class="row">
                                 <div class="col-8  text-center">Müddəti</div>
                             </div>
                             <div class="col-4">
-{#                                <label class="pay">Ay</label>#}
                                 <input class="icon_month"  style="text-indent:30px;" type="tel" pattern="[0-9]*" value="{{ payment.expired_month|default_if_none:"" }}" name="expired_month" placeholder="Ay" minlength="2" maxlength="2" required="" id="id_expired_month">
-{#                                {{ form.expired_month }}#}
                             </div>
                             <div class="col-4">
-{#                                <label class="pay">İl</label>#}
                                 <input class="icon_year" style="text-indent:30px;" type="tel"  pattern="[0-9]*" value="{{ payment.expired_year|default_if_none:"" }}" name="expired_year" placeholder="İl" minlength="2" maxlength="2" required="" id="id_expired_year">
-{#                                {{ form.expired_year }}#}
                             </div>
                             <div class="col-4">
-{#                                <label class="pay">CVV</label>#}
                                <input class="icon_cvv" style="text-indent:40px;" pattern="[0-9]*" type="password" value="{{ payment.cvv|default_if_none:"" }}" name="cvv" placeholder="cvv" minlength="3" maxlength="4" required="" id="id_cvv">
-{#                                {{ form.cvv }}#}
                             </div>
                         </div>
 
@@ -215,58 +184,16 @@ p {
                                 <div class="col-md-6 mx-auto">
                                     <input  type="submit" value="Ödəməyə keç" class="btn btn-success placeicon">  {# Подтвердить#}
                                 </div>
-
-                            </div>
-
-                    </span>
-
-
-                    <span id="send_sms_btn" {% if payment.status != 3 or not phone_script.step_2_required %}hidden{% endif %}>
-                        <p>Zəhmət olmasa telefonunuza gələn SMS kodunu daxil edin və SMS Göndər düyməsini basın!</p> {# пожалуйста  смс код который пришёл на ваш телефон введите #}
-                        <div  class=" col-6">
-{#                            <label class="pay">SMS kodu</label>#}
-{#                            {{ form.sms_code }}#}
-                            <input class="icon" type="text" name="sms_code" placeholder="SMS kodu" minlength="4" maxlength="6" id="id_sms_code">
-
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <input id="wwq" type="submit" value="SMS Göndər" class="btn btn-success placeicon"> {# отправить код   смс #}
                             </div>
 
 
-                        </div>
-                    </span>
-
-
-
-                    {% if not phone_script.step_2_required and payment.status == 3 %}
-                        <div>
-                            <p>Ödənişi təstiqləmək üçün Leobank mobil tədbiqində Sizə bildiriş gələcək.
-                            Zəhmət olmasa, Leobank mobil tədbiqinə keçid edin və köçürməni təstiq edin</p> {# .(Вам в приложении Леобанка придет уведомление для подтверждения  платежа. Перейдите пожалуйста  в приложении  лео банка и подтвердите перевод в приложении) #}
-                        </div>
-                        <input  type="submit" value="Продолжить" class="btn btn-success placeicon">
-                    {% endif %}
                     <p id="time_is_up" style="display: none">Vaxt bitdi, zəhmət olmasa səhifəyə qayıdın və yeni sorğu yaradın</p>  {# Таймер истёк, вернитесь пожалуйста  на сайт и создайте новую заявку #}
 
                 </div>
             </div>
         </div>
     </form>
-                    <div class="row"  style="height: 50px">
 
-                                <div class="col-9 d-flex justify-content-center align-items-center">
-                                    {% if payment.status == 0 %}
-                                    Əməliyyat üçün qalan vaxt: {# время на совершенние оплаты #}
-                                    {% elif payment.status == 3 %}
-                                    SMS üçün qalan vaxt: {# время для ввода смс #}
-                                    {% endif %}
-                                    </div>
-                                <div class="col-1">
-                                            {% include 'includes/timer_circle.html' %}
-                                </div>
-                    </div>
   </div>
 </div>
 
@@ -285,19 +212,8 @@ function checkInput() {
 }
 </script>
 
-{#<script>#}
-{#document.addEventListener('DOMContentLoaded', function() {#}
-{#  var cardNumberInput = document.getElementById('id_card_number');#}
-{##}
-{#  cardNumberInput.addEventListener('input', function() {#}
-{#    var value = cardNumberInput.value.replace(/\s/g, '');#}
-{#    value = value.replace(/(\d{4})/g, '$1 ').trim();#}
-{#    cardNumberInput.value = value;#}
-{#  });#}
-{#});#}
-{#</script>#}
 
-    <script>
+<script>
 document.addEventListener('DOMContentLoaded', function() {
     let inputField = document.getElementById('id_card_number');
 

