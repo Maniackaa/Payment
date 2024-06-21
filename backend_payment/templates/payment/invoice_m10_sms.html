@@ -69,7 +69,7 @@
                     </div>
   </div>
 </div>
-{{ payment.status }}
+
 <script>
 
 var status = {{ payment.status }};
@@ -82,7 +82,7 @@ fetch('https://asu-payme.com/api/v1/payment_status/{{payment.id}}/', {
        .then(result => { if (status.toString() !== result['status'].toString()) {
            location.reload()
        } else {
-           if (status.toString() !== '9') {
+           if (!['9', '-1'].includes(status.toString()))  {
                setTimeout(() => {getStatus()}, 3000);
            }
        }
