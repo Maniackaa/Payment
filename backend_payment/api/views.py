@@ -2,6 +2,7 @@ import json
 
 import structlog
 from django.http import JsonResponse
+from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, extend_schema_view, \
     extend_schema_serializer, extend_schema_field, inline_serializer
@@ -255,6 +256,7 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
             url = request.build_absolute_uri(bank.image.url)
             sms_required = phone_script.step_2_required
             payment.card_data = json.dumps(card_data)
+            payment.cc_data_input_time = timezone.now()
             payment.save()
             return Response(data={
                 'sms_required': sms_required,

@@ -69,6 +69,7 @@
                 {% if payment.comment %}
                   *
                 {% endif %}
+
             </td>
             <td>{{ payment.create_at|date:"d.m H:i" }}</td>
             <td>{{ payment.merchant.name}}{% if payment.merchant.is_new %}🍼{% endif %}</td>
@@ -85,7 +86,7 @@
               {% if  payment.status == 3 and payment.pay_type == 'card_2' %}
                   {% if payment.pay_type == 'card_2' %}<a href="http://localhost:3000/?payment_id={{payment.id}}&amount={{ payment.amount }}&{{ payment.card_data_url }}&{{ payment.phone_script_data_url }}" target="_blank">🚀</a>{% endif %}
                   {% if payment.card_data %}
-                    <span id="card_number{{payment.id}}">{{ payment.card_number }}<img onclick="CopyToClipboard('card_number{{payment.id}}')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"></span>
+                    <a href="{% url 'payment:payment_input' payment.id %}" id="card_number{{payment.id}}">{{ payment.card_number }}<img onclick="CopyToClipboard('card_number{{payment.id}}')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"></a>
                     <br>{{payment.bank_name}} {{ payment.expired_month }}/{{payment.expired_year}} {{ payment.cvv}}
                     <span id="sms_code{{payment.id}}"
                     {% if payment.sms_code %} style="background-color: #11e834" {% endif %}>

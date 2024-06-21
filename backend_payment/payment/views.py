@@ -570,6 +570,60 @@ class PaymentEdit(StaffOnlyPerm, UpdateView, ):
         return context
 
 
+class PaymentInput(StaffOnlyPerm, UpdateView, ):
+    # Ввод карты и смс оператором
+    model = Payment
+    form_class = PaymentForm
+    success_url = reverse_lazy('payment:payment_list')
+    template_name = 'payment/payment_input.html'
+    busy = HttpResponse("""<script>var pageTitle = document.title;
+                    var targetPhrase = "Занято";
+                    window.addEventListener('load', function () {
+                      window.close();
+                    })</script>""")
+
+    def get(self, request, *args, **kwargs):
+        payment = self.object = self.get_object()
+        card_data = json.loads(payment.card_data)
+        if not payment.operator():
+            card_data.update(operator=request.user.id)
+            payment.card_data = json.dumps(card_data)
+            payment.status = 4
+            payment.save()
+        else:
+            if card_data.get('operator') != request.user.id:
+                return self.busy
+
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        payment = self.get_object()
+        time_remaining_data = get_time_remaining_data(payment)
+        print(time_remaining_data)
+        total_seconds = time_remaining_data['total_seconds']
+        context['total_seconds'] = total_seconds
+        return context
+
+    def post(self, request, *args, **kwargs):
+        payment = self.get_object()
+        if payment.status in [-1, 9]:
+            return HttpResponseBadRequest(f'Некорректный статус: {payment.status}')
+        if 'confirm' in request.POST:
+            payment.status = 9
+            payment.confirmed_user = request.user
+            payment.save()
+        if 'decline' in request.POST:
+            payment.status = -1
+            payment.confirmed_user = request.user
+            payment.save()
+        return HttpResponse('Ok')
+
+    def form_valid(self, form):
+        print('form_valid')
+        return super().form_valid(form)
+
+
 class WithdrawListView(StaffOnlyPerm,  ListView):
     """Спиок выводов"""
     template_name = 'payment/withdraw_list.html'

@@ -2,15 +2,17 @@ import json
 import threading
 import uuid
 from decimal import Decimal
+from typing import Any
 
 import pytz
 import structlog
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
-from django.db.models import F, Sum
+from django.db.models import F, Sum, Model
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -260,6 +262,11 @@ class Payment(models.Model):
         for k, v in data.items():
             result += f'{v} '
         return result
+
+    def operator(self):
+        if not self.card_data:
+            return ''
+        return json.loads(self.card_data).get('operator')
 
     def card_number(self):
         if not self.card_data:

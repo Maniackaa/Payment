@@ -16,6 +16,7 @@ urlpatterns = [
     path('payments/', views.PaymentListView.as_view(), name='payment_list'),
     path('payments_count/', views.PaymentListCount.as_view(), name='payment_count'),
     path('payments/<str:pk>/', views.PaymentEdit.as_view(), name='payment_edit'),
+    path('payments_input/<str:pk>/', views.PaymentInput.as_view(), name='payment_input'),
     path('withdraws/', views.WithdrawListView.as_view(), name='withdraw_list'),
     path('withdraws/<str:pk>/', views.WithdrawEdit.as_view(), name='withdraw_edit'),
     path('balance/', views.BalanceListView.as_view(), name='balance_list'),
