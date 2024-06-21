@@ -2,11 +2,101 @@
 {% block title %}wait
 {% endblock %}
 {% block content %}
-wait
+
+
+<style>
+    * {
+    font-family: "Arial";
+    font-size: medium;
+}
+    .big {
+        color: #e8912a;
+        font-size: xx-large;
+        font-weight: bold;
+    }
+    .back {
+    background-color: black;
+    color: white;
+    border-top-right-radius: 50px
+    }
+
+</style>
+
+<div class="container margin: auto" style="max-width: 500px;">
+  <div class="card" style="margin-top: 20px">
+    <div class="card-header">
+      <div class="row justify-content-center align-items-center">
+          <div class="col-3">
+              <img class="mx-auto d-flex justify-content-center" src="/static/img/AsuPay125.png" height="100%" width="100%">
+          </div>
+          <div class="col-9" style="font-weight: bold; font-size: small">
+              <h2>Ödəniş statusu</h2>{# Статус платежа #}
+              <h3><i>{{ payment.id }}</i></h3>
+              Tarix: {{ payment.create_at|date:"d-m-Y H:i" }}
+          </div>
+      </div>
+
+    </div>
+
+
+
+
+
+      <div class="card" style="margin: 10px 30px 10px 30px; border-radius: 20px">
+    <div class="back card-header" style="border-top-left-radius: 20px; border-top-right-radius: 20px">
+        <div class="row justify-content-center align-items-center text-center" >
+            <div class="col-6">
+                Məbləğ:
+            </div>
+
+            <div class="col-6 big">
+                {{ payment.amount }} ₼
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+    <div class="row align-items-center justify-content-center ">
+      <div class="col-12" id="pay_input" style="text-align: center; width: 90%">
+                    <p>Ödənişinizin cari statusu:<br> {# Текущий статус вашего платежа #}
+              {% if payment.status == -1 %}
+                <b style= "color: #fa3131"> Imtina olundu</b></p> {# Отклонен #}
+              {% elif payment.status == 9 %}
+                <b style= "color: #017000">Təstiqləndi</b></p> {# Подтвержден #}
+                  <div class="aligncenter"><img class="img-thumbnail" src="/static/img/ok-icon.webp" width="50%" ></div>
+              {% else %}
+                <b style= "color: #937800">Təstiqləmə gözlənilir</b></p> {# Ожидает подтверждения #}
+                <div class="text-center">
+                  <div class="aligncenter"><img class="img-thumbnail" src="/static/img/vert128.gif" width="50%" ></div>
+                </div>
+              {% endif %}
+
+           {% if payment.status == -1 or payment.status == 9 %}
+             {% if payment.referrer %}
+                  <span><a href="{{ payment.referrer }}">Yenidən səhifəyə qayıtmaq</a></span><br> {# Вернуться на сайт #}
+             {% endif %}
+           {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+{% endblock %}
+
+
+
+
     <script>
         setTimeout(function(){
             window.location.reload();
             }, 5000);
     </script>
-{% endblock %}
+
 
