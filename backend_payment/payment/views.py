@@ -108,7 +108,7 @@ def get_time_remaining(pay: Payment) -> tuple[datetime.timedelta, int]:
         TIMER_SECONDS = 600
     else:
         TIMER_SECONDS = 600
-    TIMER_SMS_SECONDS = 600
+    TIMER_SMS_SECONDS = 300
     STATUS_WAIT_TIMER = 600
     if pay.card_data and json.loads(f'{pay.card_data}').get('sms_code'):
         # Если смс введена
@@ -322,17 +322,6 @@ def pay_to_card_create(request, *args, **kwargs):
                                           content='Not correct data'
                                           )
 
-        # requisite = payment.pay_requisite
-        # # Если нет активных реквизитов
-        # if not requisite:
-        #     # Перенаправляем на извинения
-        #     return redirect(reverse('payment:wait_requisite', args=(payment.id,)))
-
-        # # Сохраняем реквизит к платежу
-        # if not payment.pay_requisite:
-        #     payment.pay_requisite = requisite
-        #     payment.save()
-
         form = forms.InvoiceForm(instance=payment, )
         context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment)}
         return render(request, context=context, template_name='payment/invoice_card.html')
@@ -372,7 +361,9 @@ def pay_to_m10_create(request, *args, **kwargs):
             logger.error(err)
             return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='Not correct data',
                                           content='Not correct data')
-        if payment.status not in [0, 3]:
+        if payment.status in [3]:
+            return redirect(reverse('payment:pay_to_m10_wait_work') + f'?payment_id={payment.id}')
+        if payment.status not in [0]:
             return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
 
         amount = payment.amount
@@ -381,8 +372,8 @@ def pay_to_m10_create(request, *args, **kwargs):
             initial_data.update(json.loads(payment.card_data))
         form = forms.InvoiceM10Form(initial=initial_data)
         bank = get_bank_from_bin(initial_data.get('card_num'))
-        print('bank', bank)
-        context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment), 'bank_url': bank.image.url}
+        context = {'form': form, 'payment': payment,
+                   'data': get_time_remaining_data(payment), 'bank_url': bank.image.url}
         card_number = initial_data.get('card_number')
         if card_number:
             phone_script = get_phone_script(card_number)
@@ -391,17 +382,13 @@ def pay_to_m10_create(request, *args, **kwargs):
 
     elif request.method == 'POST':
         # Обработка нажатия кнопки
-        print(request.POST)
         payment_id = request.POST.get('payment_id')
-        print(payment_id)
         payment = Payment.objects.get(pk=payment_id)
-        print(payment)
         initial_data = {'payment_id': payment.id}
         form = InvoiceM10Form(request.POST, instance=payment, initial=initial_data)
         context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment)}
 
         if form.is_valid():
-            print('form.is_valid()')
             card_data = form.cleaned_data
             logger.debug(card_data)
             card_number = card_data.get('card_number')
@@ -414,7 +401,6 @@ def pay_to_m10_create(request, *args, **kwargs):
             if not payment.cc_data_input_time:
                 payment.cc_data_input_time = timezone.now()
                 payment.save()
-                context['data'] = get_time_remaining_data(payment)
             # Если ввел смс-код или status 3 и смс код не требуется
             if sms_code or (payment.status == 3 and not phone_script.step_2_required):
                 # payment.status = 7  # Ожидание подтверждения
@@ -438,12 +424,12 @@ def pay_to_m10_create(request, *args, **kwargs):
 def pay_to_m10_wait_work(request, *args, **kwargs):
     payment_id = request.GET.get('payment_id')
     payment = get_object_or_404(Payment, pk=payment_id)
-
     if payment.status in [4]:
         return redirect(reverse('payment:pay_to_m10_sms_input') + f'?payment_id={payment.id}')
     if payment.status not in [0, 3]:
         return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
-    return render(request, template_name='payment/invoice_m10_wait.html', context={'payment': payment})
+    return render(request, template_name='payment/invoice_m10_wait.html',
+                  context={'payment': payment, 'data': get_time_remaining_data(payment)})
 
 
 def pay_to_m10_sms_input(request, *args, **kwargs):
@@ -457,7 +443,7 @@ def pay_to_m10_sms_input(request, *args, **kwargs):
     form = InvoiceM10SmsForm(request.POST or None, instance=payment)
     if not phone_script.step_2_required:
         form.fields['sms_code'].required = False
-    context = {'form': form, 'payment': payment, 'phone_script': phone_script}
+    context = {'form': form, 'payment': payment, 'phone_script': phone_script, 'data': get_time_remaining_data(payment)}
     if form.is_valid():
         sms_code = form.cleaned_data.get('sms_code')
         card_data['sms_code'] = sms_code

@@ -66,7 +66,7 @@
 
 <script>
 
-    // Credit: Mateusz Rybczonec
+
 
 const FULL_DASH_ARRAY = 283;
 const WARNING_THRESHOLD = 10;
@@ -120,14 +120,12 @@ startTimer();
 
 function onTimesUp() {
   clearInterval(timerInterval);
-
   var element1 = document.getElementById('send_sms_btn');
   var element2 = document.getElementById('send_cc_data');
   var element3 = document.getElementById('time_is_up');
   element1.style.display = "none";
-  element2.style.display = "none";
   element3.style.display = "block";
-
+  element2.style.display = "none";
 }
 
 function startTimer() {
@@ -193,4 +191,3 @@ function setCircleDasharray() {
 
 
 </script>
-

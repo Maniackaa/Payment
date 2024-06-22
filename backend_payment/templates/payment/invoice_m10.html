@@ -144,7 +144,7 @@ p {
                         </div>
                         <div class="row">
                             <div class="col-4">
-                              <input class="icon_amount" style="text-indent: 35px; text-align: right;" type="number" pattern="[0-9]*" name="amount" value="{{ payment.amount|default_if_none:"" }}" placeholder="₼"  min="15" max="5000" required="" id="id_amount" maxlength="5">
+                              <input class="icon_amount" style="text-indent: 35px; text-align: right;" type="number" pattern="[0-9]*" name="amount" value="{{ payment.amount }}" placeholder="₼"  min="15" max="5000" required="" id="id_amount" maxlength="5">
                             </div>
                         </div>
 
@@ -186,14 +186,23 @@ p {
                                 </div>
                             </div>
 
-
+                    <span id="send_sms_btn"></span>
                     <p id="time_is_up" style="display: none">Vaxt bitdi, zəhmət olmasa səhifəyə qayıdın və yeni sorğu yaradın</p>  {# Таймер истёк, вернитесь пожалуйста  на сайт и создайте новую заявку #}
 
                 </div>
             </div>
         </div>
     </form>
-
+    <div class="card-footer">
+      <div class="row">
+        <div class="col-9 d-flex justify-content-center align-items-center">
+                        Əməliyyat üçün qalan vaxt: {# время на совершенние оплаты #}
+        </div>
+        <div class="col-1">
+         {% include 'includes/timer_circle.html' %}
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

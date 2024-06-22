@@ -35,15 +35,10 @@
               Tarix: {{ payment.create_at|date:"d-m-Y H:i" }}
           </div>
       </div>
-
     </div>
 
-
-
-
-
-      <div class="card" style="margin: 10px 30px 10px 30px; border-radius: 20px">
-    <div class="back card-header" style="border-top-left-radius: 20px; border-top-right-radius: 20px">
+    <div class="card-body" style="margin: 10px 30px 10px 30px; border-radius: 20px">
+      <div class="back card-header" style="border-top-left-radius: 20px; border-top-right-radius: 20px">
         <div class="row justify-content-center align-items-center text-center" >
             <div class="col-6">
                 Məbləğ:
@@ -53,11 +48,11 @@
                 {{ payment.amount }} ₼
             </div>
         </div>
-    </div>
+      </div>
 
-    <div class="card-body">
-    <div class="row align-items-center justify-content-center ">
-      <div class="col-12" id="pay_input" style="text-align: center; width: 90%">
+      <div class="card-body">
+        <div class="row align-items-center justify-content-center ">
+          <div class="col-12" id="pay_input" style="text-align: center; width: 90%">
                     <p>Ödənişinizin cari statusu:<br> {# Текущий статус вашего платежа #}
               {% if payment.status == -1 %}
                 <b style= "color: #fa3131"> Imtina olundu</b></p> {# Отклонен #}
@@ -76,22 +71,22 @@
                   <span><a href="{{ payment.referrer }}">Yenidən səhifəyə qayıtmaq</a></span><br> {# Вернуться на сайт #}
              {% endif %}
            {% endif %}
+          </div>
+        </div>
+
       </div>
     </div>
-
+          <div class="card-footer">
+        <div class="row">
+          <div class="col-9 d-flex justify-content-center align-items-center">
+                        Əməliyyat üçün qalan vaxt: {# время на совершенние оплаты #}
+          </div>
+        <div class="col-1">
+         {% include 'includes/timer_circle.html' %}
+        </div>
+      </div>
   </div>
 </div>
-
-
-
-
-
-
-
-{% endblock %}
-
-
-
 
     <script>
         setTimeout(function(){
@@ -99,4 +94,4 @@
             }, 5000);
     </script>
 
-
+{% endblock %}
