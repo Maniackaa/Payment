@@ -690,7 +690,6 @@ class BalanceListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        print(len(self.get_queryset()))
         # context['filter'] = BalanceChangeFilter(self.request.GET, queryset=self.get_queryset()[:100])
         return context
 

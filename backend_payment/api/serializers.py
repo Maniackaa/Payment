@@ -13,7 +13,7 @@ from rest_framework.serializers import as_serializer_error
 from rest_framework import validators
 
 from core.global_func import hash_gen
-from payment.models import Payment, Merchant, CreditCard, PayRequisite, Withdraw
+from payment.models import Payment, Merchant, CreditCard, PayRequisite, Withdraw, BalanceChange
 from payment.views import get_pay_requisite
 
 logger = structlog.get_logger(__name__)
@@ -209,3 +209,8 @@ class WithdrawCreateSerializer(serializers.ModelSerializer):
             raise ValidationError('Is not your merchant')
         return data
 
+
+class BalanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BalanceChange
+        fields = ('create_at', 'amount', 'current_balance', 'comment')

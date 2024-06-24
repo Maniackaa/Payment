@@ -13,6 +13,7 @@ v1_router.register("payment_status", views.PaymentStatusView, basename='payment_
 v1_router.register("payment_types", views.PaymentTypesView, basename='payment_types'),
 
 v1_router.register("withdraw", views.WithdrawViewSet, basename='withdraw'),
+v1_router.register("balance_changes", views.BalanceViewSet, basename='balance_changes'),
 
 urlpatterns = [
     path("", include(v1_router.urls)),

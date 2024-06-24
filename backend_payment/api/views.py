@@ -19,12 +19,13 @@ from rest_framework.views import APIView
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from api.filters import BalanceChangeFilter
 from api.permissions import PaymentOwnerOrStaff, IsStaff, IsStaffOrReadOnly
 from api.serializers import PaymentCreateSerializer, PaymentInputCardSerializer, \
     PaymentInputSmsCodeSerializer, PaymentTypesSerializer, WithdrawCreateSerializer, \
-    WithdrawSerializer, PaymentGuestSerializer
+    WithdrawSerializer, PaymentGuestSerializer, BalanceSerializer
 from core.global_func import hash_gen
-from payment.models import Payment, PayRequisite, Withdraw
+from payment.models import Payment, PayRequisite, Withdraw, BalanceChange
 from payment.views import get_phone_script, get_bank_from_bin
 
 logger = structlog.get_logger(__name__)
@@ -317,6 +318,15 @@ class PaymentInputSmsCode(mixins.UpdateModelMixin, viewsets.GenericViewSet):
     permission_classes = [PaymentOwnerOrStaff]
     http_method_names = ['put']
 
+
+class BalanceViewSet(viewsets.GenericViewSet, generics.ListAPIView):
+    serializer_class = BalanceSerializer
+    queryset = BalanceChange.objects.all()
+    permission_classes = [IsAuthenticated]
+    filterset_class = BalanceChangeFilter
+
+    def get_queryset(self):
+        return BalanceChange.objects.filter(user=self.request.user)
 
 
 class PaymentStatusView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):

@@ -67,6 +67,7 @@ class BalanceChange(models.Model):
     create_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Изменение баланса')
+    current_balance = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Текущий баланс', null=True)
     comment = models.CharField(null=True, blank=True)
 
     class Meta:
@@ -443,7 +444,8 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
                 new_log = BalanceChange.objects.create(
                     user=user,
                     amount=- instance.amount - tax,
-                    comment=f'Withdraw {instance.id}. {-instance.amount - tax} ₼. (Tax: {tax} ₼)'
+                    comment=f'Withdraw {instance.amount} ₼: {instance.id}. {-instance.amount - tax} ₼. (Tax: {tax} ₼)',
+                    current_balance=user.balance
                 )
                 new_log.save()
 
@@ -515,13 +517,17 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
             logger.info(f'user: {user}. {user.balance} -> {user.balance} + {instance.confirmed_amount} - {tax} = {user.balance + instance.confirmed_amount - tax}')
             user.balance = F('balance') + Decimal(str(instance.confirmed_amount)) - Decimal(str(tax))
             user.save()
+            user.refresh_from_db()
+            new_balance = user.balance
             # Фиксируем историю
             new_log = BalanceChange.objects.create(
                 user=user,
                 amount=instance.confirmed_amount - tax,
-                comment=f'From payment {instance.id}. +{instance.confirmed_amount - tax} ₼. (Tax: {tax} ₼)'
+                comment=f'From payment {instance.confirmed_amount} ₼: {instance.id}. +{instance.confirmed_amount - tax} ₼. (Tax: {tax} ₼).',
+                current_balance=new_balance
             )
             new_log.save()
+            logger.debug(f'new_balance: {new_balance}')
 
 
         # Отправляем вэбхук

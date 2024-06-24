@@ -26,6 +26,7 @@
            <th>create time</th>
            <th>user</th>
            <th>Сумм</th>
+           <th>Баланс</th>
            <th>comment</th>
        </tr>
      </thead>
@@ -35,6 +36,7 @@
             <td>{{ obj.create_at|date:"d.m H:i" }}</td>
             <td>{{ obj.user}}</td>
              <td>{{ obj.amount}}</td>
+            <td>{{ obj.current_balance}}</td>
              <td style="text-align: left">{{ obj.comment}}</td>
 
 
