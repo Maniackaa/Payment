@@ -840,9 +840,13 @@ def merchant_test_webhook(request, *args, **kwargs):
         return HttpResponseBadRequest()
     print(request.POST)
     print(args, kwargs)
+    print('merchant_test_webhook')
     order_id = str(uuid.uuid4())
     pk = str(uuid.uuid4())
-    merchant_id = request.POST.get('decline') or request.POST.get('accept')
+    merchant_id = (request.POST.get('payment_decline') or
+                   request.POST.get('payment_accept') or
+                   request.POST.get('withdraw_accept') or
+                   request.POST.get('withdraw_decline'))
     if not merchant_id:
         return HttpResponseBadRequest()
     merchant = Merchant.objects.get(pk=merchant_id)
@@ -855,7 +859,7 @@ def merchant_test_webhook(request, *args, **kwargs):
     withdraw = Withdraw(
         merchant=merchant,
         id=pk,
-        order_id=order_id,
+        withdraw_id=order_id,
         amount=random.randrange(10, 3000),
         create_at=(timezone.now() - datetime.timedelta(minutes=1)),
     )
@@ -871,12 +875,14 @@ def merchant_test_webhook(request, *args, **kwargs):
         send_payment_webhook.delay(merchant.host, data)
     elif 'withdraw_accept' in request.POST:
         withdraw.status = 9
+        withdraw.confirmed_time = timezone.now()
         data = withdraw.webhook_data()
         send_withdraw_webhook.delay(merchant.host, data)
     else:
         withdraw.status = -1
         data = withdraw.webhook_data()
         send_withdraw_webhook.delay(merchant.host, data)
+
     return JsonResponse(json.dumps(data), safe=False)
 
 
