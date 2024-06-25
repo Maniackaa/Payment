@@ -764,6 +764,8 @@ def invoice_test(request, *args, **kwargs):
         x = [f'{k}={v}' for k, v in request_dict.items()]
         # merch = Merchant.objects.get(pk=request_dict['merchant_id'])
         merch = get_object_or_404(Merchant, pk=request_dict['merchant_id'])
+        if merch.owner.username != 'slot_machine':
+            return HttpResponseBadRequest()
         string_value = f'{request_dict["merchant_id"]}{request_dict["order_id"]}'
         logger.debug(f'string: {string_value}')
         signature = hash_gen(string_value, merch.secret)
