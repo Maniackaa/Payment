@@ -186,6 +186,16 @@ instruction = """
 <p>&nbsp;</p>
 <p><strong>Вариант 2. Воспользоваться API:</strong></p>
 <p>Для авторизации используется JWT Bearer Authorization.</p>
+<i><p>curl --location https://asu-payme.com/api/v1/payment/' \</p>
+<p>--header 'Content-Type: application/json' \</p>
+<p>--header 'Authorization: Bearer eyJhbGciOiJI••••••' \</p>
+<p>--data '{</p>
+<p>&emsp;'merchant': '2',</p>
+<p>&emsp;'order_id': 'test_id',</p>
+<p>&emsp;'amount': '15',</p>
+<p>&emsp;'pay_type': 'card_2'</p>
+<p>}'</p></i>
+
 <p>1.	Отправка данных для создания платежа</p>
 <p>2.	Отправка даных карты</p>
 <p>3.	Отправка кода подтверждения из смс (при необходимости)</p>
