@@ -17,8 +17,9 @@
           <form method="POST" action="{% url 'payment:merchant_test_webhook' %}">
             {% csrf_token %}
 
-            <button name='accept' value='{{  form.instance.id }}' type="submit" class="btn btn-warning btn-sm">Test Accept Webhook</button>
-            <button name='decline' value = '{{  form.instance.id }}' type="submit" class="btn btn-warning btn-sm">Test Decline Webhook</button>
+            <button name='payment_accept' value='{{ form.instance.id }}' type="submit" class="btn btn-warning btn-sm">Test Accept Webhook</button>
+            <button name='payment_decline' value = '{{ form.instance.id }}' type="submit" class="btn btn-warning btn-sm">Test Decline Webhook</button>
+            <button name='withdraw_accept' value='{{ form.instance.id }}' type="submit" class="btn btn-warning btn-sm">Test Withdraw Accept Webhook</button>
 
         </form>
       </div>

@@ -36,7 +36,7 @@ def send_withdraw_webhook(url, data: dict):
     try:
         logger.info(f'Отправка webhook на {url}: {json.dumps(data)}')
         headers = {"Content-Type": "application/json"}
-        response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=5)
+        response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=10)
         logger.info(response.status_code)
         withdraw_id = data['id']
         withdraw = models.Withdraw.objects.get(pk=withdraw_id)

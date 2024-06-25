@@ -34,7 +34,7 @@ from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, Invo
     MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm
-from payment.task import send_payment_webhook
+from payment.task import send_payment_webhook, send_withdraw_webhook
 
 logger = structlog.get_logger(__name__)
 User = get_user_model()
@@ -852,16 +852,31 @@ def merchant_test_webhook(request, *args, **kwargs):
                       amount=random.randrange(10, 3000),
                       create_at=(timezone.now() - datetime.timedelta(minutes=1)),
                       )
-    if 'decline' in request.POST:
+    withdraw = Withdraw(
+        merchant=merchant,
+        id=pk,
+        order_id=order_id,
+        amount=random.randrange(10, 3000),
+        create_at=(timezone.now() - datetime.timedelta(minutes=1)),
+    )
+    if 'payment_decline' in request.POST:
         payment.status = -1
         data = payment.webhook_data()
-    else:
+        send_payment_webhook.delay(merchant.host, data)
+    elif 'payment_accept' in request.POST:
         payment.confirmed_amount = random.randrange(10, 3000)
         payment.status = 9
-        # payment.confirmed_time = datetime.datetime.now(tz=TZ)
         payment.confirmed_time = timezone.now()
         data = payment.webhook_data()
-    send_payment_webhook.delay(merchant.host, data)
+        send_payment_webhook.delay(merchant.host, data)
+    elif 'withdraw_accept' in request.POST:
+        withdraw.status = 9
+        data = withdraw.webhook_data()
+        send_withdraw_webhook.delay(merchant.host, data)
+    else:
+        withdraw.status = -1
+        data = withdraw.webhook_data()
+        send_withdraw_webhook.delay(merchant.host, data)
     return JsonResponse(json.dumps(data), safe=False)
 
 

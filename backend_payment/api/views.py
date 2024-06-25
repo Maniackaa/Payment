@@ -449,6 +449,15 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
 
     @extend_schema(tags=['Withdraw'],
                    summary='Просмотр статуса заяки на вывод',
+                   # request=[
+                   #     OpenApiExample(
+                   #         "Bad response",
+                   #         value={
+                   #             "amount": ["Ensure this value is greater than or equal to 1."]},
+                   #         status_codes=[400],
+                   #         response_only=False,
+                   #     ),
+                   # ],
                    responses={
                        status.HTTP_200_OK: OpenApiResponse(
                            description='Ok',
