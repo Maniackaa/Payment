@@ -16,12 +16,14 @@
           <p>Test webhook. Send random data and correct signature</p>
           <form method="POST" action="{% url 'payment:merchant_test_webhook' %}">
             {% csrf_token %}
-
+            <div class="col"  style="padding: 5px">
             <button name='payment_accept' value='{{ form.instance.id }}' type="submit" class="btn btn-warning btn-sm">Test Accept Webhook</button>
             <button name='payment_decline' value = '{{ form.instance.id }}' type="submit" class="btn btn-warning btn-sm">Test Decline Webhook</button>
-            <button name='withdraw_accept' value='{{ form.instance.id }}' type="submit" class="btn btn-warning btn-sm">Test Withdraw Accept Webhook</button>
+            </div>
+            <div class="col"  style="padding: 5px">
+                <button name='withdraw_accept' value='{{ form.instance.id }}' type="submit" class="btn btn-warning btn-sm">Test Withdraw Accept Webhook</button>
             <button name='withdraw_decline' value='{{ form.instance.id }}' type="submit" class="btn btn-warning btn-sm">Test Withdraw Decline Webhook</button>
-
+            </div>
         </form>
       </div>
      </div>
