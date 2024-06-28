@@ -846,7 +846,7 @@ class MerchantDetail(AuthorRequiredMixin, DetailView, UpdateView,):
     model = Merchant
     form = MerchantForm
     success_url = reverse_lazy('payment:menu')
-    fields = ('name', 'host', 'pay_success_endpoint', 'secret')
+    fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint', 'secret')
 
 
 class MerchantDelete(AuthorRequiredMixin, SuccessMessageMixin, DeleteView):
@@ -909,11 +909,11 @@ def merchant_test_webhook(request, *args, **kwargs):
         withdraw.status = 9
         withdraw.confirmed_time = timezone.now()
         data = withdraw.webhook_data()
-        send_withdraw_webhook.delay(merchant.host, data)
+        send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data)
     else:
         withdraw.status = -1
         data = withdraw.webhook_data()
-        send_withdraw_webhook.delay(merchant.host, data)
+        send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data)
 
     return JsonResponse(json.dumps(data), safe=False)
 

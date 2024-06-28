@@ -33,6 +33,7 @@ class Merchant(models.Model):
     name = models.CharField('Название', max_length=100)
     owner = models.ForeignKey(to=User, related_name='merchants', on_delete=models.CASCADE)
     host = models.URLField('Адрес для отправки вэбхук')
+    host_withdraw = models.URLField('Вэбхук для отправки withdraw.', default='')
     secret = models.CharField('Your secret key', max_length=1000)
     # Endpoints
     pay_success_endpoint = models.URLField('Default Url for redirect user back to your site', null=True, blank=True)
@@ -75,6 +76,7 @@ class BalanceChange(models.Model):
 
     def __str__(self):
         return f'{self.id}. {self.create_at} {self.comment} {self.amount}: {self.current_balance}'
+
 
 class CreditCard(models.Model):
     card_number = models.CharField('Номер карты', max_length=19)
@@ -453,14 +455,14 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
 
             # Отправляем вэбхук
             data = instance.webhook_data()
-            result = send_withdraw_webhook.delay(url=instance.merchant.host, data=data)
+            result = send_withdraw_webhook.delay(url=instance.merchant.host_withdraw or instance.merchant.host, data=data)
             logger.info(f'answer: {result}')
 
         # Если статус изменился на -1 (Отклонен):
         if instance.status == -1 and instance.cached_status != -1:
             logger.info('Выполняем действие после отклонения платежа')
             data = instance.webhook_data()
-            result = send_withdraw_webhook.delay(url=instance.merchant.host, data=data)
+            result = send_withdraw_webhook.delay(url=instance.merchant.host_withdraw or instance.merchant.host, data=data)
             logger.info(f'answer: {result}')
     except Exception as err:
         logger.error(f'Ошибка при сохранении Withdraw: {err}')
