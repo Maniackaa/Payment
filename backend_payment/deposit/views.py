@@ -190,7 +190,7 @@ def sms(request: Request):
 
     finally:
         if errors:
-            msg = f'Ошибки при распознавании sms:\n{errors}\n\n{text}'
+            msg = f'Ошибки при распознавании Payment sms:\n{errors}\n\n{text}'
             send_message_tg(message=msg, chat_ids=settings.ALARM_IDS)
 
 

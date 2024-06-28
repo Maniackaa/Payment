@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 def send_message_tg(message: str, chat_ids: list = settings.ADMIN_IDS):
     """Отправка сообщений через чат-бот телеграмма"""
-    try:
-        for chat_id in chat_ids:
+    for chat_id in chat_ids:
+        try:
             logger.debug(f'Отправляем сообщение для {chat_id}')
             url = (f'https://api.telegram.org/'
                    f'bot{settings.BOT_TOKEN}/'
@@ -26,8 +26,8 @@ def send_message_tg(message: str, chat_ids: list = settings.ADMIN_IDS):
                 logger.debug(f'Сообщение для {chat_id} отправлено')
             else:
                 logger.debug(f'Ошибка при отправке сообщения для {chat_id}. Код {response.status_code}')
-    except Exception as err:
-        logger.error(f'Ошибка при отправки сообщений: {err}')
+        except Exception as err:
+            logger.error(f'Ошибка при отправки сообщений: {err}')
 
 
 def hash_gen(text, salt):

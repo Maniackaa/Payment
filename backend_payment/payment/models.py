@@ -552,8 +552,9 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
 
     if created:
         try:
-            if instance.merchant and instance.merchant.is_new is True:
-                text = f'Новая заявка payment\nОт {instance.merchant}\nТип {instance.pay_type} на {instance.amount}'
-                send_message_tg_task.delay(text, settings.ADMIN_IDS)
+            # if instance.merchant and instance.merchant.is_new is True:
+            if instance.merchant:
+                text = f'Новая заявка payment\nОт {instance.merchant}\nТип {instance.pay_type} на {instance.amount} ₼'
+                send_message_tg_task.delay(text, settings.ALARM_IDS)
         except Merchant.DoesNotExist:
             pass
