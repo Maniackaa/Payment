@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Список владельцев-мерчей{% endblock %}
+
+
+{% block content %}
+<style>
+
+
+</style>
+
+{% include 'includes/operator_menu.html' %}
+<div class="container">
+
+     {% include 'includes/paginator.html' %}
+     <div class="container">
+         {% for obj in page_obj %}
+         {{obj}} <a href="{% url 'payment:merch_owner_detail' obj.id%}">Выплата</a><br>
+         {% endfor %}
+   </div>
+   {% include 'includes/paginator.html' %}
+
+</div>
+
+{% endblock %}

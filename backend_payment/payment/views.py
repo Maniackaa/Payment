@@ -31,9 +31,9 @@ from core.global_func import hash_gen, TZ
 from payment import forms
 from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
-    MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm
+    MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm, MerchBalanceChangeForm
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
-from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm
+from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm, SuperuserOnlyPerm
 from payment.task import send_payment_webhook, send_withdraw_webhook
 
 logger = structlog.get_logger(__name__)
@@ -108,7 +108,7 @@ def get_time_remaining(pay: Payment) -> tuple[datetime.timedelta, int]:
         TIMER_SECONDS = 600
     else:
         TIMER_SECONDS = 600
-    TIMER_SMS_SECONDS = 300
+    TIMER_SMS_SECONDS = 600
     STATUS_WAIT_TIMER = 600
     if pay.card_data and json.loads(f'{pay.card_data}').get('sms_code'):
         # Если смс введена
@@ -692,6 +692,38 @@ class BalanceListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         # context['filter'] = BalanceChangeFilter(self.request.GET, queryset=self.get_queryset()[:100])
         return context
+
+
+class MerchOwnerList(SuperuserOnlyPerm, ListView):
+    """Список мерчей"""
+    template_name = 'payment/merch_owner_list.html'
+    model = User
+    paginate_by = settings.PAGINATE
+
+    def get_queryset(self):
+        return User.objects.filter(role='merchant')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class MerchOwnerDetail(SuperuserOnlyPerm, FormView, UpdateView):
+    template_name = 'payment/merch_owner_detail.html'
+    model = User
+    form_class = MerchBalanceChangeForm
+    context_object_name = 'merchowner'
+
+    def form_valid(self, form):
+        merchowner = form.instance
+        balance_delta = form.cleaned_data['balance_delta']
+        comment = form.cleaned_data['comment']
+        merchowner.balance = F('balance') + balance_delta
+        merchowner.save()
+        merchowner = User.objects.get(pk=merchowner.id)
+        BalanceChange.objects.create(amount=balance_delta, user=merchowner, comment=f'Изменение баланса на {balance_delta} ₼. {comment}',
+                                     current_balance=merchowner.balance)
+        return redirect(reverse_lazy('payment:merch_owner_detail', kwargs={'pk': 2}))
 
 
 class WithdrawEdit(StaffOnlyPerm, UpdateView, ):

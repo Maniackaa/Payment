@@ -30,7 +30,7 @@
               <img class="mx-auto d-flex justify-content-center" src="/static/img/AsuPay125.png" height="100%" width="100%">
           </div>
           <div class="col-9" style="font-weight: bold; font-size: small">
-              <h2>Ödəniş statusu</h2>{# Статус платежа #}
+              <h2>Wait instructions</h2>{# Статус платежа #}
               <h3><i>{{ payment.id }}</i></h3>
               Tarix: {{ payment.create_at|date:"d-m-Y H:i" }}
           </div>
@@ -60,7 +60,7 @@
                 <b style= "color: #017000">Təstiqləndi</b></p> {# Подтвержден #}
                   <div class="aligncenter"><img class="img-thumbnail" src="/static/img/ok-icon.webp" width="50%" ></div>
               {% else %}
-                <b style= "color: #937800">Təstiqləmə gözlənilir</b></p> {# Ожидает подтверждения #}
+                <b style= "color: #937800">Wait instructions</b></p> {# Ожидает подтверждения #}
                 <div class="text-center">
                   <div class="aligncenter"><img class="img-thumbnail" src="/static/img/vert128.gif" width="50%" ></div>
                 </div>

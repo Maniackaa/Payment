@@ -167,8 +167,9 @@
     <script>
 
 function playSound() {
-  const audio = new Audio("{% static '/icq-notification-sound.mp3' %}");
-  audio.play();
+  const audio = new Audio();
+  audio.src = "{% static '/icq-notification-sound.mp3' %}"
+  return audio.play();
 }
                 function getPosts() {
             $.ajax({

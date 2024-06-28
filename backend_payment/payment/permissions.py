@@ -14,6 +14,17 @@ class AuthorRequiredMixin(AccessMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
+class SuperuserOnlyPerm(AccessMixin):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('payment:menu')
+        else:
+            if not request.user.is_superuser:
+                # return self.handle_no_permission()
+                return redirect('payment:menu')
+        return super().dispatch(request, *args, **kwargs)
+
+
 class StaffOnlyPerm(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:

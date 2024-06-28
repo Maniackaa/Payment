@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Список владельцев-мерчей{% endblock %}
+{% block content %}
+<style>
+
+</style>
+
+{% include 'includes/operator_menu.html' %}
+<div class="container">
+
+
+     <div class="container">
+         {{ merchowner }} {{ merchowner.balance }}<br>
+        <div class="col-md-3">
+         <form method="post">
+		     {% csrf_token %}
+             {% include 'includes/form_fields.html'%}
+             <button type="submit" class="btn btn-success">Изменить баланс</button>
+             </form>
+            </div>
+    </div>
+    {% for balance_change in merchowner.balance_history.all|slice:"0:50" %}
+        {{ balance_change}}<br>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

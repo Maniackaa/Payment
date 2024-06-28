@@ -65,7 +65,7 @@ def after_save_shop(sender, instance: Merchant, created, raw, using, update_fiel
 
 class BalanceChange(models.Model):
     create_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='balance_history')
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Изменение баланса')
     current_balance = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Текущий баланс', null=True)
     comment = models.CharField(null=True, blank=True)
@@ -73,6 +73,8 @@ class BalanceChange(models.Model):
     class Meta:
         ordering = ('-create_at',)
 
+    def __str__(self):
+        return f'{self.id}. {self.create_at} {self.comment} {self.amount}: {self.current_balance}'
 
 class CreditCard(models.Model):
     card_number = models.CharField('Номер карты', max_length=19)

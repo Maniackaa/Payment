@@ -1,9 +1,11 @@
 import uuid
 
 from django import forms
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
 from payment.models import Payment, CreditCard, Merchant, Withdraw
+User = get_user_model()
 
 
 class InvoiceForm(forms.ModelForm):
@@ -126,6 +128,30 @@ class MerchantForm(forms.ModelForm):
     class Meta:
         model = Merchant
         fields = ('name', 'host', 'secret', 'pay_success_endpoint')
+
+
+class MerchBalanceChangeForm(forms.ModelForm):
+    balance_delta = forms.DecimalField()
+    comment = forms.CharField(required=False)
+
+    class Meta:
+        model = User
+        fields = ('balance_delta', 'comment')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        balance = self.instance.balance
+        print(cleaned_data)
+        print(balance)
+        balance_delta = cleaned_data.get('balance_delta')
+        if balance < balance_delta:
+            raise ValidationError(f'Недостаточно средств: {balance}')
+        if balance_delta > 10:
+            raise ValidationError(f'Многовато!')
+        return self.cleaned_data
+
+
+
 
 
 class PaymentForm(forms.ModelForm):

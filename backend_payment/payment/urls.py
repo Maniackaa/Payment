@@ -23,6 +23,9 @@ urlpatterns = [
     path('withdraws/<str:pk>/', views.WithdrawEdit.as_view(), name='withdraw_edit'),
     path('balance/', views.BalanceListView.as_view(), name='balance_list'),
     # path('merch_stat/<int:pk>', views.MerchStatView.as_view(), name='merch_stats'),
+    path('merchowners/<int:pk>/', views.MerchOwnerDetail.as_view(), name='merch_owner_detail'),
+    path('merchowners/', views.MerchOwnerList.as_view(), name='merch_owner_list'),
+
 
     path('wait_requisite/<str:pk>/', views.wait_requisite, name='wait_requisite'),
     path('payment_type_not_worked/', views.payment_type_not_worked, name='payment_type_not_worked'),
