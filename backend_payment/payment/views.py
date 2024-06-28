@@ -723,7 +723,7 @@ class MerchOwnerDetail(SuperuserOnlyPerm, FormView, UpdateView):
         merchowner = User.objects.get(pk=merchowner.id)
         BalanceChange.objects.create(amount=balance_delta, user=merchowner, comment=f'Изменение баланса на {balance_delta} ₼. {comment}',
                                      current_balance=merchowner.balance)
-        return redirect(reverse_lazy('payment:merch_owner_detail', kwargs={'pk': 2}))
+        return redirect(reverse_lazy('payment:merch_owner_detail', kwargs={'pk': merchowner.id}))
 
 
 class WithdrawEdit(StaffOnlyPerm, UpdateView, ):
