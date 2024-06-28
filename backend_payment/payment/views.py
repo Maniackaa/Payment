@@ -382,9 +382,13 @@ def pay_to_m10_create(request, *args, **kwargs):
 
     elif request.method == 'POST':
         # Обработка нажатия кнопки
+        print(request.POST)
+        post_data = request.POST.dict()
         payment_id = request.POST.get('payment_id')
         payment = Payment.objects.get(pk=payment_id)
         initial_data = {'payment_id': payment.id}
+        initial_data.update(post_data)
+        print('initial_data:', initial_data)
         form = InvoiceM10Form(request.POST, instance=payment, initial=initial_data)
         context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment)}
 

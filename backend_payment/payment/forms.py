@@ -60,7 +60,7 @@ class InvoiceM10Form(forms.ModelForm):
                                                                   }
                                                            )
                                     )
-    expired_year = forms.CharField(label='expired_month',
+    expired_year = forms.CharField(label='expired_year',
                                    widget=forms.TextInput(attrs={'placeholder': 'YY',
                                                                  'minlength': 2,
                                                                  'maxlength': 2,
@@ -99,6 +99,19 @@ class InvoiceM10Form(forms.ModelForm):
                 raise ValidationError('Qeyd etdiyiniz ay yalnışdır')  # Неверный месяц
         except Exception:
             raise ValidationError('Qeyd etdiyiniz ay yalnışdır')
+
+    def clean_expired_year(self):
+        data = self.cleaned_data["expired_year"]
+        min_year = 20
+        max_year = 40
+        try:
+            year = int(data)
+            if min_year <= year <= max_year:
+                return data
+            else:
+                raise ValidationError(f'Year must be {min_year}-{max_year}')  # Неверный месяц
+        except Exception:
+            raise ValidationError(f'Year must be {min_year}-{max_year}')
 
 
 class InvoiceM10SmsForm(forms.ModelForm):

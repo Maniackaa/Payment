@@ -85,7 +85,7 @@ class CreditCard(models.Model):
     card_type = models.CharField('Система карты', max_length=100)
     card_bank = models.CharField('Название банка', max_length=50, default='Bank')
     expired_month = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(12)])
-    expired_year = models.IntegerField(validators=[MinValueValidator(20), MaxValueValidator(99)])
+    expired_year = models.IntegerField(validators=[MinValueValidator(20), MaxValueValidator(40)])
     status = models.CharField('Статус карты',
                               default='not_active',
                               choices=[
