@@ -270,7 +270,7 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
     @extend_schema(tags=['API Payment process'],
                    request=PaymentInputSmsCodeSerializer,
                    summary="Отправка кода подтверждения (For pay_type ['card_2]')",
-                   description="Необходим если в предыдущем шаге sms_required=True. После отправки запроса с данными карты в ответ на ваш адрес вэб-хука будет отправлен post-запрос:<br>{'order_id': 'string', 'id': '4caed007-2d31-489c-9f3d-a2af6ccf07e4', 'status': 5,  'signature': hash('sha256', 'card_number' + 'secret_key')}",
+                   description="Необходим если в предыдущем шаге sms_required=True.",
                    responses={status.HTTP_200_OK: OpenApiResponse(
                        response=ResponseInputSms,
                        examples=[
