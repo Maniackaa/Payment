@@ -24,6 +24,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.http import urlencode
 from django.views.generic import CreateView, DetailView, FormView, UpdateView, ListView, DeleteView
+from django_currentuser.middleware import get_current_user, get_current_authenticated_user
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
@@ -452,10 +453,10 @@ def pay_to_m10_sms_input(request, *args, **kwargs):
         sms_code = form.cleaned_data.get('sms_code')
         card_data['sms_code'] = sms_code
         payment.card_data = json.dumps(card_data, ensure_ascii=False)
+        payment.status = 6
         payment.save()
         return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
     return render(request, context=context, template_name='payment/invoice_m10_sms.html')
-
 
 
 class PayResultView(DetailView):
@@ -791,6 +792,11 @@ def invoice_test(request, *args, **kwargs):
     print(http_host)
     new_uid = uuid.uuid4()
     form = InvoiceTestForm(initial={'order_id': new_uid})
+    user = get_current_user()
+    print(user)
+    print(user == 'AnonymousUser')
+    user = get_current_authenticated_user()
+    print(user)
 
     if request.method == 'POST':
         print('post')

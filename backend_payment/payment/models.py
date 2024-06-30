@@ -195,7 +195,7 @@ class Payment(models.Model):
         (3, '3. CardData input.'),
         (4, '4. Send to work'),
         (5, '5. Wait Sms'),
-        (6, '6. Work completed'),
+        (6, '6. Sms input'),
         (7, '7. Await confirm'),
         (9, '9. Confirmed'),
     )
@@ -480,11 +480,15 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
             instance.confirmed_amount = instance.amount
         # Осободим реквизиты
         instance.pay_requisite = None
+        if not instance.confirmed_user:
+            instance.confirmed_user = get_current_authenticated_user()
 
     # Если статус изменился на -1 (Отклонен):
     if instance.status == -1 and instance.cached_status != -1:
         # Осободим реквизиты
         instance.pay_requisite = None
+        if not instance.confirmed_user:
+            instance.confirmed_user = get_current_authenticated_user()
 
     # Сохранение лога
     try:
@@ -498,9 +502,10 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
                     new_value = getattr(instance, field)
                     if new_value != getattr(old, field):
                         changes[field] = new_value
-            logger.debug(f'Изменения {get_current_user()}: {changes} ')
+            logger.debug(f'Изменения {get_current_authenticated_user()}: {changes} ')
             if changes:
-                log = PaymentLog.objects.create(payment=instance, user=get_current_user(), changes=json.dumps(changes))
+                user = get_current_authenticated_user()
+                log = PaymentLog.objects.create(payment=instance, user=user, changes=json.dumps(changes))
 
     except Exception as err:
         logger.error(f'Ошибка сохранения лога: {err}')

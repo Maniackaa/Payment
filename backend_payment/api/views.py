@@ -300,6 +300,7 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
             card_data = json.loads(payment.card_data)
             card_data['sms_code'] = serializer.validated_data.get('sms_code')
             payment.card_data = json.dumps(card_data)
+            payment.status = 6
             payment.save()
             return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)

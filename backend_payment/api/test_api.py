@@ -129,7 +129,7 @@ class TestAPI(APITestCase):
         response = self.client.post(start_url, data)
         assert response.status_code == 201, f'Не создается платеж зарегистрированного мерча: {data}'
         pk = response.data.get('id')
-        self.assertEqual(Payment.objects.count(),start_count + 1, 'Количество платежей не увеличилось')
+        self.assertEqual(Payment.objects.count(), start_count + 1, 'Количество платежей не увеличилось')
 
         payment = Payment.objects.get(pk=pk)
         self.assertEqual(payment.status, 0, 'Payment оздался со статусом не 0')
@@ -158,10 +158,10 @@ class TestAPI(APITestCase):
 
         response = self.guest_client.get(url, data)
         self.assertEqual(response.status_code, 200, 'Не показывается статус платежа')
-        self.assertEqual(response.json(),  {'id': pk, 'status': 3}, 'Не верный ответ статуса платежа анонимом')
+        self.assertEqual(response.json(),  {'id': pk, 'status': 6}, 'Не верный ответ статуса платежа анонимом')
 
         payment = Payment.objects.get(pk=pk)
-        self.assertEqual(payment.status, 3, 'После передачи данных карты статус не 3')
+        self.assertEqual(payment.status, 6, 'После передачи данных карты и смс статус не 6')
 
         # Подтверждение платежа
         response = self.client.put(url, data={'status': 9})
