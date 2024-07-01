@@ -21,10 +21,15 @@ class PayRequisiteAdmin(admin.ModelAdmin):
 
 class PaymentAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'merchant', 'order_id', 'amount', 'confirmed_amount', 'confirmed_time', 'pay_requisite',  'screenshot',
-        'create_at', 'status', 'change_time', 'confirmed_time',
+        'id', 'create_at', 'merchant', 'order_id', 'amount',
+        'status', 'card_number', 'sms_code', 'bank_name'
     )
     list_filter = ('merchant', 'pay_requisite')
+
+    # Кастомное поле
+    # def card_number(self, obj):
+    #     return obj.id
+    # order_number.short_description = 'Номер заказа'
 
 
 class WithdrawAdmin(admin.ModelAdmin):
