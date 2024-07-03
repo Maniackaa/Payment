@@ -438,9 +438,9 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
             # Минусуем баланс
             with transaction.atomic():
                 user = User.objects.get(pk=instance.merchant.owner.id)
-                tax = round(instance.amount * user.withdraw_tax / 100, 2)
-                logger.info(f'user: {user}. {user.balance} -> {user.balance - Decimal(f"{instance.amount}") - Decimal(f"{tax}")}')
-                user.balance = F('balance') - Decimal(f"{instance.amount}") - Decimal(f"{tax}")
+                tax = Decimal(round(instance.amount * user.withdraw_tax / 100, 2))
+                logger.info(f'user: {user}. {user.balance} -> {round(user.balance - Decimal(f"{instance.amount}") - tax, 2)}')
+                user.balance = F('balance') - Decimal(f"{instance.amount}") - tax
                 user.save()
                 user = User.objects.get(pk=instance.merchant.owner.id)
                 logger.info(f'New balance: {user.balance}')
@@ -448,7 +448,7 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
                 new_log = BalanceChange.objects.create(
                     user=user,
                     amount=- instance.amount - tax,
-                    comment=f'Withdraw {instance.amount} ₼: {instance.id}. {-instance.amount - tax} ₼. (Tax: {tax} ₼)',
+                    comment=f'Withdraw {instance.amount} ₼: {instance.id}. {round(-instance.amount - tax, 2)} ₼. (Tax: {round(tax, 2)} ₼)',
                     current_balance=user.balance
                 )
                 new_log.save()
@@ -521,10 +521,10 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         # Плюсуем баланс
         with transaction.atomic():
             user = User.objects.get(pk=instance.merchant.owner.id)
-            tax = round(instance.confirmed_amount * user.tax / 100)
+            tax = Decimal(round(instance.confirmed_amount * user.tax / 100, 2))
 
             logger.info(f'user: {user}. {user.balance} -> {user.balance} + {instance.confirmed_amount} - {tax} = {user.balance + instance.confirmed_amount - tax}')
-            user.balance = F('balance') + Decimal(str(instance.confirmed_amount)) - Decimal(str(tax))
+            user.balance = F('balance') + Decimal(str(instance.confirmed_amount)) - tax
             user.save()
             user.refresh_from_db()
             new_balance = user.balance
@@ -532,7 +532,7 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
             new_log = BalanceChange.objects.create(
                 user=user,
                 amount=instance.confirmed_amount - tax,
-                comment=f'From payment {instance.confirmed_amount} ₼: {instance.id}. +{instance.confirmed_amount - tax} ₼. (Tax: {tax} ₼).',
+                comment=f'From payment {instance.confirmed_amount} ₼: {instance.id}. +{round(instance.confirmed_amount - tax, 2)} ₼. (Tax: {round(tax, 2)} ₼).',
                 current_balance=new_balance
             )
             new_log.save()

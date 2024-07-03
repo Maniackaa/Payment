@@ -6,7 +6,24 @@
 
 
 
-/*Right Side Card*/
+
+    * {
+    font-family: "Arial";
+    font-size: medium;
+}
+    .big {
+        color: #e8912a;
+        font-size: xx-large;
+        font-weight: bold;
+    }
+    .back {
+    background-color: black;
+    color: white;
+    border-top-right-radius: 50px
+    }
+
+
+
 .card2 {
 	padding: 5px;
 	margin: 0;
@@ -97,10 +114,7 @@
 
 }
 
-p {
-    font-family: Calibri;
-    font-size: 18px;
-}
+
 .btn-success {
     background-color: #11e834;
 }
@@ -134,19 +148,25 @@ p {
                                 <p>Hörmətli müştəri xoş gəlmisiniz</p>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col mx-auto text-center">
 
-                            </div>
-                        </div>
+
                         <div class="row">
+                            {% if not payment.amount %}
                             <label class="pay">Məbləğ girin</label>
+                            {% else %}
+                            <div class="col mx-auto text-center big ">
+                                <span class="big" style="color: black">Amount:</span> {{ payment.amount }} ₼
+                            </div>
+                            {% endif %}
                         </div>
+
                         <div class="row">
                             <div class="col-4">
-                              <input class="icon_amount" style="text-indent: 35px; text-align: right;" type="number" pattern="[0-9]*" name="amount" value="{{ form.amount.value }}" placeholder="₼"  min="15" max="5000" required="" id="id_amount" maxlength="5">
+                              <input {% if payment.amount %} hidden {% endif %} class="icon_amount" style="text-indent: 35px; text-align: right;" type="number" pattern="[0-9]*" name="amount" value="{{ form.amount.value }}" placeholder="₼"  min="15" max="5000" required="" id="id_amount" maxlength="5">
                             </div>
                         </div>
+
+
 
 
                         <input class="icon_owner" style="text-indent: 35px" type="text" hidden name="owner_name" value="{{ payment.owner_name|default_if_none:"" }}" placeholder="John Smith">

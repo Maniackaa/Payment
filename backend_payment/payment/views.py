@@ -245,7 +245,6 @@ def invoice(request, *args, **kwargs):
             payment.referrer = back_url or merch.pay_success_endpoint
             payment.save()
 
-
         if pay_type == 'card-to-card':
             return redirect(reverse('payment:pay_to_card_create') + f'?payment_id={payment.id}')
         elif pay_type == 'card_2':
