@@ -368,9 +368,9 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERYD_LOG_FILE = os.path.join(BASE_DIR, "logs", "celery_work.log")
 CELERYBEAT_LOG_FILE = os.path.join(BASE_DIR, "logs", "celery_beat.log")
 CELERYD_HIJACK_ROOT_LOGGER = False
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 
 CORS_ALLOWED_ORIGINS = ["https://asu-payme.com", "http://127.0.0.1"]
 # CORS_ALLOW_ALL_ORIGINS = True
 # CORS_ALLOW_CREDENTIALS = True
-print('DEBUG-', DEBUG)

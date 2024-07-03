@@ -186,6 +186,8 @@ instruction = """
 <p>&nbsp;</p>
 <p><strong>Вариант 2. Воспользоваться API:</strong></p>
 <p>Для авторизации используется JWT Bearer Authorization.</p>
+<p>ACCESS_TOKEN_LIFETIME: 1 hours</p>
+<p>REFRESH_TOKEN_LIFETIME: 1 days</p>
 <i><p>curl --location https://asu-payme.com/api/v1/payment/' \</p>
 <p>--header 'Content-Type: application/json' \</p>
 <p>--header 'Authorization: Bearer eyJhbGciOiJI••••••' \</p>

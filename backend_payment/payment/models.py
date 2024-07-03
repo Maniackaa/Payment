@@ -496,7 +496,7 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         old = Payment.objects.filter(pk=instance.id).first()
         if old:
             changes = {}
-            fields = ['amount', 'confirmed_amount', 'status', 'comment']
+            fields = ['amount', 'confirmed_amount', 'status', 'comment', 'response_status_code']
             for field in fields:
                 if hasattr(instance, field):
                     new_value = getattr(instance, field)

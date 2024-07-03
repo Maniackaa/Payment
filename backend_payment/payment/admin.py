@@ -22,7 +22,7 @@ class PayRequisiteAdmin(admin.ModelAdmin):
 class PaymentAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'create_at', 'merchant', 'order_id', 'amount',
-        'status', 'card_number', 'sms_code', 'bank_name'
+        'status', 'card_number', 'sms_code', 'bank_name', 'response_status_code'
     )
     list_filter = ('merchant', 'pay_requisite')
 

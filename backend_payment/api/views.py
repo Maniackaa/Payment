@@ -427,7 +427,6 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
                    },
                    )
     def create(self, request, *args, **kwargs):
-        print(request.data)
         if "signature" not in request.data:
             return Response({"non_field_errors": ["Wrong signature"]},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -437,7 +436,9 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
             data = serializer.validated_data
             shop = data["merchant"]
             signature_string = f'{shop.id}{data["card_data"]["card_number"]}{data["amount"]}'
+            logger.warning(f'{signature_string} + {shop.secret}')
             hash_s = hash_gen(signature_string, shop.secret)
+            logger.warning(hash_s)
             if hash_s != signature:
                 return Response({"non_field_errors": ["Wrong signature"]},
                                 status=status.HTTP_400_BAD_REQUEST)

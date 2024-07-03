@@ -20,7 +20,7 @@ def send_payment_webhook(url, data: dict):
         logger.info(f'Отправка webhook на {url}: {json.dumps(data)}')
         headers = {"Content-Type": "application/json"}
         response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=5)
-        logger.info(response.status_code)
+        logger.info(f'status_code {url}: response.status_code')
         payment_id = data['id']
         payment = models.Payment.objects.get(pk=payment_id)
         if payment:
@@ -58,7 +58,7 @@ def automatic_decline_expired_payment():
     expired_time = timezone.now() - datetime.timedelta(seconds=PAYMENT_EXPIRED)
     logger.info(f'Удаляем payment ранее {expired_time}')
     expired_payment = models.Payment.objects.filter(create_at__lt=expired_time, status__range=(0, 8))
-    logger.info(f'Найдено для отклонениz: {expired_payment}')
+    logger.info(f'Найдено для отклонения: {expired_payment}')
     for p in expired_payment:
         p.status = -1
         p.pay_requisite = None
