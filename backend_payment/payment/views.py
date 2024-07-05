@@ -30,7 +30,8 @@ from rest_framework.views import APIView
 
 from core.global_func import hash_gen, TZ
 from payment import forms
-from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter
+from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter, \
+    MerchPaymentFilter, BalanceFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
     MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm, MerchBalanceChangeForm
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
@@ -190,9 +191,8 @@ def invoice(request, *args, **kwargs):
             required_values = [merchant_id, order_id, pay_type, amount]
         else:
             required_values = [False]
-        #Проверка сигнатуры
+        # Проверка сигнатуры
         try:
-            # merch = Merchant.objects.get(pk=merchant_id)
             merch = get_object_or_404(Merchant, pk=merchant_id)
             string_value = f'{merchant_id}{order_id}'
             merch_hash = hash_gen(string_value, merch.secret)
@@ -684,17 +684,20 @@ class BalanceListView(LoginRequiredMixin, ListView):
     template_name = 'payment/balance_list.html'
     model = BalanceChange
     paginate_by = settings.PAGINATE
+    filter = BalanceFilter
 
     def get_queryset(self):
+        queryset = BalanceChange.objects.all()
         if self.request.user.is_superuser:
-            return super().get_queryset()
+            return BalanceFilter(self.request.GET, queryset=queryset).qs
         if self.request.user.role not in ('merchant', 'operator'):
             return BalanceChange.objects.none()
-        return BalanceChange.objects.filter(user=self.request.user)
+        # return BalanceChange.objects.filter(user=self.request.user)
+        return BalanceFilter(self.request.GET, queryset=queryset.filter(user=self.request.user)).qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # context['filter'] = BalanceChangeFilter(self.request.GET, queryset=self.get_queryset()[:100])
+        context['filter'] = BalanceFilter(self.request.GET, queryset=self.get_queryset())
         return context
 
 
@@ -841,11 +844,11 @@ class MerchantOrders(LoginRequiredMixin, MerchantOnlyPerm, ListView):
     def get_queryset(self):
         user = self.request.user
         queryset = Payment.objects.filter(merchant__owner=user)
-        return PaymentFilter(self.request.GET, queryset=queryset).qs
+        return MerchPaymentFilter(self.request.GET, queryset=queryset).qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        filter = PaymentFilter(self.request.GET, queryset=self.get_queryset())
+        filter = MerchPaymentFilter(self.request.GET, queryset=self.get_queryset())
         context['filter'] = filter
         return context
 

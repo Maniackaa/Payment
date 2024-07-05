@@ -10,14 +10,11 @@
 
 {% include 'includes/operator_menu.html' %}
 <div class="container">
-{% if request.user.is_superuser %}
+
     <form method="get">
     {{ filter.form.as_p }}
-    <button type="submit">Фильтровать</button>
+    <button type="submit">Фильтровать {{filter.qs.count}}</button>
     </form>
-    {% endif %}
-
-
      {% include 'includes/paginator.html' %}
      <div class="container">
      <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">

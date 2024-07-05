@@ -5,12 +5,24 @@
 {% block content %}
      <div class="container ">
     {% include 'includes/user_menu.html' %}
-    <div class="row">
+<div class="container-fluid">
+
+  <div class="container">
       <form method="get">
-        {{ filter.form.as_p }}
-          <button type="submit">Filter</button>
-      </form>
-    </div>
+        <div class="row">
+
+            {% for field in filter.form  %}
+                <div class="col-auto">
+                <b>{{ field.label_tag }}</b><br>{{ field }}
+                </div>
+            {% endfor %}
+            <div class="row">
+
+            <button class="btn btn-info btn-light" type="submit">Фильтровать</button>
+            </div>
+        </div>
+    </form>
+  </div>
 
      {% include 'includes/paginator.html' %}
 
@@ -40,7 +52,7 @@
             <td>{{ payment.order_id }}
             <td>{{ payment.id }}</td>
              <td>{{ payment.pay_type }}</td>
-            <td>{{ payment.create_at|date:"Y.d.m H:i" }}</td>
+            <td>{{ payment.create_at|date:"Y.m.d H:i" }}</td>
             <td>{{ payment.merchant.name}}</td>
             <td>{{ payment.amount }}</td>
             <td style="white-space: nowrap">{{ payment.status_str }}</td>

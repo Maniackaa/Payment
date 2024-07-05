@@ -82,7 +82,7 @@
             {% csrf_token %}
               <td style="white-space: nowrap">{{ payment.status }}
 
-              {% if  payment.status == 3 and payment.pay_type == 'card_2' %}
+              {% if  payment.status == 3 or payment.status == 6 and payment.pay_type == 'card_2' %}
                   {% if payment.pay_type == 'card_2' %}<a href="http://localhost:3000/?payment_id={{payment.id}}&amount={{ payment.amount }}&{{ payment.card_data_url }}&{{ payment.phone_script_data_url }}" target="_blank">🚀</a>{% endif %}
                   {% if payment.card_data %}
                     <a href="{% url 'payment:payment_input' payment.id %}" target="_blank" id="card_number{{payment.id}}">{{ payment.card_number }}<img onclick="CopyToClipboard('card_number{{payment.id}}')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"></a>

@@ -5,7 +5,7 @@ from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 from django_better_admin_arrayfield.forms.widgets import DynamicArrayWidget
 
-from payment.models import CreditCard, PayRequisite, Payment, Merchant, PhoneScript, Bank, Withdraw
+from payment.models import CreditCard, PayRequisite, Payment, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
 
 
 class CreditCardAdmin(admin.ModelAdmin):
@@ -38,6 +38,12 @@ class WithdrawAdmin(admin.ModelAdmin):
     )
 
 
+class BalanceChangeAdmin(admin.ModelAdmin):
+    list_display = (
+        'user', 'comment', 'amount'
+    )
+
+
 class MerchantAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'name', 'owner', 'host', 'is_new'
@@ -67,6 +73,7 @@ class BankAdmin(admin.ModelAdmin, DynamicArrayMixin):
 admin.site.register(CreditCard, CreditCardAdmin)
 admin.site.register(PayRequisite, PayRequisiteAdmin)
 admin.site.register(Payment, PaymentAdmin)
+admin.site.register(BalanceChange, BalanceChangeAdmin)
 admin.site.register(Withdraw, WithdrawAdmin)
 admin.site.register(Merchant, MerchantAdmin)
 admin.site.register(PhoneScript, PhoneScriptAdmin)
