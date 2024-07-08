@@ -655,7 +655,7 @@ class PaymentInput(StaffOnlyPerm, UpdateView, ):
         return super().form_valid(form)
 
 
-class WithdrawListView(StaffOnlyPerm,  ListView):
+class WithdrawListView(LoginRequiredMixin, ListView):
     """Спиок выводов"""
     template_name = 'payment/withdraw_list.html'
     model = Withdraw

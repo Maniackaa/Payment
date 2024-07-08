@@ -159,12 +159,7 @@ class MerchBalanceChangeForm(forms.ModelForm):
         balance_delta = cleaned_data.get('balance_delta')
         if balance < balance_delta:
             raise ValidationError(f'Недостаточно средств: {balance}')
-        if balance_delta > 10:
-            raise ValidationError(f'Многовато!')
         return self.cleaned_data
-
-
-
 
 
 class PaymentForm(forms.ModelForm):

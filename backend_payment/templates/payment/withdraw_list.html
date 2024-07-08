@@ -8,13 +8,25 @@
 
 </style>
 
-{% include 'includes/operator_menu.html' %}
+{% include 'includes/user_menu.html' %}
 <div class="container-fluid ">
-<form method="get">
-    {{ filter.form.as_p }}
-    <button type="submit">Фильтровать</button>
-</form>
 
+  <div class="container">
+      <form method="get">
+        <div class="row">
+
+            {% for field in filter.form  %}
+                <div class="col-auto">
+                <b>{{ field.label_tag }}</b><br>{{ field }}
+                </div>
+            {% endfor %}
+            <div class="row">
+
+            <button class="btn btn-info btn-light" type="submit">Фильтровать</button>
+            </div>
+        </div>
+    </form>
+  </div>
 
      {% include 'includes/paginator.html' %}
      <div class="container-fluid ">
@@ -39,9 +51,10 @@
                      class="table-success"
                  {% endif %}>
 
-            <td><a class="changelink" href="{% url 'payment:withdraw_edit' withdraw.id %}">{{ withdraw.id }}</a>
-                {% if withdraw.comment %}
-                  *
+            <td>{% if user.is_staff %}
+                <a class="changelink" href="{% url 'payment:withdraw_edit' withdraw.id %}">{{ withdraw.id }}</a>
+                {% else %}
+                {{ withdraw.id }}
                 {% endif %}
             </td>
             <td>{{ withdraw.create_at|date:"d.m H:i" }}</td>

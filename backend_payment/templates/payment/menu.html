@@ -22,6 +22,7 @@
            {% endif %}
            {% if user.role == 'merchant' %}
              <a class="" href="{% url 'payment:merchant_orders' %}">merchant_orders</a><br>
+            <a class="" href="{% url 'payment:withdraw_list' %}">Заявки на Выводы withdraw</a>
            {% endif %}
              <a class="" href="{% url 'payment:balance_list' %}">Изменения баланса</a><br>
         </div>

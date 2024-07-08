@@ -150,7 +150,7 @@ class TestPayment(TestCase):
             f'/pay_result/{payment.id}/': (200, 200, 200, 200, 200),
             '/payments/': (302, 302, 302, 302, 200),
             f'/payments/{payment.id}/': (302, 302, 302, 302, 200),
-            '/withdraws/': (302, 302, 302, 302, 200),
+            '/withdraws/': (302, 200, 200, 200, 200),
             f'/withdraws/{withdraw.id}/': (302, 302, 302, 302, 200),
             f'/balance/': (302, 200, 200, 200, 200),
             f'/create_merchant/': (302, 302, 200, 200, 302),

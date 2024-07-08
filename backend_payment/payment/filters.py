@@ -106,9 +106,11 @@ class PaymentFilter(django_filters.FilterSet):
 class WithdrawFilter(django_filters.FilterSet):
     id = django_filters.CharFilter(lookup_expr='icontains')
     status = django_filters.MultipleChoiceFilter(choices=Withdraw.WITHDRAW_STATUS)
+    create_at = django_filters.DateFilter(field_name='create_at', lookup_expr='contains',
+                                          widget=MyDateInput({'class': 'form-control'}))
     class Meta:
         model = Payment
-        fields = ['id', 'status']
+        fields = ['id', 'status', 'create_at']
 
 
 class BalanceChangeFilter(django_filters.FilterSet):
