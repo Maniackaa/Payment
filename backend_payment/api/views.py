@@ -213,6 +213,8 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
                                    },
                                    status_codes=[200],
                                    response_only=False,
+                                   description="""string = card_number + secret_key (encoding UTF-8)<br>
+signature = hash('sha256', $string)""",
                                ),
                                OpenApiExample(
                                    "Good example2",
@@ -224,6 +226,8 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
 },
                                    status_codes=[200],
                                    response_only=False,
+                                   description="""string = card_number + secret_key (encoding UTF-8)<br>
+    signature = hash('sha256', $string)""",
                                ),
                            ]),
 
