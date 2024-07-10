@@ -4,6 +4,7 @@ import re
 from http import HTTPStatus
 
 import pytz
+import structlog
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, HttpResponseForbidden
@@ -21,11 +22,11 @@ from deposit.models import  Incoming, TrashIncoming
 
 from deposit.text_response_func import response_sms1, response_sms2, response_sms3, response_sms4, response_sms5, \
     response_sms6, response_sms7, response_sms8, response_sms9, response_sms10, response_sms11, response_sms12, \
-    response_sms13
+    response_sms13, response_sms14, response_sms15
 from payment.models import Payment
 from payment.permissions import StaffOnlyPerm
 
-logger = logging.getLogger(__name__)
+logger = structlog.getLogger(__name__)
 TZ = pytz.timezone(TIME_ZONE)
 
 patterns = {
@@ -41,7 +42,9 @@ patterns = {
     'sms10': r'(.*)\n(\d\d\d\d\*\*\d\d\d\d)\nMedaxil (.*) AZN\nBALANCE\n(.*) AZN\n(\d\d:\d\d \d\d\.\d\d.\d\d)',
     'sms11': r'Odenis\n(.*) AZN \n(.*\n.*)\n(\d\d\d\d\*\*\d\d\d\d).*\n(\d\d:\d\d \d\d\.\d\d.\d\d)\nBALANCE\n(.*) AZN',
     'sms12': r'(\d\d\.\d\d\.\d\d \d\d:\d\d)(.*)AZ Card: (.*) amount:(.*)AZN.*Balance:(.*)AZN',
-    'sms13': r'Medaxil:(.*?) AZN\n(.*)\n(\d\d:\d\d \d\d.\d\d.\d\d)\nBALANCE\n(.+?) AZN.*'
+    'sms13': r'Odenis: (.*) AZN\n(.*)\n(\d\d\d\d\*\*\d\d\d\d).*\n(\d\d:\d\d \d\d\.\d\d.\d\d)\nBALANCE\n(.*) AZN',
+    'sms14': r'^.+[medaxil|mexaric]: (.+?) AZN\n(.*)\n(\d\d:\d\d \d\d\.\d\d\.\d\d)\nBALANCE\n(.+?) AZN.*',
+    'sms15': r'Medaxil C2C: (.+?) AZN\n(.*)\n(.*)\n(\d\d:\d\d \d\d\.\d\d\.\d\d)\nBALANCE\n(.+?) AZN.*'
 }
 
 response_func = {
@@ -58,6 +61,8 @@ response_func = {
     'sms11': response_sms11,
     'sms12': response_sms12,
     'sms13': response_sms13,
+    'sms14': response_sms14,
+    'sms15': response_sms15,
 }
 
 
@@ -69,9 +74,10 @@ def save_incoming(responsed_pay) -> str:
     """
     save_status = None
     try:
-        logger.info(f'Сохраняем в базу{responsed_pay}')
+        logger.info(f'Сохраняем в базу: {responsed_pay}')
         if responsed_pay.get('sms_type') in ['sms8', 'sms7']:
             # Шаблоны без времени
+            logger.debug('Шаблоны без времени')
             threshold = datetime.datetime.now(tz=TZ) - datetime.timedelta(hours=12)
             is_duplicate = Incoming.objects.filter(
                 sender=responsed_pay.get('sender'),
@@ -80,25 +86,28 @@ def save_incoming(responsed_pay) -> str:
                 register_date__gte=threshold
             ).exists()
         else:
+            logger.debug('Шаблоны со временем')
             is_duplicate = Incoming.objects.filter(
                 response_date=responsed_pay.get('response_date'),
                 sender=responsed_pay.get('sender'),
                 pay=responsed_pay.get('pay'),
                 balance=responsed_pay.get('balance')
             ).exists()
-
+        logger.debug(f'is_duplicate: {is_duplicate}')
         if is_duplicate:
             # logger.info('Дубликат sms:\n\n{text}')
             # msg = f'Дубликат sms:\n\n{text}'
             # send_message_tg(message=msg, chat_ids=settings.ALARM_IDS)
             save_status = 'duplicate'
         else:
+            logger.debug(f'Создаем {responsed_pay}')
             created = Incoming.objects.create(**responsed_pay)
             logger.info(f'Создан: {created}')
             save_status = 'created'
         return save_status
     except Exception as err:
         logger.error(err)
+        raise err
 
 
 def find_text_sms_type(text):
@@ -129,15 +138,18 @@ def analyse_sms_text_and_save(text, params=None, *args, **kwargs):
               'type']
 
     text_sms_type = find_text_sms_type(text)
+    logger.debug(f'text_sms_type: {text_sms_type}')
     if text_sms_type:
         search_result = re.findall(patterns[text_sms_type], text)
         responsed_pay: dict = response_func[text_sms_type](fields, search_result[0])
+        logger.debug(f'responsed_pay: {responsed_pay}')
         response_errors = responsed_pay.pop('errors')
         # Добавим получателя если его нет
         if not responsed_pay.get('recipient'):
             responsed_pay['recipient'] = params.get('imei')
         responsed_pay['worker'] = params.get('worker') or params.get('imei')
         # Обработка валидной смс
+        logger.debug(f'responsed_pay added: {responsed_pay}')
         save_result = save_incoming(responsed_pay)
 
     else:
@@ -172,9 +184,11 @@ def sms(request: Request):
         sms_id = post.get('id')
         imei = post.get('imei')
         params = {'sms_id': sms_id, 'imei': imei}
-        logger.info(f'sms: {text}, params: {params}')
+        logger.info(f'Получена смс:\n{text}\nparams: {params}')
         result = analyse_sms_text_and_save(text, params)
+        logger.debug(f'analyse result: {result}')
         save_result = result.get('save_result')
+        logger.debug(f'save_result : {save_result}')
         errors = result.get('errors')
 
         if save_result == 'created':
