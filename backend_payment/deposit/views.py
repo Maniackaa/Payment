@@ -20,7 +20,8 @@ from deposit.forms import IncomingForm
 from deposit.models import  Incoming, TrashIncoming
 
 from deposit.text_response_func import response_sms1, response_sms2, response_sms3, response_sms4, response_sms5, \
-    response_sms6, response_sms7, response_sms8, response_sms9, response_sms10, response_sms11, response_sms12
+    response_sms6, response_sms7, response_sms8, response_sms9, response_sms10, response_sms11, response_sms12, \
+    response_sms13
 from payment.models import Payment
 from payment.permissions import StaffOnlyPerm
 
@@ -40,6 +41,7 @@ patterns = {
     'sms10': r'(.*)\n(\d\d\d\d\*\*\d\d\d\d)\nMedaxil (.*) AZN\nBALANCE\n(.*) AZN\n(\d\d:\d\d \d\d\.\d\d.\d\d)',
     'sms11': r'Odenis\n(.*) AZN \n(.*\n.*)\n(\d\d\d\d\*\*\d\d\d\d).*\n(\d\d:\d\d \d\d\.\d\d.\d\d)\nBALANCE\n(.*) AZN',
     'sms12': r'(\d\d\.\d\d\.\d\d \d\d:\d\d)(.*)AZ Card: (.*) amount:(.*)AZN.*Balance:(.*)AZN',
+    'sms13': r'Medaxil:(.*?) AZN\n(.*)\n(\d\d:\d\d \d\d.\d\d.\d\d)\nBALANCE\n(.+?) AZN.*'
 }
 
 response_func = {
@@ -55,6 +57,7 @@ response_func = {
     'sms10': response_sms10,
     'sms11': response_sms11,
     'sms12': response_sms12,
+    'sms13': response_sms13,
 }
 
 

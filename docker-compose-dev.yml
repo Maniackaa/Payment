@@ -67,7 +67,7 @@ services:
 
 
   celery:
-    container_name: celery
+    container_name: celery_payment
     build: ./backend_payment
     restart: always
     command: celery -A backend_payment.celery:app worker -l warning -n myworker --concurrency=4 --logfile=logs/celery.log
@@ -79,6 +79,7 @@ services:
       - redis
 
   celery-beat:
+    container_name:   celery
     build: ./backend_payment
     command: celery -A backend_payment.celery:app beat -l info -S django
     env_file: .env
