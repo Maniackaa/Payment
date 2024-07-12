@@ -107,7 +107,6 @@ def save_incoming(responsed_pay) -> str:
         return save_status
     except Exception as err:
         logger.error(err)
-        raise err
 
 
 def find_text_sms_type(text):
@@ -157,6 +156,8 @@ def analyse_sms_text_and_save(text, params=None, *args, **kwargs):
         new_trash = TrashIncoming.objects.create(text=text, worker=params.get('worker') or params.get('imei'))
         logger.info(f'Добавлено в мусор: {new_trash}')
         save_result = 'trash'
+    if not save_result:
+        response_errors.append(f'Смс не сохранилась в базу!')
     return {'save_result': save_result, 'response_errors': response_errors}
 
 
@@ -197,12 +198,17 @@ def sms(request: Request):
             response = HttpResponse(status=HTTPStatus.OK, content=sms_id)
         else:
             # Мусор
+            new_trash = TrashIncoming.objects.create(text=text, worker=params.get('worker') or params.get('imei'))
+            send_message_tg(message=f'Добавлено в мусор:\n{text}', chat_ids=settings.ALARM_IDS)
+            logger.info(f'Добавлено в мусор так как не удалось сохранить: {new_trash}')
             response = HttpResponse(status=HTTPStatus.OK, content=sms_id)
         return response
 
     except Exception as err:
-        logger.info(f'Неизвестная ошибка при распознавании сообщения: {err}')
-        logger.error(f'Неизвестная ошибка при распознавании сообщения: {err}\n', exc_info=True)
+        msg = f'Неизвестная ошибка при распознавании сообщения: {err}'
+        logger.info(msg)
+        logger.error(f'{msg}', exc_info=True)
+        send_message_tg(message=msg, chat_ids=settings.ALARM_IDS)
         return HttpResponse(status=HTTPStatus.BAD_REQUEST)
 
     finally:

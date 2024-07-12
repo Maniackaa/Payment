@@ -32,8 +32,8 @@ class Merchant(models.Model):
     is_new = models.BooleanField(verbose_name='Новенький', default=1)
     name = models.CharField('Название', max_length=100)
     owner = models.ForeignKey(to=User, related_name='merchants', on_delete=models.CASCADE)
-    host = models.URLField('Адрес для отправки вэбхук')
-    host_withdraw = models.URLField('Вэбхук для отправки withdraw.', default='')
+    host = models.URLField('Адрес для отправки вэбхук payment')
+    host_withdraw = models.URLField('Адрес для отправки вэбхук withdraw.', default='')
     secret = models.CharField('Your secret key', max_length=1000)
     # Endpoints
     pay_success_endpoint = models.URLField('Default Url for redirect user back to your site', null=True, blank=True)

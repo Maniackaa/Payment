@@ -8,6 +8,7 @@ instruction = """
 </ol>
 <p>- <span style="color: #993300;">name</span><sup>*</sup></p>
 <p>- <span style="color: #993300;">endpoint</span><sup>*</sup> для отправки webhook о подтверждении оплаты</p>
+<p>- <span style="color: #993300;">endpoint_withdraw</span><sup>*</sup> для отправки withdraw о подтверждении выплаты</p>
 <p>- <span style="color: #993300;">secret_key</span><sup>*</sup></p>
 <p>- <span style="color: #993300;">url</span> для возврата пользователя после подтверждения платежа. Будет использоваться при отсутствии <span style="color: green">back_url</span>.</p>
 <p>&nbsp;</p>
