@@ -40,8 +40,9 @@ class WithdrawAdmin(admin.ModelAdmin):
 
 class BalanceChangeAdmin(admin.ModelAdmin):
     list_display = (
-        'user', 'comment', 'amount'
+        'create_at', 'user', 'comment', 'amount', 'current_balance'
     )
+    list_filter = ('user',)
 
 
 class MerchantAdmin(admin.ModelAdmin):

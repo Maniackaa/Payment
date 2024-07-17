@@ -14,7 +14,7 @@
      {% include 'includes/paginator.html' %}
      <div class="container">
          {% for obj in page_obj %}
-         {{obj}} <a href="{% url 'payment:merch_owner_detail' obj.id%}">Выплата</a><br>
+         {{obj}} <a href="{% url 'payment:merch_owner_detail' obj.id%}">Изменить баланс/выплата</a><br>
          {% endfor %}
    </div>
    {% include 'includes/paginator.html' %}
