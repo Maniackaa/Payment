@@ -162,7 +162,7 @@
 
                         <div class="row">
                             <div class="col-4">
-                              <input {% if payment.amount %} hidden {% endif %} class="icon_amount" style="text-indent: 35px; text-align: right;" type="number" pattern="[0-9]*" name="amount" value="{{ form.amount.value }}" placeholder="₼"  min="15" max="5000" required="" id="id_amount" maxlength="5">
+                              <input {% if payment.amount %} hidden {% endif %} class="icon_amount" style="text-indent: 35px; text-align: right;" type="number" pattern="[0-9]*" name="amount" value="{{ form.amount.value }}" placeholder="₼"  min="{{ payment.pay_requisite.min_amount }}" max="5000" required="" id="id_amount" maxlength="5">
                             </div>
                         </div>
 
