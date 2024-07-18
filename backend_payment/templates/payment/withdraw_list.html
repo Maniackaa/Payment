@@ -41,6 +41,7 @@
            <th>Статус</th>
            <th>T подтв</th>
          <th>Баланс</th>
+                  <th>response</th>
        </tr>
      </thead>
      <tbody style="text-align: end" >
@@ -65,7 +66,8 @@
 
 
             <td>{{ withdraw.confirmed_time|default_if_none:"-"  }}</td>
-             <td>{{ withdraw.balance  }}</td>
+            <td>{{ withdraw.balance  }}</td>
+            <td>{{ withdraw.response_status_code  }}</td>
 
          </tr>
          {% endfor %}

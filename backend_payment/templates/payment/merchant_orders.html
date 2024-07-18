@@ -38,6 +38,7 @@
          <th>Status</th>
          <th>Confirmed<br>amount</th>
          <th>Confirmed time</th>
+         <th>response</th>
 
        </tr>
      </thead>
@@ -58,6 +59,7 @@
             <td style="white-space: nowrap">{{ payment.status_str }}</td>
             <td>{{ payment.confirmed_amount|default_if_none:"-" }}</td>
             <td>{{ payment.confirmed_time|default_if_none:"-"  }}</td>
+            <td>{{ payment.response_status_code|default_if_none:"-"  }}</td>
 
          </tr>
          {% endfor %}
