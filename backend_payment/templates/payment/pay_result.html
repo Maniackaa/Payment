@@ -104,15 +104,13 @@
 }
 </script>
 
-
-
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script>
 
 var status = {{ payment.status }};
 
 function getStatus() {
-fetch('https://asu-payme.com/api/v1/payment_status/{{payment.id}}/', {
+fetch('/api/v1/payment_status/{{payment.id}}/', {
     method: 'GET',
     headers: {'Content-Type': 'application/json'},
 }).then(response => response.json())
