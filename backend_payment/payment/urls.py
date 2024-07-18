@@ -40,6 +40,7 @@ urlpatterns = [
     path('merchant_delete/<str:pk>/', views.MerchantDelete.as_view(), name='merchant_delete'),
     path('merchant_orders/', views.MerchantOrders.as_view(), name='merchant_orders'),
     path('merchant_test_webhook/', views.merchant_test_webhook, name='merchant_test_webhook'),
+    path('export_payments/', views.export_payments, name='export_payments'),
 
     path('receive_webhook/', views.WebhookReceive.as_view(), name='receive_webhook'),
     ]

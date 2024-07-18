@@ -5,7 +5,6 @@ import random
 import uuid
 from http import HTTPStatus
 
-import requests
 import structlog
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -25,6 +24,7 @@ from django.utils import timezone
 from django.utils.http import urlencode
 from django.views.generic import CreateView, DetailView, FormView, UpdateView, ListView, DeleteView
 from django_currentuser.middleware import get_current_user, get_current_authenticated_user
+from openpyxl.workbook import Workbook
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
@@ -928,6 +928,44 @@ def merchant_test_webhook(request, *args, **kwargs):
         send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data)
 
     return JsonResponse(json.dumps(data), safe=False)
+
+
+@login_required()
+def export_payments(request, *args, **kwargs):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="payments.xlsx"'
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Payments"
+    # Add headers
+    headers = ["Id", "order_id", "pay_type", "create_at", 'merchant', "amount", "confirmed_amount", "status", "user_login", "owner_name", "referrer", "confirmed_time", "response_status_code"]
+    ws.append(headers)
+
+    # Add data from the model
+    if request.user.is_staff:
+        products = Payment.objects.all()
+    else:
+        products = Payment.objects.filter(merchant__owner=request.user)
+    for payment in products:
+        ws.append([str(payment.id),
+                   str(payment.order_id),
+                   payment.pay_type,
+                   str(payment.create_at),
+                   payment.merchant.name,
+                   payment.amount,
+                   payment.confirmed_amount,
+                   payment.status,
+                   payment.user_login,
+                   payment.owner_name,
+                   payment.referrer,
+                   str(payment.confirmed_time),
+                   payment.response_status_code,
+                   ]
+                  )
+
+    # Save the workbook to the HttpResponse
+    wb.save(response)
+    return response
 
 
 class MerchStatView(DetailView, ):

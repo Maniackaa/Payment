@@ -7,21 +7,21 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-3">
+            <div class="col-4">
             Баланс: {{ request.user.balance }} ₼
             </div>
             {% if user.is_superuser %}
             <a class="" href="{% url 'payment:merch_owner_list' %}">Список мерчей</a>
             {% endif %}
            {% if user.is_staff %}
-             <a class="" href="{% url 'payment:payment_list' %}">Заявки payment</a>
+               <div><a class="" href="{% url 'payment:payment_list' %}">Заявки payment</a>  <a href="{% url 'payment:export_payments' %}">(Экспорт)</a></div>
              <a class="" href="{% url 'payment:withdraw_list' %}">Заявки на Выводы withdraw</a>
             <hr>
              <a class="" href="{% url 'deposit:incomings' %}">Пополнения смс incomings</a>
              <a class="" href="{% url 'deposit:trash' %}">Смс мусор incomings </a>
            {% endif %}
            {% if user.role == 'merchant' %}
-             <a class="" href="{% url 'payment:merchant_orders' %}">merchant_orders</a><br>
+               <div><a class="" href="{% url 'payment:merchant_orders' %}">merchant_orders</a> <a href="{% url 'payment:export_payments' %}">(Экспорт)</a></div>
             <a class="" href="{% url 'payment:withdraw_list' %}">Заявки на Выводы withdraw</a>
            {% endif %}
              <a class="" href="{% url 'payment:balance_list' %}">Изменения баланса</a><br>
