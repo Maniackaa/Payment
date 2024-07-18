@@ -34,6 +34,7 @@
      <thead class="">
      <tr class="">
            <th>id</th>
+         <th>withdraw_id</th>
            <th>create time</th>
            <th>Merchant</th>
            <th>Сумм</th>
@@ -50,7 +51,7 @@
                  {% elif withdraw.confirmed_time%}
                      class="table-success"
                  {% endif %}>
-
+         <td>{{ withdraw.withdraw_id}}</td>
             <td>{% if user.is_staff %}
                 <a class="changelink" href="{% url 'payment:withdraw_edit' withdraw.id %}">{{ withdraw.id }}</a>
                 {% else %}
