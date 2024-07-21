@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Оплата
+{% endblock %}
+{% block content %}
+<style>
+    * {
+    font-family: "Arial";
+    font-size: medium;
+}
+
+</style>
+
+<div class="container margin: auto" style="max-width: 500px;">
+  <div class="card" style="margin-top: 20px">
+    <div class="card-header">
+      <div class="row justify-content-center align-items-center">
+          <div class="col-3">
+              <img class="mx-auto d-flex justify-content-center" src="/static/img/AsuPay125.png" height="100%" width="100%">
+          </div>
+          <div class="col-9" style="font-weight: bold; font-size: small">
+              Qeyd olunmuş vaxt ərzində dəqiq məbləği ödəyin, əgər məbləğ fərqlidirsə, ödəniş avtomatik keçməyəcək.  {# совершите оплату точной суммы в течении указанного времени, если сумма будет другая, платеж не пройдёт автоматически. #}
+          </div>
+      </div>
+
+    </div>
+    <div class="row">
+      {% include 'includes/timer_horizontal.html' %}
+    </div>
+    <div class="row ">
+      <div class="">
+        {% include 'payment/credit_card.html' %}
+      </div>
+    </div>
+
+    <div class="row align-items-center justify-content-center ">
+      <div class="col-12" id="pay_input" style="text-align: center; width: 90%">
+        <span>{{ payment.pay_requisite.info }}</span>
+        <form method="POST" enctype="multipart/form-data" style="height:100%; padding: 1px; margin: 1px">
+          {% csrf_token %}
+          {% include 'includes/form_fields.html' %}
+            <div class="col  align-items-center ">
+            <button style="margin-bottom: 20px; margin-top: -20px; width:75%" id="confirm_btn" class="btn btn-success btn btn-block" type="submit">Ödədim</button>
+            </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="row justify-content-center align-items-center text-center">
+        <div class="col" style="display: none" id="time_exp_info1">Vaxt bitdi</div> {# Время вышло #}
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

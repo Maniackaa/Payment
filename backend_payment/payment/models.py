@@ -106,6 +106,7 @@ class CreditCard(models.Model):
 PAY_TYPE = (
         ('card-to-card', 'card-to-card'),
         ('card_2', 'card_2'),
+        ('m10_to_m10', 'm10_to_m10'),
     )
 
 

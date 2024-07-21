@@ -14,6 +14,7 @@ urlpatterns = [
     path('pay_to_m10_create/', views.pay_to_m10_create, name='pay_to_m10_create'),
     path('pay_to_m10_wait_work/', views.pay_to_m10_wait_work, name='pay_to_m10_wait_work'),
     path('pay_to_m10_sms_input/', views.pay_to_m10_sms_input, name='pay_to_m10_sms_input'),
+    path('m10_to_m10_create/', views.m10_to_m10_create, name='m10_to_m10_create'),
     path('pay_result/<str:pk>/', views.PayResultView.as_view(), name='pay_result'),
     path('payments/', views.PaymentListView.as_view(), name='payment_list'),
     path('payments_count/', views.PaymentListCount.as_view(), name='payment_count'),

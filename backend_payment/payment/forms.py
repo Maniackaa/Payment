@@ -120,7 +120,6 @@ class InvoiceM10SmsForm(forms.ModelForm):
                                widget=forms.TextInput(attrs={'minlength': 4,
                                                              'maxlength': 6})
                                )
-
     class Meta:
         model = Payment
         fields = ('sms_code',)

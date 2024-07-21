@@ -185,10 +185,13 @@ def invoice(request, *args, **kwargs):
         query_params = request.GET.urlencode()
         logger.debug(f'invoice GET {args} {kwargs} {request.GET.dict()}'
                      f' {request.META.get("HTTP_REFERER")}')
+        logger.debug((merchant_id, order_id, user_login, owner_name, amount, pay_type, signature))
         if pay_type == 'card_2':
             required_values = [merchant_id, order_id, pay_type]
         elif pay_type == 'card-to-card':
             required_values = [merchant_id, order_id, pay_type, amount]
+        elif pay_type == 'm10_to_m10':
+            required_values = [merchant_id, order_id, pay_type]
         else:
             required_values = [False]
         # Проверка сигнатуры
@@ -249,6 +252,8 @@ def invoice(request, *args, **kwargs):
             return redirect(reverse('payment:pay_to_card_create') + f'?payment_id={payment.id}')
         elif pay_type == 'card_2':
             return redirect(reverse('payment:pay_to_m10_create') + f'?payment_id={payment.id}')
+        elif pay_type == 'm10_to_m10':
+            return redirect(reverse('payment:m10_to_m10_create') + f'?payment_id={payment.id}')
 
     logger.warning('Необработанный путь')
     return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='Not correct data',
@@ -456,6 +461,62 @@ def pay_to_m10_sms_input(request, *args, **kwargs):
         payment.save()
         return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
     return render(request, context=context, template_name='payment/invoice_m10_sms.html')
+
+def m10_to_m10_create(request, *args, **kwargs):
+    """Платеж с м10 на м10 автоматом"""
+    if request.method == 'GET':
+        payment_id = request.GET.get('payment_id')
+        logger.debug(f'GET {request.GET.dict()}'
+                     f' {request.META.get("HTTP_REFERER")}')
+
+        try:
+            payment = Payment.objects.get(id=payment_id)
+            logger.debug(f'payment, status: {payment}')
+        except Exception as err:
+            logger.error(err)
+            return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='Not correct data',
+                                          content='Not correct data')
+        if payment.status not in [0]:
+            return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
+
+        amount = payment.amount
+        initial_data = {'payment_id': payment.id, 'amount': amount}
+        if payment.card_data:
+            initial_data.update(json.loads(payment.card_data))
+        form = forms.InvoiceForm(initial=initial_data)
+        context = {'form': form, 'payment': payment,
+                   'data': get_time_remaining_data(payment)}
+        card_number = initial_data.get('card_number')
+        if card_number:
+            phone_script = get_phone_script(card_number)
+            context['phone_script'] = phone_script
+        return render(request, context=context, template_name='payment/invoice_m10_to_m10.html')
+
+    elif request.method == 'POST':
+        # Обработка нажатия кнопки
+        print(request.POST)
+        post_data = request.POST.dict()
+        payment_id = request.POST.get('payment_id')
+        payment = Payment.objects.get(pk=payment_id)
+        initial_data = {'payment_id': payment.id}
+        initial_data.update(post_data)
+        print('initial_data:', initial_data)
+        form = InvoiceForm(request.POST, instance=payment, initial=initial_data)
+        context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment)}
+
+        if form.is_valid():
+
+            if payment.status == 0:
+                payment.status = 3  # Ввел CC.
+            payment.save()
+            # return render(request, context=context, template_name='payment/invoice_m10.html')
+            return redirect(reverse('payment:pay_result') + f'?payment_id={payment.id}')
+        else:
+            # Некорректные данные
+            logger.debug(f'{form.errors}')
+            return render(request, context=context, template_name='payment/invoice_m10_to_m10.html')
+
+    logger.critical('Необработанный путь')
 
 
 class PayResultView(DetailView):
