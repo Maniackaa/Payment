@@ -5,6 +5,7 @@ import random
 import uuid
 from http import HTTPStatus
 
+import requests
 import structlog
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -191,7 +192,7 @@ def invoice(request, *args, **kwargs):
         elif pay_type == 'card-to-card':
             required_values = [merchant_id, order_id, pay_type, amount]
         elif pay_type == 'm10_to_m10':
-            required_values = [merchant_id, order_id, pay_type]
+            required_values = [merchant_id, order_id, pay_type, amount]
         else:
             required_values = [False]
         # Проверка сигнатуры
@@ -462,13 +463,13 @@ def pay_to_m10_sms_input(request, *args, **kwargs):
         return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
     return render(request, context=context, template_name='payment/invoice_m10_sms.html')
 
+
 def m10_to_m10_create(request, *args, **kwargs):
     """Платеж с м10 на м10 автоматом"""
     if request.method == 'GET':
         payment_id = request.GET.get('payment_id')
         logger.debug(f'GET {request.GET.dict()}'
                      f' {request.META.get("HTTP_REFERER")}')
-
         try:
             payment = Payment.objects.get(id=payment_id)
             logger.debug(f'payment, status: {payment}')
@@ -481,39 +482,38 @@ def m10_to_m10_create(request, *args, **kwargs):
 
         amount = payment.amount
         initial_data = {'payment_id': payment.id, 'amount': amount}
-        if payment.card_data:
-            initial_data.update(json.loads(payment.card_data))
-        form = forms.InvoiceForm(initial=initial_data)
+        form = forms.M10ToM10Form(instance=payment, initial=initial_data)
         context = {'form': form, 'payment': payment,
                    'data': get_time_remaining_data(payment)}
-        card_number = initial_data.get('card_number')
-        if card_number:
-            phone_script = get_phone_script(card_number)
-            context['phone_script'] = phone_script
         return render(request, context=context, template_name='payment/invoice_m10_to_m10.html')
 
     elif request.method == 'POST':
         # Обработка нажатия кнопки
-        print(request.POST)
+        logger.debug(f'POST Обработка нажатия кнопки: {request.POST}')
         post_data = request.POST.dict()
+        logger.debug(f'post_data: {post_data}')
         payment_id = request.POST.get('payment_id')
+        phone = request.POST.get('phone')
+        logger.debug(f'payment_id: {payment_id}')
         payment = Payment.objects.get(pk=payment_id)
-        initial_data = {'payment_id': payment.id}
+        initial_data = {'payment_id': payment.id, 'phone': phone}
         initial_data.update(post_data)
         print('initial_data:', initial_data)
-        form = InvoiceForm(request.POST, instance=payment, initial=initial_data)
+        form = forms.M10ToM10Form(request.POST, instance=payment)
         context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment)}
 
         if form.is_valid():
-
+            print(f'cleaned_data: {form.cleaned_data}')
             if payment.status == 0:
-                payment.status = 3  # Ввел CC.
-            payment.save()
-            # return render(request, context=context, template_name='payment/invoice_m10.html')
-            return redirect(reverse('payment:pay_result') + f'?payment_id={payment.id}')
+                payment.status = 3  # Ввел CC/Оплатил.
+            payment.phone = form.clean_phone()
+            # payment.save()
+            form.save()
+
+            return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
         else:
             # Некорректные данные
-            logger.debug(f'{form.errors}')
+            logger.debug(f'Не корректные данные: {form.errors}')
             return render(request, context=context, template_name='payment/invoice_m10_to_m10.html')
 
     logger.critical('Необработанный путь')
@@ -852,6 +852,17 @@ def test(request, pk, *args, **kwargs):
 
 def invoice_test(request, *args, **kwargs):
     http_host = request.META['HTTP_HOST']
+    data = {
+        'recipient': '+994 51 346 76 42',
+        'sender': '+994 55 212 0919',
+        'pay': 10,
+        'transaction': 124563,
+        'response_date': str(datetime.datetime(2024, 3, 3, 18, 55))
+    }
+    resp = requests.post(
+        url=f'http://127.0.0.1:8000/create_copy_screen/', params=data
+    )
+    print(resp)
     print(http_host)
     new_uid = uuid.uuid4()
     form = InvoiceTestForm(initial={'order_id': new_uid})
