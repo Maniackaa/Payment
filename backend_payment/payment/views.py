@@ -28,8 +28,10 @@ from django_currentuser.middleware import get_current_user, get_current_authenti
 from openpyxl.workbook import Workbook
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
+from urllib3 import Retry, PoolManager
 
 from core.global_func import hash_gen, TZ
+from deposit.models import Incoming
 from payment import forms
 from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter, \
     MerchPaymentFilter, BalanceFilter
@@ -852,17 +854,20 @@ def test(request, pk, *args, **kwargs):
 
 def invoice_test(request, *args, **kwargs):
     http_host = request.META['HTTP_HOST']
-    data = {
-        'recipient': '+994 51 346 76 42',
-        'sender': '+994 55 212 0919',
-        'pay': 10,
-        'transaction': 124563,
-        'response_date': str(datetime.datetime(2024, 3, 3, 18, 55))
-    }
-    resp = requests.post(
-        url=f'http://127.0.0.1:8000/create_copy_screen/', params=data
-    )
-    print(resp)
+    # data = {
+    #     'recipient': 'incoming.recipient',
+    #     'sender': 'incoming.sender',
+    #     'pay': 25,
+    #     'transaction': 12345678,
+    #     'response_date': str(datetime.datetime(2024, 1, 1, 11, 12)),
+    #     'type': 'copy',
+    #     'worker': 'copy from Deposite2'
+    # }
+    # retries = Retry(total=1, backoff_factor=3, status_forcelist=[500, 502, 503, 504])
+    # http = PoolManager(retries=retries)
+    # response = http.request('POST', url=f'http://127.0.0.1:8000/create_copy_screen/', json=data
+    #                         )
+    # print(response.status)
     print(http_host)
     new_uid = uuid.uuid4()
     form = InvoiceTestForm(initial={'order_id': new_uid})

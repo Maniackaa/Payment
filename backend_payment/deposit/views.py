@@ -163,7 +163,8 @@ def analyse_sms_text_and_save(text, params=None, *args, **kwargs):
 
 @api_view(['POST'])
 def create_copy_screen(request: Request):
-    data = request.GET.dict()
+
+    data = request.data
     logger.debug(data)
     Incoming.objects.get_or_create(**data)
     return HttpResponse(status=HTTPStatus.OK, content='ok')
