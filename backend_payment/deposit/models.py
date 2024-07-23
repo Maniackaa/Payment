@@ -11,6 +11,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.utils.html import format_html
 
+from core.global_func import TZ
 from payment.models import Payment
 
 logger = logging.getLogger(__name__)
@@ -98,9 +99,22 @@ def pre_save_incoming(sender, instance: Incoming, raw, using, update_fields, *ar
 @receiver(post_save, sender=Incoming)
 def post_save_incoming(sender, instance: Incoming, created, raw, using, update_fields, *args, **kwargs):
     print(f'post_save_incoming: {instance}. created: {created}')
-    # if created:
-    #     # Проверим есть ли заявки с данной карты
-    #     last_4_digit_recipient = instance.recipient[-4:]
-    #     target_payments = Payment.objects.filter(pay_requisite__card__card_number__endswith=last_4_digit_recipient)
-    #     if target_payments.count() == 1:
-    #         target_payments.first()
+    if created:
+        logger.debug(f'Проверим заявки m10_to_m10')
+        threshold = datetime.datetime.now(tz=TZ) - datetime.timedelta(minutes=10)
+        target_payments = Payment.objects.filter(
+            pay_type='m10_to_m10',
+            phone=instance.sender,
+            amount=instance.pay,
+            status__in=[0, 3],
+            create_at__gte=threshold
+        )
+        logger.debug(f'target_payments: {target_payments}')
+        if target_payments and target_payments.count() == 1:
+            target_payment = target_payments.first()
+            logger.debug(f'target_payment: {target_payment}')
+            target_payment.status = 9
+            target_payment.confirmed_incoming = instance
+            target_payment.save()
+            instance.confirmed_payment = target_payment
+            instance.save()

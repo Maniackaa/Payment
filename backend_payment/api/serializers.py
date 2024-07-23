@@ -179,9 +179,39 @@ class WithdrawSerializer(serializers.ModelSerializer):
         fields = ('id', 'withdraw_id', 'amount', 'status', 'payload')
 
 
+class WithdrawCardSerializer(serializers.ModelSerializer):
+    cvv = serializers.CharField(required=False, min_length=3, max_length=4)
+    expired_month = serializers.CharField(required=False)
+    expired_year = serializers.CharField(required=False)
+
+    class Meta:
+        model = CreditCard
+        fields = (
+            'card_number',
+            'owner_name',
+            'expired_month',
+            'expired_year',
+            'cvv'
+        )
+
+    def validate_card_number(self, data):
+        card_number = ''.join([x for x in data if x.isdigit()])
+        if all(
+                (card_number.isdigit(), len(card_number) == 16)
+        ):
+            return card_number
+        raise ValidationError('card_number must be 16 digits')
+
+    def validate_cvv(self, data):
+        if data.isdigit():
+            return data
+        else:
+            raise ValidationError('cvv must be 3-4 digits')
+
+
 class WithdrawCreateSerializer(serializers.ModelSerializer):
     """Передача данных карты для оплаты"""
-    card_data = CardSerializer()
+    card_data = WithdrawCardSerializer()
     # signature = serializers.CharField()
 
     class Meta:

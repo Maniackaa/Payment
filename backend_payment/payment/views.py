@@ -505,11 +505,24 @@ def m10_to_m10_create(request, *args, **kwargs):
         context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment)}
 
         if form.is_valid():
-            print(f'cleaned_data: {form.cleaned_data}')
             if payment.status == 0:
                 payment.status = 3  # Ввел CC/Оплатил.
             payment.phone = form.clean_phone()
-            # payment.save()
+            # Поиск скринов под заявку:
+            threshold = datetime.datetime.now(tz=TZ) - datetime.timedelta(minutes=10)
+            incomings = Incoming.objects.filter(
+                sender=payment.phone,
+                pay=payment.amount,
+                confirmed_payment__isnull=True,
+                register_date__gte=threshold
+
+            )
+            logger.debug(f'Поиск скринов под оплату: {incomings}')
+            if incomings.count() == 1:
+                incoming = incomings.first()
+                incoming.confirmed_payment = payment
+                incoming.save()
+                payment.status = 9
             form.save()
 
             return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
@@ -854,20 +867,20 @@ def test(request, pk, *args, **kwargs):
 
 def invoice_test(request, *args, **kwargs):
     http_host = request.META['HTTP_HOST']
-    # data = {
-    #     'recipient': 'incoming.recipient',
-    #     'sender': 'incoming.sender',
-    #     'pay': 25,
-    #     'transaction': 12345678,
-    #     'response_date': str(datetime.datetime(2024, 1, 1, 11, 12)),
-    #     'type': 'copy',
-    #     'worker': 'copy from Deposite2'
-    # }
-    # retries = Retry(total=1, backoff_factor=3, status_forcelist=[500, 502, 503, 504])
-    # http = PoolManager(retries=retries)
-    # response = http.request('POST', url=f'http://127.0.0.1:8000/create_copy_screen/', json=data
-    #                         )
-    # print(response.status)
+    data = {
+        'recipient': 'incoming.recipient',
+        'sender': '+994112223333',
+        'pay': 25,
+        'transaction': 12323563389,
+        'response_date': str(datetime.datetime(2024, 1, 1, 11, 12)),
+        'type': 'copy',
+        'worker': 'copy from Deposite2'
+    }
+    retries = Retry(total=1, backoff_factor=3, status_forcelist=[500, 502, 503, 504])
+    http = PoolManager(retries=retries)
+    response = http.request('POST', url=f'http://127.0.0.1:8000/create_copy_screen/', json=data
+                            )
+    print(response.status)
     print(http_host)
     new_uid = uuid.uuid4()
     form = InvoiceTestForm(initial={'order_id': new_uid})
