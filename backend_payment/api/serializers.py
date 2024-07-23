@@ -180,9 +180,9 @@ class WithdrawSerializer(serializers.ModelSerializer):
 
 
 class WithdrawCardSerializer(serializers.ModelSerializer):
-    cvv = serializers.CharField(required=False, min_length=3, max_length=4)
-    expired_month = serializers.CharField(required=False)
-    expired_year = serializers.CharField(required=False)
+    cvv = serializers.CharField(required=False, max_length=4, allow_blank=True)
+    expired_month = serializers.CharField(required=False, allow_blank=True)
+    expired_year = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = CreditCard
@@ -203,6 +203,8 @@ class WithdrawCardSerializer(serializers.ModelSerializer):
         raise ValidationError('card_number must be 16 digits')
 
     def validate_cvv(self, data):
+        if not data:
+            return ''
         if data.isdigit():
             return data
         else:
