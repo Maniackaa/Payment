@@ -16,6 +16,7 @@ from rest_framework.request import Request
 
 from backend_payment.settings import TIME_ZONE
 from core.global_func import send_message_tg
+from deposit.filters import IncomingFilter
 from deposit.forms import IncomingForm
 
 from deposit.models import  Incoming, TrashIncoming
@@ -267,13 +268,17 @@ class IncomingListView(StaffOnlyPerm, ListView, ):
     template_name = 'deposit/incomings_list.html'
     model = Incoming
     paginate_by = settings.PAGINATE
+    filter = IncomingFilter
+
+    def get_queryset(self):
+        return IncomingFilter(self.request.GET, queryset=Incoming.objects).qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # form = PaymentListConfirmForm()
         # context['form'] = form
-        # filter = PaymentFilter(self.request.GET, queryset=self.get_queryset())
-        # context['filter'] = filter
+        filter = IncomingFilter(self.request.GET, queryset=self.get_queryset())
+        context['filter'] = filter
         return context
 
     def post(self, request):

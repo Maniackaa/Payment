@@ -2,7 +2,7 @@
 {% block title %}Оплата
 {% endblock %}
 {% block content %}
-    {% load static %}
+{% load static %}
 <style>
     * {
     font-family: "Arial";
@@ -17,6 +17,16 @@
     background-color: black;
     color: white;
     border-top-right-radius: 50px
+    }
+
+    .m10 {
+        color: #11cca7;
+        font-weight: bold;
+        font-size: x-large;
+    }
+    .m10link {
+        font-weight: bold;
+        font-size: x-large;
     }
 
 </style>
@@ -55,15 +65,30 @@
             <div class="card-body">
                 <div class="row">
                     <div class="row align-items-center justify-content-center ">
-                        <div class="col-12" id="pay_input" style=" width: 90%">
-                            <span>{{ payment.pay_requisite.info|safe }}</span>
-                            <form method="POST" enctype="multipart/form-data" style="height:100%; padding: 1px; margin: 1px">
+                        <div class="col-12 " id="pay_input" style=" width: 100%">
+                            <div class="row">
+                                <div class="col-3">
+                                    <span class="m10">M10</span>
+                                </div>
+                                <span class="col-7" style="text-align: center">
+                                    {{ payment.pay_requisite.info|safe }}<br>
+                                </span>
+                                <div class="col-2">
+                                    <img onclick="CopyToClipboard('m10data')" style="opacity: 1; background-color: #198653" class="img-thumbnail" width="32" height="32" src="{% static '/img/copy.png' %}">
+                                </div>
+                            </div>
+                            <div class="row  justify-content-center ">
+                            <div class="col-10">
+                            <form method="POST" enctype="multipart/form-data" style="width:100%; height:100%; padding: 1px; margin: 1px ">
                               {% csrf_token %}
                               {% include 'includes/form_fields.html' %}
                                 <div class="col  align-items-center" style="text-align: center;">
                                   <button style="margin-bottom: 20px; margin-top: 0px; width:75%" id="confirm_btn" class="btn btn-success btn btn-block" type="submit">Ödədim</button>
                                 </div>
                             </form>
+                            </div>
+                            </div>
+
                         </div>
                     </div>
 
@@ -83,4 +108,23 @@
 
  </div>
 </div>
+
+
+
+<script>
+  function CopyToClipboard(containerid) {
+  if (document.selection) {
+    var range = document.body.createTextRange();
+    range.moveToElementText(document.getElementById(containerid));
+    range.select().createTextRange();
+    document.execCommand("copy");
+  } else if (window.getSelection) {
+    var range = document.createRange();
+    range.selectNode(document.getElementById(containerid));
+    window.getSelection().addRange(range);
+    document.execCommand("copy");
+  }
+}
+</script>
+
 {% endblock %}

@@ -12,9 +12,22 @@
       <div class="col-6">
         <form method="GET">
 
-          {% if search_form %}
-            {{ search_form.as_p }}
-          {% endif %}
+  <div class="container">
+      <form method="get">
+        <div class="row">
+
+            {% for field in filter.form  %}
+                <div class="col-auto">
+                <b>{{ field.label_tag }}</b><br>{{ field }}
+                </div>
+            {% endfor %}
+            <div class="row">
+
+            <button class="btn btn-info btn-light" type="submit">Фильтровать</button>
+            </div>
+        </div>
+    </form>
+  </div>
           <input class="btn btn-success " type="submit" name="date_search" value="Найти">
        </form>
       </div>
@@ -41,6 +54,7 @@
            <th>Отправитель</th>
            <th>Pay</th>
            <th>Б</th>
+           <th>transaction</th>
            <th>Payment_id</th>
        </tr>
      </thead>
@@ -63,9 +77,11 @@
             <td>{{ incoming.sender }}</td>
             <td>{{ incoming.pay }}</td>
             <td>{{ incoming.balance|floatformat:0  }}</td>
-
-         {% load l10n %}
+                  {% load l10n %}
          {% localize off %}
+            <td>{{ incoming.transaction }}</td>
+
+
             <td class="text-nowrap">
                 <form action="{% url 'deposit:incomings' %}" method="post">
                                     {% csrf_token %}
