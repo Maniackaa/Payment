@@ -1,10 +1,13 @@
+from django import forms
 from django.conf import settings
 from django.contrib import admin
+from django.db.models import TextField
 from django.utils.html import format_html
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 from django_better_admin_arrayfield.forms.widgets import DynamicArrayWidget
-
+from django.forms import widgets
+from django.db import models
 from payment.models import CreditCard, PayRequisite, Payment, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
 
 
@@ -12,11 +15,20 @@ class CreditCardAdmin(admin.ModelAdmin):
     pass
 
 
+class PayReqForm(forms.ModelForm):
+  info = forms.CharField( widget=forms.Textarea(attrs={'rows': 2, 'cols': 80}))
+  class Meta:
+    model = PayRequisite
+    fields = ('__all__')
+
+
 class PayRequisiteAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'card', 'is_active', 'pay_type',
     )
     list_editable = ('is_active',)
+    form = PayReqForm
+
 
 
 class PaymentAdmin(admin.ModelAdmin):
