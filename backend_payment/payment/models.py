@@ -497,16 +497,17 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         old = Payment.objects.filter(pk=instance.id).first()
         if old:
             changes = {}
-            fields = ['amount', 'confirmed_amount', 'status', 'comment', 'response_status_code']
+            fields = ['amount', 'confirmed_amount', 'status', 'comment', 'response_status_code', 'pay_requisite']
             for field in fields:
                 if hasattr(instance, field):
+                    old_value = getattr(old, field)
                     new_value = getattr(instance, field)
-                    if new_value != getattr(old, field):
-                        changes[field] = new_value
+                    if new_value != old_value:
+                        changes[field] = f'{old_value} -> {new_value}'
             logger.debug(f'Изменения {get_current_authenticated_user()}: {changes} ')
             if changes:
                 user = get_current_authenticated_user()
-                log = PaymentLog.objects.create(payment=instance, user=user, changes=json.dumps(changes))
+                log = PaymentLog.objects.create(payment=instance, user=user, changes=json.dumps(changes, ensure_ascii=False))
 
     except Exception as err:
         logger.error(f'Ошибка сохранения лога: {err}')
