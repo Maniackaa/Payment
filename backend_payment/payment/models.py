@@ -150,6 +150,7 @@ class Withdraw(models.Model):
     status = models.IntegerField('Статус заявки',
                                  default=0,
                                  choices=WITHDRAW_STATUS)
+    comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True)
     change_time = models.DateTimeField('Время изменения в базе', auto_now=True)
     card_data = models.JSONField(default=str, blank=True)
     confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
@@ -433,6 +434,7 @@ def pre_save_withdraw(sender, instance: Withdraw, raw, using, update_fields, *ar
     if instance.status == 9 and instance.cached_status != 9:
         if not instance.confirmed_time:
             instance.confirmed_time = timezone.now()
+        instance.comission = Decimal(round(instance.amount * instance.merchant.owner.tax / 100, 2))
 
 
 @receiver(post_save, sender=Withdraw)

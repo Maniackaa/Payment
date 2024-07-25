@@ -760,7 +760,7 @@ class WithdrawListView(LoginRequiredMixin, ListView):
         wb = Workbook()
         ws = wb.active
         ws.title = "Withdraws"
-        headers = ["id", "withdraw_id", "create_at", 'merchant', "amount", "status",
+        headers = ["id", "withdraw_id", "create_at", 'merchant', "amount", "comission", "status",
                    "confirmed_time", "response_status_code", "comment", "payload"]
         ws.append(headers)
 
