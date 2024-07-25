@@ -288,12 +288,12 @@ class IncomingListView(StaffOnlyPerm, ListView, ):
             if 'incoming_id:' in key:
                 incoming_id = int(key.split('incoming_id:')[1])
                 input_payment_id = val
-        print(incoming_id, input_payment_id)
-        incoming = Incoming.objects.get(pk=incoming_id)
-        payment = Payment.objects.filter(pk=input_payment_id).first()
-        if payment:
-            incoming.confirmed_payment = payment
-            incoming.save()
+                print(incoming_id, input_payment_id)
+                incoming = Incoming.objects.get(pk=incoming_id)
+                payment = Payment.objects.filter(pk=input_payment_id).first()
+                if payment:
+                    incoming.confirmed_payment = payment
+                    incoming.save()
 
         return redirect(reverse('deposit:incomings'))
 

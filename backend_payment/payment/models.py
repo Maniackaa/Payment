@@ -233,6 +233,7 @@ class Payment(models.Model):
 
     # Подтверждение:
     confirmed_amount = models.IntegerField('Подтвержденная сумма заявки', null=True, blank=True)
+    comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True)
     confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
     confirmed_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     confirmed_incoming = models.OneToOneField(
@@ -372,6 +373,11 @@ class Payment(models.Model):
             data = {}
         return data
 
+    def get_comission(self):
+        user: User = self.merchant.owner
+        tax = user.tax
+        return tax
+
     class Meta:
         ordering = ('-create_at',)
 
@@ -479,6 +485,7 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
             instance.confirmed_time = timezone.now()
         if not instance.confirmed_amount:
             instance.confirmed_amount = instance.amount
+        instance.comission = Decimal(round(instance.confirmed_amount * instance.get_comission() / 100, 2))
         # Осободим реквизиты
         instance.pay_requisite = None
         if not instance.confirmed_user:

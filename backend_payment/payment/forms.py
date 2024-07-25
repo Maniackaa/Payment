@@ -27,7 +27,7 @@ class M10ToM10Form(forms.ModelForm):
     amount = forms.CharField(widget=forms.HiddenInput())
     payment_id = forms.CharField(widget=forms.HiddenInput())
     phone = forms.CharField(label='Phone',
-                                  widget=forms.TextInput(attrs={'placeholder': '+994 xx xxx xxxx',
+                                  widget=forms.TextInput(attrs={'placeholder': '+994 xx xxx xxxx or xx xxx xxxx',
                                                                 'minlength': 10,
                                                                 'maxlength': 16,
                                                                 }))
@@ -187,7 +187,7 @@ class MerchBalanceChangeForm(forms.ModelForm):
         print(cleaned_data)
         print(balance)
         balance_delta = cleaned_data.get('balance_delta')
-        if balance < balance_delta:
+        if balance_delta < 0 and balance < -balance_delta:
             raise ValidationError(f'Недостаточно средств: {balance}')
         return self.cleaned_data
 

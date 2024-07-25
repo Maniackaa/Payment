@@ -3,7 +3,7 @@
 
 
 {% block content %}
-     <div class="container ">
+
     {% include 'includes/user_menu.html' %}
 <div class="container-fluid">
 
@@ -19,16 +19,20 @@
             <div class="row">
 
             <button class="btn btn-info btn-light" type="submit">Фильтровать</button>
+
+
             </div>
         </div>
     </form>
   </div>
 
+
+
      {% include 'includes/paginator.html' %}
 
      <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">
      <thead class="">
-     <tr class="">
+     <tr class="" style="text-align: center">
          <th>order_id</th>
          <th>id</th>
          <th>type</th>
@@ -39,6 +43,9 @@
          <th>Confirmed<br>amount</th>
          <th>Confirmed time</th>
          <th>response</th>
+         <th>user_login</th>
+         <th>owner_name</th>
+         <th>comment</th>
 
        </tr>
      </thead>
@@ -60,6 +67,9 @@
             <td>{{ payment.confirmed_amount|default_if_none:"-" }}</td>
             <td>{{ payment.confirmed_time|default_if_none:"-"  }}</td>
             <td>{{ payment.response_status_code|default_if_none:"-"  }}</td>
+            <td>{{ payment.user_login|default_if_none:"-" }}</td>
+            <td>{{ payment.owner_name|default_if_none:"-" }}</td>
+            <td>{{ payment.comment|default_if_none:"-" }}</td>
 
          </tr>
          {% endfor %}
@@ -69,6 +79,16 @@
             {% include 'includes/paginator.html' %}
    </div>
 
+<div class="container">
+  <div class="row">
+    <form method="post">
+      {% csrf_token %}
+        <div class="col-9 d-grid mx-auto">
+            <button class="btn btn-info btn-light" type="submit">Экспорт</button>
+        </div>
+    </form>
+  </div>
+</div>
 
 
 

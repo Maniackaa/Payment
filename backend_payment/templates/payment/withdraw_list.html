@@ -32,7 +32,7 @@
      <div class="container-fluid ">
      <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">
      <thead class="">
-     <tr class="">
+     <tr class="" style="text-align: center">
            <th>id</th>
          <th>withdraw_id</th>
            <th>create time</th>
@@ -42,6 +42,7 @@
            <th>T подтв</th>
          <th>Баланс</th>
                   <th>response</th>
+         <th>comment</th>
        </tr>
      </thead>
      <tbody style="text-align: end" >
@@ -66,8 +67,9 @@
 
 
             <td>{{ withdraw.confirmed_time|default_if_none:"-"  }}</td>
-            <td>{{ withdraw.balance  }}</td>
-            <td>{{ withdraw.response_status_code  }}</td>
+            <td>{{ withdraw.balance|default_if_none:""   }}</td>
+            <td>{{ withdraw.response_status_code|default_if_none:""   }}</td>
+            <td>{{ withdraw.comment|default_if_none:""   }}</td>
 
          </tr>
          {% endfor %}
@@ -76,6 +78,17 @@
    </table>
    </div>
    {% include 'includes/paginator.html' %}
+<div class="container">
+  <div class="row">
+    <form method="post">
+      {% csrf_token %}
+        <div class="col-9 d-grid mx-auto">
+            <button class="btn btn-info btn-light" type="submit">Экспорт</button>
+        </div>
+    </form>
+  </div>
+</div>
+
 
 </div>
 

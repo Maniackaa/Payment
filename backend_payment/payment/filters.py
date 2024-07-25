@@ -51,12 +51,21 @@ class MerchPaymentFilter(django_filters.FilterSet):
     id = django_filters.CharFilter(lookup_expr='icontains')
     order_id = django_filters.CharFilter(lookup_expr='icontains')
     status = django_filters.MultipleChoiceFilter(choices=Payment.PAYMENT_STATUS)
-    create_at = django_filters.DateFilter(field_name='create_at', lookup_expr='contains',
+    create_at = django_filters.DateFilter(label='За день', field_name='create_at', lookup_expr='contains',
                                              widget=MyDateInput({'class': 'form-control'}))
+
+    create_start = django_filters.DateFilter(label='От', field_name='create_at', lookup_expr='gte',
+                                             widget=MyDateInput({'class': 'form-control'})
+                                             )
+    create_end = django_filters.DateFilter(label='До', field_name='create_at', lookup_expr='lt',
+                                             widget=MyDateInput({'class': 'form-control'})
+                                             )
+    user_login = django_filters.CharFilter(lookup_expr='icontains')
+    owner_name = django_filters.CharFilter(lookup_expr='icontains')
 
     class Meta:
         model = Payment
-        fields = ['id', 'order_id', 'status', 'pay_type', 'amount', 'create_at']
+        fields = ['id', 'order_id', 'status', 'pay_type', 'amount', 'create_at',]
 
     @property
     def qs(self):
@@ -107,8 +116,16 @@ class WithdrawFilter(django_filters.FilterSet):
     id = django_filters.CharFilter(lookup_expr='icontains')
     withdraw_id = django_filters.CharFilter(lookup_expr='icontains')
     status = django_filters.MultipleChoiceFilter(choices=Withdraw.WITHDRAW_STATUS)
-    create_at = django_filters.DateFilter(field_name='create_at', lookup_expr='contains',
+    create_at = django_filters.DateFilter(label='За день', field_name='create_at', lookup_expr='contains',
                                           widget=MyDateInput({'class': 'form-control'}))
+
+    create_start = django_filters.DateFilter(label='От', field_name='create_at', lookup_expr='gte',
+                                             widget=MyDateInput({'class': 'form-control'})
+                                             )
+    create_end = django_filters.DateFilter(label='До', field_name='create_at', lookup_expr='lt',
+                                             widget=MyDateInput({'class': 'form-control'})
+                                             )
+
     class Meta:
         model = Payment
         fields = ['id', 'withdraw_id', 'status', 'create_at']

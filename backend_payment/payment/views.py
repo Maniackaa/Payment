@@ -754,6 +754,31 @@ class WithdrawListView(LoginRequiredMixin, ListView):
         context['filter'] = filter
         return context
 
+    def post(self, request, *args, **kwargs):
+        response = HttpResponse(content_type='application/ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="Withdraws.xlsx"'
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Withdraws"
+        headers = ["id", "withdraw_id", "create_at", 'merchant', "amount", "status",
+                   "confirmed_time", "response_status_code", "comment", "payload"]
+        ws.append(headers)
+
+        products = MerchPaymentFilter(self.request.GET, queryset=self.get_queryset()).qs
+        for payment in products:
+            row = []
+            for field in headers:
+                value = getattr(payment, field)
+                if not value:
+                    value = ''
+                if field in ('id', 'withdraw_id', 'merchant', 'create_at', 'confirmed_time', 'payload'):
+                    row.append(str(value))
+                else:
+                    row.append(value)
+            ws.append(row)
+        wb.save(response)
+        return response
+
 
 class BalanceListView(LoginRequiredMixin, ListView):
     """Список Изменения баланса"""
@@ -942,6 +967,32 @@ class MerchantOrders(LoginRequiredMixin, MerchantOnlyPerm, ListView):
         context['filter'] = filter
         return context
 
+    def post(self, request, *args, **kwargs):
+        print(request, *args, **kwargs)
+        response = HttpResponse(content_type='application/ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="payments.xlsx"'
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Payments"
+        headers = ["id", "order_id", "pay_type", "create_at", 'merchant', "amount", "confirmed_amount", "comission", "status",
+                   "user_login", "owner_name", "referrer", "confirmed_time", "response_status_code", "comment"]
+        ws.append(headers)
+
+        products = MerchPaymentFilter(self.request.GET, queryset=self.get_queryset()).qs
+        for payment in products:
+            row = []
+            for field in headers:
+                value = getattr(payment, field)
+                if not value:
+                    value = ''
+                if field in ('id', 'order_id', 'merchant', 'create_at', 'confirmed_time'):
+                    row.append(str(value))
+                else:
+                    row.append(value)
+            ws.append(row)
+        wb.save(response)
+        return response
+
 
 class MerchantDetail(AuthorRequiredMixin, DetailView, UpdateView,):
     template_name = 'payment/merchant.html'
@@ -1027,31 +1078,23 @@ def export_payments(request, *args, **kwargs):
     wb = Workbook()
     ws = wb.active
     ws.title = "Payments"
-    # Add headers
-    headers = ["Id", "order_id", "pay_type", "create_at", 'merchant', "amount", "confirmed_amount", "status", "user_login", "owner_name", "referrer", "confirmed_time", "response_status_code"]
+    headers = ["Id", "order_id", "pay_type", "create_at", 'merchant', "amount", "confirmed_amount", "status", "user_login", "owner_name", "referrer", "confirmed_time", "response_status_code", "comment"]
     ws.append(headers)
-
-    # Add data from the model
     if request.user.is_staff:
         products = Payment.objects.all()
     else:
         products = Payment.objects.filter(merchant__owner=request.user)
     for payment in products:
-        ws.append([str(payment.id),
-                   str(payment.order_id),
-                   payment.pay_type,
-                   str(payment.create_at),
-                   payment.merchant.name,
-                   payment.amount,
-                   payment.confirmed_amount,
-                   payment.status,
-                   payment.user_login,
-                   payment.owner_name,
-                   payment.referrer,
-                   str(payment.confirmed_time),
-                   payment.response_status_code,
-                   ]
-                  )
+        row = []
+        for field in headers:
+            value = getattr(payment, field)
+            if not value:
+                value = ''
+            if field in ('id', 'order_id', 'merchant', 'create_at', 'confirmed_time'):
+                row.append(str(value))
+            else:
+                row.append(value)
+        ws.append(row)
 
     # Save the workbook to the HttpResponse
     wb.save(response)
