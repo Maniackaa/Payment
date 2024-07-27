@@ -16,7 +16,7 @@ class CreditCardAdmin(admin.ModelAdmin):
 
 
 class PayReqForm(forms.ModelForm):
-  info = forms.CharField( widget=forms.Textarea(attrs={'rows': 2, 'cols': 80}))
+  info = forms.CharField(widget=forms.Textarea(attrs={'rows': 10, 'cols': 80}), required=False)
   class Meta:
     model = PayRequisite
     fields = ('__all__')

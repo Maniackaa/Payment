@@ -975,7 +975,7 @@ class MerchantOrders(LoginRequiredMixin, MerchantOnlyPerm, ListView):
         ws = wb.active
         ws.title = "Payments"
         headers = ["id", "order_id", "pay_type", "create_at", 'merchant', "amount", "confirmed_amount", "comission", "status",
-                   "user_login", "owner_name", "referrer", "confirmed_time", "response_status_code", "comment"]
+                   "user_login", "owner_name", "mask", "referrer", "confirmed_time", "response_status_code", "comment"]
         ws.append(headers)
 
         products = MerchPaymentFilter(self.request.GET, queryset=self.get_queryset()).qs
@@ -999,7 +999,7 @@ class MerchantDetail(AuthorRequiredMixin, DetailView, UpdateView,):
     model = Merchant
     form = MerchantForm
     success_url = reverse_lazy('payment:menu')
-    fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint', 'secret')
+    fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint', 'secret', 'check_balance')
 
 
 class MerchantDelete(AuthorRequiredMixin, SuccessMessageMixin, DeleteView):
@@ -1078,7 +1078,7 @@ def export_payments(request, *args, **kwargs):
     wb = Workbook()
     ws = wb.active
     ws.title = "Payments"
-    headers = ["Id", "order_id", "pay_type", "create_at", 'merchant', "amount", "confirmed_amount", "status", "user_login", "owner_name", "referrer", "confirmed_time", "response_status_code", "comment"]
+    headers = ["Id", "order_id", "pay_type", "create_at", 'merchant', "amount", "comission", "confirmed_amount", "status", "user_login", "owner_name", "mask", "referrer", "confirmed_time", "response_status_code", "comment"]
     ws.append(headers)
     if request.user.is_staff:
         products = Payment.objects.all()

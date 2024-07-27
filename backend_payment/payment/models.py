@@ -35,6 +35,8 @@ class Merchant(models.Model):
     host = models.URLField('Адрес для отправки вэбхук payment')
     host_withdraw = models.URLField('Адрес для отправки вэбхук withdraw.', default='')
     secret = models.CharField('Your secret key', max_length=1000)
+    check_balance = models.BooleanField('Принимать заявку на вывод только при достаточном балансе:',
+                                        default=False)
     # Endpoints
     pay_success_endpoint = models.URLField('Default Url for redirect user back to your site', null=True, blank=True)
 
@@ -116,6 +118,7 @@ class PayRequisite(models.Model):
     card = models.OneToOneField(to=CreditCard, on_delete=models.CASCADE, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     info = models.CharField('Инструкция для пользователя', null=True, blank=True)
+    info2 = models.CharField('Инфо 2', null=True, blank=True)
     method_info = models.CharField('Описание метода', null=True, blank=True)
     min_amount = models.IntegerField(default=0)
     max_amount = models.IntegerField(default=10000)
@@ -150,7 +153,7 @@ class Withdraw(models.Model):
     status = models.IntegerField('Статус заявки',
                                  default=0,
                                  choices=WITHDRAW_STATUS)
-    comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True)
+    comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True, blank=True)
     change_time = models.DateTimeField('Время изменения в базе', auto_now=True)
     card_data = models.JSONField(default=str, blank=True)
     confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
@@ -234,7 +237,8 @@ class Payment(models.Model):
 
     # Подтверждение:
     confirmed_amount = models.IntegerField('Подтвержденная сумма заявки', null=True, blank=True)
-    comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True)
+    comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True, blank=True)
+    mask = models.CharField('Маска карты', max_length=16, null=True)
     confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
     confirmed_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     confirmed_incoming = models.OneToOneField(
@@ -488,6 +492,10 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         if not instance.confirmed_amount:
             instance.confirmed_amount = instance.amount
         instance.comission = Decimal(round(instance.confirmed_amount * instance.get_comission() / 100, 2))
+        # Сохраним маску
+        card_number = instance.card_number()
+        if card_number:
+            instance.mask = f'{card_number[:4]}**{card_number[-4:]}'
         # Осободим реквизиты
         instance.pay_requisite = None
         if not instance.confirmed_user:
@@ -528,7 +536,7 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
 
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
-        logger.info('Выполняем действие полсле подтверждения платежа')
+        logger.info('Выполняем действие после подтверждения платежа')
         # Плюсуем баланс
         with transaction.atomic():
             user = User.objects.get(pk=instance.merchant.owner.id)
@@ -548,6 +556,7 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
             )
             new_log.save()
             logger.debug(f'new_balance: {new_balance}')
+
 
 
         # Отправляем вэбхук

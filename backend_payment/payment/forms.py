@@ -26,9 +26,9 @@ class InvoiceForm(forms.ModelForm):
 class M10ToM10Form(forms.ModelForm):
     amount = forms.CharField(widget=forms.HiddenInput())
     payment_id = forms.CharField(widget=forms.HiddenInput())
-    phone = forms.CharField(label='Phone',
-                                  widget=forms.TextInput(attrs={'placeholder': '+994 xx xxx xxxx or xx xxx xxxx',
-                                                                'minlength': 10,
+    phone = forms.CharField(label='Phone (+994)',
+                                  widget=forms.TextInput(attrs={'placeholder': 'xx xxx xxxx',
+                                                                'minlength': 7,
                                                                 'maxlength': 16,
                                                                 }))
 
@@ -170,7 +170,7 @@ class PaymentListConfirmForm(forms.ModelForm):
 class MerchantForm(forms.ModelForm):
     class Meta:
         model = Merchant
-        fields = ('name', 'host', 'host_withdraw', 'secret', 'pay_success_endpoint')
+        fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint', 'secret', 'check_balance')
 
 
 class MerchBalanceChangeForm(forms.ModelForm):

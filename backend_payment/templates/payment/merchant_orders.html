@@ -40,11 +40,13 @@
          <th>Merchant</th>
          <th>Amount</th>
          <th>Status</th>
+         <th>Comission</th>
          <th>Confirmed<br>amount</th>
          <th>Confirmed time</th>
          <th>response</th>
          <th>user_login</th>
          <th>owner_name</th>
+         <th>card</th>
          <th>comment</th>
 
        </tr>
@@ -64,12 +66,14 @@
             <td>{{ payment.merchant.name}}</td>
             <td>{{ payment.amount }}</td>
             <td style="white-space: nowrap">{{ payment.status_str }}</td>
-            <td>{{ payment.confirmed_amount|default_if_none:"-" }}</td>
-            <td>{{ payment.confirmed_time|default_if_none:"-"  }}</td>
-            <td>{{ payment.response_status_code|default_if_none:"-"  }}</td>
-            <td>{{ payment.user_login|default_if_none:"-" }}</td>
-            <td>{{ payment.owner_name|default_if_none:"-" }}</td>
-            <td>{{ payment.comment|default_if_none:"-" }}</td>
+            <td>{{ payment.comission|default_if_none:"" }}</td>
+            <td>{{ payment.confirmed_amount|default_if_none:"" }}</td>
+            <td>{{ payment.confirmed_time|default_if_none:""  }}</td>
+            <td>{{ payment.response_status_code|default_if_none:""  }}</td>
+            <td>{{ payment.user_login|default_if_none:"" }}</td>
+            <td>{{ payment.owner_name|default_if_none:"" }}</td>
+             <td>{{ payment.mask|default_if_none:"" }}</td>
+            <td>{{ payment.comment|default_if_none:"" }}</td>
 
          </tr>
          {% endfor %}

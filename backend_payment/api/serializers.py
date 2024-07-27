@@ -239,6 +239,12 @@ class WithdrawCreateSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if merchant.owner != user:
             raise ValidationError('Is not your merchant')
+        if merchant.check_balance:
+            amount = data.get('amount')
+            if amount > user.balance:
+                raise ValidationError('Not enough balance')
+
+
         return data
 
 

@@ -66,23 +66,36 @@
                 <div class="row">
                     <div class="row align-items-center justify-content-center ">
                         <div class="col-12 " id="pay_input" style=" width: 100%">
-                            <div class="row justify-content-center" style="text-align: center; white-space: nowrap">
-                                <div class="col-2">
+                            <div class="row justify-content-center" style="text-align: center; white-space: nowrap; ">
+                                <div class="col-12">
                                     <span class="m10">M10</span>
                                 </div>
-                                <span class="col-8">
-                                    {{ payment.pay_requisite.info|safe }}<br>
+
+                                <span class="row align-items-center">
+                                    <div class="col-9">{{ payment.pay_requisite.info|safe }}</div>
+                                    <div class="col-2"><img align="middle" onclick="CopyToClipboard('m10data')" style=" opacity: 1; background-color: #198653; display: block; margin: 0 auto;" class="img-thumbnail"  src="{% static '/img/copy.png' %}"></div>
                                 </span>
-                                <div class="col-2">
-                                    <img onclick="CopyToClipboard('m10data')" style="opacity: 1; background-color: #198653" class="img-thumbnail" width="32" height="32" src="{% static '/img/copy.png' %}">
-                                </div>
+                                <div class="col-12">{{ payment.pay_requisite.info2|safe }}</div>
+
+
                             </div>
-                            <div class="row  justify-content-center ">
-                            <div class="col-10">
-                            <form method="POST" enctype="multipart/form-data" style="width:100%; height:100%; padding: 1px; margin: 1px ">
+                            <div class="row  justify-content-center " style="">
+                            <div class="col-12">
+                            <form method="POST" enctype="multipart/form-data" style="width:100%; height:100%; padding: 1px; margin: 10px ">
                               {% csrf_token %}
-                              {% include 'includes/form_fields.html' %}
-                                <div class="col  align-items-center" style="text-align: center;">
+                                {% for field in form %}
+                                <div class="row align-items-center justify-content-start" style="">
+                                    {% if field.name != 'phone' %}
+                                    {{field}}
+                                    {% else %}
+
+                                    <div class="col-3" style="text-align: right">+994</div><div class="col-7">{{field}}</div>
+                                    {{field.error}}
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+
+                                <div class="col  align-items-center" style="text-align: center; margin-top: 30px">
                                   <button style="margin-bottom: 20px; margin-top: 0px; width:75%" id="confirm_btn" class="btn btn-success btn btn-block" type="submit">Ödədim</button>
                                 </div>
                             </form>
