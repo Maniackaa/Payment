@@ -27,9 +27,10 @@ class M10ToM10Form(forms.ModelForm):
     amount = forms.CharField(widget=forms.HiddenInput())
     payment_id = forms.CharField(widget=forms.HiddenInput())
     phone = forms.CharField(label='Phone (+994)',
-                                  widget=forms.TextInput(attrs={'placeholder': 'xx xxx xxxx',
-                                                                'minlength': 7,
-                                                                'maxlength': 16,
+                                  widget=forms.TextInput(attrs={'placeholder': '556677889',
+                                                                'minlength': 9,
+                                                                'maxlength': 9,
+                                                                'size': 10
                                                                 }))
 
     class Meta:
@@ -42,10 +43,11 @@ class M10ToM10Form(forms.ModelForm):
     def clean_phone(self):
         data = self.cleaned_data["phone"]
         phone = ''.join([x for x in data if x.isdigit() or x in ['+']])
-        if phone.startswith('0') and len(phone) == 10:
-            phone = '+994' + phone[1:]
+        # if phone.startswith('0') and len(phone) == 10:
+        #     phone = '+994' + phone[1:]
+        print(phone)
         if len(phone) == 9:
-            phone = phone = '+994' + phone
+            phone = '+994' + phone
         if not phone.startswith('+994'):
             raise ValidationError('Bad format number')
         if len(phone) != 13:
