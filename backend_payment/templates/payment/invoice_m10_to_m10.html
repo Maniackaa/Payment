@@ -22,7 +22,7 @@
     .m10 {
         color: #11cca7;
         font-weight: bold;
-        font-size: x-large;
+        font-size: medium;
     }
     .m10link {
         font-weight: bold;
@@ -31,8 +31,8 @@
 
 </style>
 
-<div class="container margin: auto" style="max-width: 500px;">
-  <div class="card" style="margin-top: 20px">
+<div class="container margin: auto" style="max-width: 400px;">
+  <div class="card" style="margin-top: 10px">
     <div class="card-header">
       <div class="row justify-content-center align-items-center">
           <div class="col-3">
@@ -50,7 +50,7 @@
 
     <div class="row ">
       <div class="">
-        <div class="card" style="margin: 10px 30px 10px 30px; border-radius: 20px">
+        <div class="card" style="margin: 10px 10px 10px 10px; border-radius: 20px">
             <div class="back card-header" style="border-top-left-radius: 20px; border-top-right-radius: 20px">
                 <div class="row justify-content-center align-items-center text-center" >
                     <div class="col-6">
@@ -71,9 +71,9 @@
                                     <span class="m10">M10</span>
                                 </div>
 
-                                <span class="row align-items-center">
+                                <span class="row align-items-center justify-content-left">
                                     <div class="col-9">{{ payment.pay_requisite.info|safe }}</div>
-                                    <div class="col-2"><img align="middle" onclick="CopyToClipboard('m10data')" style=" opacity: 1; background-color: #198653; display: block; margin: 0 auto;" class="img-thumbnail"  src="{% static '/img/copy.png' %}"></div>
+                                    <div class="col-3"><img align="middle" onclick="CopyToClipboard('m10data')" style=" opacity: 1; background-color: #198653; display: block; margin: auto 20px;" class="img-thumbnail"  src="{% static '/img/copy.png' %}"></div>
                                 </span>
                                 <div class="col-12">{{ payment.pay_requisite.info2|safe }}</div>
 
@@ -89,7 +89,7 @@
                                     {{field}}
                                     {% else %}
 
-                                    <div class="col-3" style="text-align: right">+994</div><div class="col-7">{{field}}</div>
+                                    <div class="col-3" style="text-align: right">+994</div><div class="col-9">{{field}}</div>
                                     {{field.error}}
                                     {% endif %}
                                 </div>
