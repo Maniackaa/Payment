@@ -27,10 +27,10 @@ class M10ToM10Form(forms.ModelForm):
     amount = forms.CharField(widget=forms.HiddenInput())
     payment_id = forms.CharField(widget=forms.HiddenInput())
     phone = forms.CharField(label='Phone (+994)',
-                                  widget=forms.TextInput(attrs={'placeholder': '556677889',
+                                  widget=forms.TextInput(attrs={'placeholder': 'xx xxx xx xx',
                                                                 'minlength': 9,
-                                                                'maxlength': 9,
-                                                                'size': 10
+                                                                'maxlength': 12,
+                                                                'size': 12
                                                                 }))
 
     class Meta:
