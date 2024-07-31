@@ -130,9 +130,11 @@
       <div class="row">
           <div class="col-4" style="padding: 0 0 0 0">
           </div>
+          {% if request.META.HTTP_HOST != 'pro-pay-sphero.com' %}
           <div class="col-4 d-flex justify-content-center"  style="padding: 0 0 0 0; margin: 0 0 0 0px">
               <img class="mx-auto d-flex justify-content-center" src="/static/img/AsuPay125.png" height="125" width="125">
           </div>
+          {% endif %}
       </div>
     </div>
 
