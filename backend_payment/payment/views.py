@@ -999,7 +999,7 @@ class MerchantDetail(AuthorRequiredMixin, DetailView, UpdateView,):
     model = Merchant
     form = MerchantForm
     success_url = reverse_lazy('payment:menu')
-    fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint', 'secret', 'check_balance')
+    fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint', 'secret', 'check_balance', 'white_ip')
 
 
 class MerchantDelete(AuthorRequiredMixin, SuccessMessageMixin, DeleteView):

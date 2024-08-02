@@ -172,7 +172,8 @@ class PaymentListConfirmForm(forms.ModelForm):
 class MerchantForm(forms.ModelForm):
     class Meta:
         model = Merchant
-        fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint', 'secret', 'check_balance')
+        fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint',
+                  'secret', 'check_balance', 'white_ip')
 
 
 class MerchBalanceChangeForm(forms.ModelForm):

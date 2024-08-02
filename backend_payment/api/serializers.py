@@ -22,6 +22,15 @@ logger = structlog.get_logger(__name__)
 User = get_user_model()
 
 
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
 class PaymentCreateSerializer(serializers.ModelSerializer):
     """Создание payment"""
     amount = serializers.IntegerField(required=True)
@@ -45,6 +54,12 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         if amount < pay_requisite.min_amount or amount > pay_requisite.max_amount:
             raise ValidationError(f'Amount must be from {pay_requisite.min_amount} to {pay_requisite.max_amount}')
         data['pay_requisite'] = pay_requisite
+        request = self.context["request"]
+        if merchant.white_ip:
+            ip = get_client_ip(request)
+            logger.debug(f'ip: {ip}')
+            if ip not in merchant.ip_list():
+                raise ValidationError(f'Your ip {ip} not in white list')
         return data
 
     def save(self, **kwargs):

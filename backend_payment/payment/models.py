@@ -37,6 +37,7 @@ class Merchant(models.Model):
     secret = models.CharField('Your secret key', max_length=1000)
     check_balance = models.BooleanField('Принимать заявку на вывод только при достаточном балансе:',
                                         default=False)
+    white_ip = models.CharField('Принимать только с этих адресов', null=True, blank=True, default='')
     # Endpoints
     pay_success_endpoint = models.URLField('Default Url for redirect user back to your site', null=True, blank=True)
 
@@ -51,6 +52,12 @@ class Merchant(models.Model):
 
     def __str__(self):
         return f'Shop {self.id}. ({self.owner}) {self.name}'
+
+    def ip_list(self):
+        ips = []
+        if self.white_ip:
+            ips = self.white_ip.split(';')
+        return ips
 
     class Meta:
         ordering = ('id',)
@@ -358,7 +365,8 @@ class Payment(models.Model):
                 "status": self.status,
                 "confirmed_time": self.confirmed_time.isoformat(),
                 "confirmed_amount": self.confirmed_amount,
-                "signature": self.get_hash()
+                "signature": self.get_hash(),
+                "mask": self.mask
             }
         elif self.status == 5:
             data = {
