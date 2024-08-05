@@ -20,12 +20,19 @@ def send_payment_webhook(url, data: dict):
         logger.info(f'Отправка webhook на {url}: {json.dumps(data)}')
         headers = {"Content-Type": "application/json"}
         response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=5)
-        logger.info(f'status_code {url}: response.status_code')
+        logger.info(f'status_code {url}: {response.status_code}')
         payment_id = data['id']
-        payment = models.Payment.objects.get(pk=payment_id)
+        payment = models.Payment.objects.filter(pk=payment_id).first()
         if payment:
             payment.response_status_code = response.status_code
             payment.save()
+        logger.debug(
+            f'Полный лог {payment_id} {data}:\n'
+            f'status_code: {response.status_code}\n'
+            f'reason: {response.reason}\n'
+            f'text: {response.text}\n'
+            f'url: {response.url}\n'
+        )
         return response.status_code
     except Exception as err:
         logger.error(err)
