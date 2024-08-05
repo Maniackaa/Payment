@@ -144,6 +144,7 @@ class PaymentInputCardSerializer(serializers.ModelSerializer):
 class PaymentInputSmsCodeSerializer(serializers.ModelSerializer):
     """Передача кода подтверждения из смс"""
     sms_code = serializers.CharField(min_length=4, max_length=6)
+
     class Meta:
         model = Payment
         fields = (

@@ -37,7 +37,7 @@ class Merchant(models.Model):
     secret = models.CharField('Your secret key', max_length=1000)
     check_balance = models.BooleanField('Принимать заявку на вывод только при достаточном балансе:',
                                         default=False)
-    white_ip = models.CharField('Принимать только с этих адресов', null=True, blank=True, default='')
+    white_ip = models.CharField('Принимать только с этих адресов (через ";" Например : "127.0.0.1;127.0.0.2")', null=True, blank=True, default='')
     # Endpoints
     pay_success_endpoint = models.URLField('Default Url for redirect user back to your site', null=True, blank=True)
 
@@ -56,7 +56,10 @@ class Merchant(models.Model):
     def ip_list(self):
         ips = []
         if self.white_ip:
-            ips = self.white_ip.split(';')
+            raw_ips = self.white_ip.split(';')
+            for ip in raw_ips:
+                ip = ''.join([char for char in ip if char.isdigit() or char in ['.']])
+                ips.append(ip)
         return ips
 
     class Meta:
