@@ -27,11 +27,11 @@ def send_payment_webhook(url, data: dict):
             payment.response_status_code = response.status_code
             payment.save()
         logger.debug(
-            f'Полный лог {payment_id} {data}:\n'
-            f'status_code: {response.status_code}\n'
-            f'reason: {response.reason}\n'
-            f'text: {response.text}\n'
-            f'url: {response.url}\n'
+            f'Полный лог {payment_id} {data};'
+            f'status_code: {response.status_code};'
+            f'reason: {response.reason};'
+            f'text: {response.text};'
+            f'url: {response.url}'
         )
         return response.status_code
     except Exception as err:
