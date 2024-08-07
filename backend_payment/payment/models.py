@@ -250,7 +250,7 @@ class Payment(models.Model):
     # Подтверждение:
     confirmed_amount = models.IntegerField('Подтвержденная сумма заявки', null=True, blank=True)
     comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True, blank=True)
-    mask = models.CharField('Маска карты', max_length=16, null=True)
+    mask = models.CharField('Маска карты', max_length=16, null=True, blank=True)
     confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
     confirmed_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     confirmed_incoming = models.OneToOneField(
