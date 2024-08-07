@@ -40,3 +40,12 @@ def hash_gen(text, salt):
     formatted_string = f'{text}' + f'{salt}'
     m = hashlib.sha256(formatted_string.encode('UTF-8'))
     return m.hexdigest()
+
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip

@@ -12,7 +12,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import as_serializer_error
 from rest_framework import validators
 
-from core.global_func import hash_gen
+from core.global_func import hash_gen, get_client_ip
 from payment.models import Payment, Merchant, CreditCard, PayRequisite, Withdraw, BalanceChange
 from payment.views import get_pay_requisite
 
@@ -20,15 +20,6 @@ logger = structlog.get_logger(__name__)
 
 
 User = get_user_model()
-
-
-def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
 
 
 class PaymentCreateSerializer(serializers.ModelSerializer):
@@ -57,7 +48,6 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         if merchant.white_ip:
             ip = get_client_ip(request)
-            logger.debug(f'ip: {ip}')
             if ip not in merchant.ip_list():
                 raise ValidationError(f'Your ip {ip} not in white list')
         return data
@@ -156,20 +146,6 @@ class DummyDetailSerializer(serializers.Serializer):
     amount = serializers.CharField()
 
 
-# class PaymentStaffSerializer(serializers.ModelSerializer):
-#     sms_code = serializers.CharField(min_length=4, max_length=6, read_only=True)
-#
-#     class Meta:
-#         fields = ('id', 'status', 'sms_code')
-#         model = Payment
-#
-#     def validate_status(self, value):
-#         logger.debug(f'validate {self}')
-#         if self.instance.status in (-1, 9):
-#             raise serializers.ValidationError("Платеж уже обработан")
-#         return value
-
-
 class PaymentGuestSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'status')
@@ -251,6 +227,11 @@ class WithdrawCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         merchant = data.get('merchant')
+        request = self.context["request"]
+        if merchant.white_ip:
+            ip = get_client_ip(request)
+            if ip not in merchant.ip_list():
+                raise ValidationError(f'Your ip {ip} not in white list')
         user = self.context['request'].user
         if merchant.owner != user:
             raise ValidationError('Is not your merchant')
@@ -258,8 +239,6 @@ class WithdrawCreateSerializer(serializers.ModelSerializer):
             amount = data.get('amount')
             if amount > user.balance:
                 raise ValidationError('Not enough balance')
-
-
         return data
 
 

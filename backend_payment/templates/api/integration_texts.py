@@ -11,6 +11,7 @@ instruction = """
 <p>- <span style="color: #993300;">endpoint_withdraw</span><sup>*</sup> для отправки withdraw о подтверждении выплаты</p>
 <p>- <span style="color: #993300;">secret_key</span><sup>*</sup></p>
 <p>- <span style="color: #993300;">url</span> для возврата пользователя после подтверждения платежа. Будет использоваться при отсутствии <span style="color: green">back_url</span>.</p>
+<p>- <span style="color: #993300;">ip</span> адреса, с которых будут приниматься запросы по API. При пустом поле будут приниматься с любых адресов.</p>
 <p>&nbsp;</p>
 <p>Вашему магазину будет присвоен <b>merchant_id</b></p>
 <p>В настоящий момент работает 2 метода оплаты:</p>
@@ -155,10 +156,11 @@ instruction = """
 <p>&nbsp; "user_login": "user_login",</p>
 <p>&nbsp; "amount": 500,</p>
 <p>&nbsp; "create_at": &ldquo;2024-05-16T08:50:17.092730&rdquo;, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / время создания isoformat</p>
-<p>&nbsp; "status": 9, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / -1 отклонен, 9 подтвержден</p>
+<p>&nbsp; "status": 9, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / -1 отклонен, 9 подтвержден</p>
 <p>&nbsp; "confirmed_time": 2024-05-16T08:51:17.092730, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / время подтверждения isoformat</p>
 <p>&nbsp; "confirmed_amount": 400,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / подтвержденная сумма</p>
-<p>&nbsp; "signature": "59f232b7a2a22f9d1bf8829c6b39ab0b0410eba6a83d5fd402743ae0c415f6b1"</p>
+<p>&nbsp; "signature": "59f232b7a2a22f9d1bf8829c6b39ab0b0410eba6a83d5fd402743ae0c415f6b1",</p>
+<p>&nbsp; "mask": "1111**1234"</p>
 <p>}</p>
 <p>&nbsp;</p>
 <p>Расчет signature:</p>

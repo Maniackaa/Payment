@@ -24,7 +24,7 @@ from api.permissions import PaymentOwnerOrStaff, IsStaff, IsStaffOrReadOnly
 from api.serializers import PaymentCreateSerializer, PaymentInputCardSerializer, \
     PaymentInputSmsCodeSerializer, PaymentTypesSerializer, WithdrawCreateSerializer, \
     WithdrawSerializer, PaymentGuestSerializer, BalanceSerializer
-from core.global_func import hash_gen
+from core.global_func import hash_gen, get_client_ip
 from payment.models import Payment, PayRequisite, Withdraw, BalanceChange
 from payment.views import get_phone_script, get_bank_from_bin
 
@@ -250,6 +250,11 @@ signature = hash('sha256', $string)""",
             permission_classes=[PaymentOwnerOrStaff],)
     def send_card_data(self, request, *args, **kwargs):
         payment = get_object_or_404(Payment, id=self.kwargs.get("pk"))
+        merchant = payment.merchant
+        if merchant.white_ip:
+            ip = get_client_ip(request)
+            if ip not in merchant.ip_list():
+                raise serializers.ValidationError(f'Your ip {ip} not in white list')
         if payment.status == -1:
             raise serializers.ValidationError({'status': 'payment Declined!'})
         serializer = PaymentInputCardSerializer(data=request.data)
@@ -301,6 +306,11 @@ signature = hash('sha256', $string)""",
             permission_classes=[PaymentOwnerOrStaff],)
     def send_sms_code(self, request, *args, **kwargs):
         payment = get_object_or_404(Payment, id=self.kwargs.get("pk"))
+        merchant = payment.merchant
+        if merchant.white_ip:
+            ip = get_client_ip(request)
+            if ip not in merchant.ip_list():
+                raise serializers.ValidationError(f'Your ip {ip} not in white list')
         if payment.status == -1:
             raise serializers.ValidationError({'status': 'payment Declined!'})
         serializer = PaymentInputSmsCodeSerializer(data=request.data)
