@@ -250,6 +250,8 @@ signature = hash('sha256', $string)""",
             permission_classes=[PaymentOwnerOrStaff],)
     def send_card_data(self, request, *args, **kwargs):
         payment = get_object_or_404(Payment, id=self.kwargs.get("pk"))
+        if payment.status == -1:
+            raise serializers.ValidationError({'status': 'payment Declined!'})
         serializer = PaymentInputCardSerializer(data=request.data)
         if serializer.is_valid():
             card_data = serializer.validated_data
@@ -299,6 +301,8 @@ signature = hash('sha256', $string)""",
             permission_classes=[PaymentOwnerOrStaff],)
     def send_sms_code(self, request, *args, **kwargs):
         payment = get_object_or_404(Payment, id=self.kwargs.get("pk"))
+        if payment.status == -1:
+            raise serializers.ValidationError({'status': 'payment Declined!'})
         serializer = PaymentInputSmsCodeSerializer(data=request.data)
         if serializer.is_valid():
             card_data = json.loads(payment.card_data)
@@ -308,20 +312,6 @@ signature = hash('sha256', $string)""",
             payment.save()
             return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class PaymentInputCard(mixins.UpdateModelMixin, viewsets.GenericViewSet):
-    serializer_class = PaymentInputCardSerializer
-    queryset = Payment.objects.all()
-    permission_classes = [PaymentOwnerOrStaff]
-    http_method_names = ['put']
-
-
-class PaymentInputSmsCode(mixins.UpdateModelMixin, viewsets.GenericViewSet):
-    serializer_class = PaymentInputSmsCodeSerializer
-    queryset = Payment.objects.all()
-    permission_classes = [PaymentOwnerOrStaff]
-    http_method_names = ['put']
 
 
 class BalanceViewSet(viewsets.GenericViewSet, generics.ListAPIView):

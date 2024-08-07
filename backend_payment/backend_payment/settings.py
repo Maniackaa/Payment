@@ -289,7 +289,7 @@ LOGGING = {
         },
         "root": {
             "handlers": [],
-            "level": "WARNING",
+            "level": "DEBUG",
             "propagate": False,
         },
 

@@ -122,13 +122,12 @@ class PaymentInputCardSerializer(serializers.ModelSerializer):
 
     def validate_card_number(self, data):
         card_number = ''.join([x for x in data if x.isdigit()])
-        print(card_number, card_number.isdigit(), len(card_number))
+        # print(card_number, card_number.isdigit(), len(card_number))
         if all(
                 (card_number.isdigit(), len(card_number) == 16)
         ):
             return card_number
         raise ValidationError('card_number must be 16 digits')
-
 
     class Meta:
         model = CreditCard

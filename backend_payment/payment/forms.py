@@ -170,6 +170,8 @@ class PaymentListConfirmForm(forms.ModelForm):
 
 
 class MerchantForm(forms.ModelForm):
+    name = forms.CharField(label='235')
+
     class Meta:
         model = Merchant
         fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint',

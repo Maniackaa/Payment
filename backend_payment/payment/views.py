@@ -994,12 +994,13 @@ class MerchantOrders(LoginRequiredMixin, MerchantOnlyPerm, ListView):
         return response
 
 
-class MerchantDetail(AuthorRequiredMixin, DetailView, UpdateView,):
+class MerchantDetail(AuthorRequiredMixin, UpdateView,):
     template_name = 'payment/merchant.html'
     model = Merchant
-    form = MerchantForm
+    # form = MerchantForm
     success_url = reverse_lazy('payment:menu')
-    fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint', 'secret', 'check_balance', 'white_ip')
+    fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint', 'secret', 'check_balance', 'white_ip',
+              'dump_webhook_data')
 
 
 class MerchantDelete(AuthorRequiredMixin, SuccessMessageMixin, DeleteView):
@@ -1051,22 +1052,26 @@ def merchant_test_webhook(request, *args, **kwargs):
     if 'payment_decline' in request.POST:
         payment.status = -1
         data = payment.webhook_data()
-        send_payment_webhook.delay(merchant.host, data)
+        send_payment_webhook.delay(merchant.host, data,
+                                   dump_data=payment.merchant.dump_webhook_data)
     elif 'payment_accept' in request.POST:
         payment.confirmed_amount = random.randrange(10, 3000)
         payment.status = 9
         payment.confirmed_time = timezone.now()
         data = payment.webhook_data()
-        send_payment_webhook.delay(merchant.host, data)
+        send_payment_webhook.delay(merchant.host, data,
+                                   dump_data=payment.merchant.dump_webhook_data)
     elif 'withdraw_accept' in request.POST:
         withdraw.status = 9
         withdraw.confirmed_time = timezone.now()
         data = withdraw.webhook_data()
-        send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data)
+        send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data,
+                                    dump_data=withdraw.merchant.dump_webhook_data)
     else:
         withdraw.status = -1
         data = withdraw.webhook_data()
-        send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data)
+        send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data,
+                                    dump_data=withdraw.merchant.dump_webhook_data)
 
     return JsonResponse(json.dumps(data), safe=False)
 
@@ -1165,7 +1170,7 @@ class WebhookReceive(APIView):
         return HttpResponse('ok')
 
     def post(self, request, *args, **kwargs):
-        logger.debug('WebhookReceive')
+        logger.info('WebhookReceive')
         data = request.data
-        logger.debug(data)
-        return JsonResponse({'status': 'succes'})
+        logger.info(data)
+        return JsonResponse({'status': 'success', 'data': data})

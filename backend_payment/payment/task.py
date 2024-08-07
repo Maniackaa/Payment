@@ -14,12 +14,15 @@ logger = structlog.get_logger(__name__)
 
 
 @shared_task()
-def send_payment_webhook(url, data: dict):
+def send_payment_webhook(url, data: dict, dump_data=True):
     """Отправка вебхука принятия или отклонения заявки payment"""
     try:
-        logger.info(f'Отправка webhook на {url}: {json.dumps(data)}')
+        logger.info(f'Отправка webhook на {url}: {data}. dump_data: {dump_data}')
         headers = {"Content-Type": "application/json"}
-        response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=5)
+        if dump_data:
+            response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=5)
+        else:
+            response = request(url=url, method='POST', json=data, headers=headers, timeout=5)
         logger.info(f'status_code {url}: {response.status_code}')
         payment_id = data['id']
         payment = models.Payment.objects.filter(pk=payment_id).first()
@@ -39,11 +42,14 @@ def send_payment_webhook(url, data: dict):
 
 
 @shared_task()
-def send_withdraw_webhook(url, data: dict):
+def send_withdraw_webhook(url, data: dict, dump_data=True):
     try:
         logger.info(f'Отправка webhook на {url}: {json.dumps(data)}')
         headers = {"Content-Type": "application/json"}
-        response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=10)
+        if dump_data:
+            response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=10)
+        else:
+            response = request(url=url, method='POST', json=data, headers=headers, timeout=10)
         logger.info(response.status_code)
         withdraw_id = data['id']
         withdraw = models.Withdraw.objects.get(pk=withdraw_id)

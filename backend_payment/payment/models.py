@@ -37,7 +37,9 @@ class Merchant(models.Model):
     secret = models.CharField('Your secret key', max_length=1000)
     check_balance = models.BooleanField('Принимать заявку на вывод только при достаточном балансе:',
                                         default=False)
-    white_ip = models.CharField('Принимать только с этих адресов (через ";" Например : "127.0.0.1;127.0.0.2")', null=True, blank=True, default='')
+    white_ip = models.CharField('Принимать только с этих адресов (через ";" Например : "127.0.0.1;127.0.0.2")',
+                                null=True, blank=True, default='')
+    dump_webhook_data = models.BooleanField(default=True)
     # Endpoints
     pay_success_endpoint = models.URLField('Default Url for redirect user back to your site', null=True, blank=True)
 
@@ -479,14 +481,18 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
 
             # Отправляем вэбхук
             data = instance.webhook_data()
-            result = send_withdraw_webhook.delay(url=instance.merchant.host_withdraw or instance.merchant.host, data=data)
+            result = send_withdraw_webhook.delay(
+                url=instance.merchant.host_withdraw or instance.merchant.host, data=data,
+                dump_data=instance.merchant.dump_webhook_data)
             logger.info(f'answer: {result}')
 
         # Если статус изменился на -1 (Отклонен):
         if instance.status == -1 and instance.cached_status != -1:
             logger.info('Выполняем действие после отклонения платежа')
             data = instance.webhook_data()
-            result = send_withdraw_webhook.delay(url=instance.merchant.host_withdraw or instance.merchant.host, data=data)
+            result = send_withdraw_webhook.delay(
+                url=instance.merchant.host_withdraw or instance.merchant.host, data=data,
+                dump_data=instance.merchant.dump_webhook_data)
             logger.info(f'answer: {result}')
     except Exception as err:
         logger.error(f'Ошибка при сохранении Withdraw: {err}')
@@ -568,24 +574,25 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
             new_log.save()
             logger.debug(f'new_balance: {new_balance}')
 
-
-
         # Отправляем вэбхук
         data = instance.webhook_data()
-        result = send_payment_webhook.delay(url=instance.merchant.host, data=data)
+        result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
+                                            dump_data=instance.merchant.dump_webhook_data)
         logger.info(f'answer: {result}')
     
     # Отправка вэбхука если статус изменился на 5 - ожидание смс и api:
     if instance.source == 'api' and instance.status == 5 and instance.cached_status != 5:
         data = instance.webhook_data()
-        result = send_payment_webhook.delay(url=instance.merchant.host, data=data)
+        result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
+                                            dump_data=instance.merchant.dump_webhook_data)
         logger.info(f'answer: {result}')
 
     # Если статус изменился на -1 (Отклонен):
     if instance.status == -1 and instance.cached_status != -1:
         logger.info('Выполняем действие после отклонения платежа')
         data = instance.webhook_data()
-        result = send_payment_webhook.delay(url=instance.merchant.host, data=data)
+        result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
+                                            dump_data=instance.merchant.dump_webhook_data)
         logger.info(f'answer: {result}')
 
     if created:
