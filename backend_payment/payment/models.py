@@ -575,10 +575,14 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
             logger.debug(f'new_balance: {new_balance}')
 
         # Отправляем вэбхук
-        data = instance.webhook_data()
-        result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
-                                            dump_data=instance.merchant.dump_webhook_data)
-        logger.info(f'answer: {result}')
+        try:
+            data = instance.webhook_data()
+            logger.debug(f'Отправляем вэбхук: {data}')
+            result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
+                                                dump_data=instance.merchant.dump_webhook_data)
+            logger.debug(f'answer: {result}')
+        except Exception as err:
+            logger.error(f'Ошибка при отправке вэбхука: {err}')
     
     # Отправка вэбхука если статус изменился на 5 - ожидание смс и api:
     if instance.source == 'api' and instance.status == 5 and instance.cached_status != 5:

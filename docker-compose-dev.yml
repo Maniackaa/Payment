@@ -44,7 +44,8 @@ services:
   redis:
     container_name: redis_payment
     image: redis:latest
-    command: redis-server --save 20 1 --loglevel warning
+    command: redis-server --save 20 1 --loglevel warning --requirepass $REDIS_PASSWORD
+    env_file: .env
     restart: always
     ports:
       - "6379:6379"

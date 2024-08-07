@@ -15,39 +15,39 @@ services:
     volumes:
       - ./postgres/init_db:/docker-entrypoint-initdb.d
       - pg_data:/var/lib/postgresql/data
-    ports:
-      - "15432:5432"
+#    ports:
+#      - "15432:5432"
     restart: always
 
 
-  pgadmin:
-    container_name: pgadmin_container
-    image: dpage/pgadmin4:latest
-    env_file: .env
-    environment:
-      PGADMIN_DEFAULT_EMAIL: $PGADMIN_DEFAULT_EMAIL
-      PGADMIN_DEFAULT_PASSWORD: $PGADMIN_DEFAULT_PASSWORD
-
-    depends_on:
-      - db_postgres
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    ports:
-      - "5050:80"
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 1G
+#  pgadmin:
+#    container_name: pgadmin_container
+#    image: dpage/pgadmin4:latest
+#    env_file: .env
+#    environment:
+#      PGADMIN_DEFAULT_EMAIL: $PGADMIN_DEFAULT_EMAIL
+#      PGADMIN_DEFAULT_PASSWORD: $PGADMIN_DEFAULT_PASSWORD
+#
+#    depends_on:
+#      - db_postgres
+#    volumes:
+#      - pgadmin_data:/var/lib/pgadmin
+#    ports:
+#      - "5050:80"
+#    restart: always
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '0.5'
+#          memory: 1G
 
   redis:
     container_name: redis_payment
     image: redis:latest
     command: redis-server --save 20 1 --loglevel warning
-    restart: always
-    ports:
-      - "6379:6379"
+    restart: unless-stopped
+#    ports:
+#      - "6379:6379"
     volumes:
       - redis_data:/data
 
@@ -69,7 +69,7 @@ services:
 
   celery:
     build: ./backend_payment
-    restart: always
+    restart: unless-stopped
     command: celery -A backend_payment worker -l warning -n myworker1  --concurrency=4  --logfile logs/celery_file.log
     env_file: .env
     volumes:

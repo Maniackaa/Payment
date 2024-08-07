@@ -97,12 +97,12 @@ def get_phone_script(card_num) -> PhoneScript:
     """Возвращает скрипт для ввода данных карты/смс по номеру карты"""
     try:
         bin_num = str(card_num)[:6]
-        logger.debug(f'bin_num: {bin_num}')
+        # logger.debug(f'bin_num: {bin_num}')
         bank = Bank.objects.filter(bins__contains=[bin_num]).first()
 
         if not bank:
             bank = Bank.objects.get(name='default')
-        logger.info(f'phone_script: {bank.script}')
+        # logger.info(f'phone_script: {bank.script}')
         return bank.script
     except Exception as err:
         logger.error(err)
@@ -126,13 +126,13 @@ def get_time_remaining(pay: Payment) -> tuple[datetime.timedelta, int]:
         time_remaining = pay.create_at + datetime.timedelta(seconds=TIMER_SECONDS) - timezone.now()
         limit = TIMER_SECONDS
 
-    logger.debug(pay.cc_data_input_time)
-    logger.debug(time_remaining)
+    # logger.debug(pay.cc_data_input_time)
+    # logger.debug(time_remaining)
     return time_remaining, limit
 
 
 def get_time_remaining_data(pay: Payment) -> dict:
-    logger.debug('get_time_remaining_data')
+    # logger.debug('get_time_remaining_data')
     time_remaining, limit = get_time_remaining(pay)
     if time_remaining.total_seconds() > 0:
         hours = time_remaining.seconds // 3600
@@ -1024,8 +1024,6 @@ class MerchantDelete(AuthorRequiredMixin, SuccessMessageMixin, DeleteView):
 def merchant_test_webhook(request, *args, **kwargs):
     if request.user.role != 'merchant':
         return HttpResponseBadRequest()
-    print(request.POST)
-    print(args, kwargs)
     print('merchant_test_webhook')
     order_id = str(uuid.uuid4())
     pk = str(uuid.uuid4())
@@ -1059,8 +1057,7 @@ def merchant_test_webhook(request, *args, **kwargs):
         payment.status = 9
         payment.confirmed_time = timezone.now()
         data = payment.webhook_data()
-        send_payment_webhook.delay(merchant.host, data,
-                                   dump_data=payment.merchant.dump_webhook_data)
+        send_payment_webhook.delay(merchant.host, data, payment.merchant.dump_webhook_data)
     elif 'withdraw_accept' in request.POST:
         withdraw.status = 9
         withdraw.confirmed_time = timezone.now()
