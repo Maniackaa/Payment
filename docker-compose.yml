@@ -43,8 +43,9 @@ services:
 
   redis:
     container_name: redis_payment
-    image: redis:latest
-    command: redis-server --save 20 1 --loglevel warning
+    image: redis:7.4
+    command: redis-server --save 20 1 --loglevel warning --requirepass $REDIS_PASSWORD
+    env_file: .env
     restart: unless-stopped
 #    ports:
 #      - "6379:6379"
@@ -57,9 +58,12 @@ services:
     restart: always
     env_file: .env
     depends_on:
-      - db_postgres
-      - redis
-      - celery
+      db_postgres:
+        condition: service_started
+        restart: false
+      celery:
+        condition: service_started
+        restart: false
     volumes:
       - static:/app/collected_static/
       - media:/app/media/
@@ -76,7 +80,9 @@ services:
       - media:/app/media/
       - ./logs/celery:/app/logs
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+        restart: false
 
 
   celery-beat:
@@ -94,7 +100,9 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - backend
+      backend:
+        condition: service_started
+        restart: false
     volumes:
       #- ./nginx.conf:/etc/nginx/conf.d:ro
       - ./certbot/www:/var/www/certbot/:ro
