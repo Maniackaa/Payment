@@ -36,7 +36,7 @@ class PaymentAdmin(admin.ModelAdmin):
         'id', 'create_at', 'merchant', 'order_id', 'amount',
         'status', 'card_number', 'sms_code', 'bank_name', 'response_status_code'
     )
-    list_filter = ('merchant', 'pay_requisite')
+    list_filter = ('merchant', 'pay_requisite', 'response_status_code')
 
     # Кастомное поле
     # def card_number(self, obj):
@@ -46,8 +46,9 @@ class PaymentAdmin(admin.ModelAdmin):
 
 class WithdrawAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'merchant', 'withdraw_id', 'amount', 'status', 'confirmed_time', 'comment'
+        'id', 'merchant', 'withdraw_id', 'amount', 'status', 'confirmed_time', 'response_status_code', 'comment'
     )
+    list_filter = ('merchant', 'status', 'response_status_code')
 
 
 class BalanceChangeAdmin(admin.ModelAdmin):

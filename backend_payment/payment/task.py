@@ -17,7 +17,7 @@ logger = structlog.get_logger(__name__)
 def send_payment_webhook(url, data: dict, dump_data=True):
     """Отправка вебхука принятия или отклонения заявки payment"""
     try:
-        logger.info(f'Отправка webhook на {url}: {data}. dump_data: {dump_data}')
+        logger.info(f'Отправка webhook на {url}: {data}.')
         headers = {"Content-Type": "application/json"}
         if dump_data:
             response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=5)
@@ -44,7 +44,7 @@ def send_payment_webhook(url, data: dict, dump_data=True):
 @shared_task()
 def send_withdraw_webhook(url, data: dict, dump_data=True):
     try:
-        logger.info(f'Отправка webhook на {url}: {json.dumps(data)}')
+        logger.info(f'Отправка webhook на {url}: {data}')
         headers = {"Content-Type": "application/json"}
         if dump_data:
             response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=10)
@@ -69,9 +69,9 @@ def automatic_decline_expired_payment():
     """
     PAYMENT_EXPIRED = 11 * 60
     expired_time = timezone.now() - datetime.timedelta(seconds=PAYMENT_EXPIRED)
-    logger.info(f'Удаляем payment ранее {expired_time}')
+    logger.debug(f'Удаляем payment ранее {expired_time}')
     expired_payment = models.Payment.objects.filter(create_at__lt=expired_time, status__range=(0, 8))
-    logger.info(f'Найдено для отклонения: {expired_payment}')
+    logger.debug(f'Найдено для отклонения: {expired_payment}')
     for p in expired_payment:
         p.status = -1
         p.pay_requisite = None

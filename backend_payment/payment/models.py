@@ -460,7 +460,7 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
         logger.debug(f'post_save_status = {instance.status}  cashed: {instance.cached_status}')
         # Если статус изменился на 9 (потвержден):
         if instance.status == 9 and instance.cached_status != 9:
-            logger.info('Выполняем действие после подтверждения выплаты')
+            logger.info(f'Выполняем действие после подтверждения выплаты {instance.id}')
             # Минусуем баланс
             with transaction.atomic():
                 user = User.objects.get(pk=instance.merchant.owner.id)
@@ -481,19 +481,21 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
 
             # Отправляем вэбхук
             data = instance.webhook_data()
+            logger.debug(f'Отправка вэбхук {instance.id}: {data}')
             result = send_withdraw_webhook.delay(
                 url=instance.merchant.host_withdraw or instance.merchant.host, data=data,
                 dump_data=instance.merchant.dump_webhook_data)
-            logger.info(f'answer: {result}')
+            logger.info(f'answer {instance.id}: {result}')
 
         # Если статус изменился на -1 (Отклонен):
         if instance.status == -1 and instance.cached_status != -1:
-            logger.info('Выполняем действие после отклонения платежа')
+            logger.debug(f'Выполняем действие после отклонения платежа {instance.id}')
             data = instance.webhook_data()
+            logger.debug(f'Отправка вэбхук {instance.id}: {data}')
             result = send_withdraw_webhook.delay(
                 url=instance.merchant.host_withdraw or instance.merchant.host, data=data,
                 dump_data=instance.merchant.dump_webhook_data)
-            logger.info(f'answer: {result}')
+            logger.debug(f'answer {instance.id}: {result}')
     except Exception as err:
         logger.error(f'Ошибка при сохранении Withdraw: {err}')
 
@@ -549,11 +551,11 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
 
 @receiver(post_save, sender=Payment)
 def after_save_pay(sender, instance: Payment, created, raw, using, update_fields, *args, **kwargs):
-    logger.debug(f'post_save_status = {instance.status}  cashed: {instance.cached_status}')
+    logger.debug(f'{instance.id} post_save_status = {instance.status}  cashed: {instance.cached_status}')
 
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
-        logger.info('Выполняем действие после подтверждения платежа')
+        logger.info(f'Выполняем действие после подтверждения платежа {instance.id}')
         # Плюсуем баланс
         with transaction.atomic():
             user = User.objects.get(pk=instance.merchant.owner.id)
@@ -577,27 +579,29 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         # Отправляем вэбхук
         try:
             data = instance.webhook_data()
-            logger.debug(f'Отправляем вэбхук: {data}')
+            logger.debug(f'Отправляем вэбхук {instance.id}: {data}')
             result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
                                                 dump_data=instance.merchant.dump_webhook_data)
-            logger.debug(f'answer: {result}')
+            logger.debug(f'answer {instance.id}: {result}')
         except Exception as err:
             logger.error(f'Ошибка при отправке вэбхука: {err}')
     
     # Отправка вэбхука если статус изменился на 5 - ожидание смс и api:
     if instance.source == 'api' and instance.status == 5 and instance.cached_status != 5:
         data = instance.webhook_data()
+        logger.debug(f'{instance} API status 5')
         result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
                                             dump_data=instance.merchant.dump_webhook_data)
-        logger.info(f'answer: {result}')
+        logger.info(f'answer {instance.id}: {result}')
 
     # Если статус изменился на -1 (Отклонен):
     if instance.status == -1 and instance.cached_status != -1:
-        logger.info('Выполняем действие после отклонения платежа')
+        logger.info(f'Выполняем действие после отклонения платежа {instance.id}')
         data = instance.webhook_data()
+        logger.debug(f'Отправляем вэбхук {instance.id}: {data}')
         result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
                                             dump_data=instance.merchant.dump_webhook_data)
-        logger.info(f'answer: {result}')
+        logger.info(f'answer {instance.id}: {result}')
 
     if created:
         try:
