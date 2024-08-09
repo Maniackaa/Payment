@@ -33,10 +33,15 @@
 
        <p hidden id="html_count">{{ html_count }}</p>
     <div class="row">
-    <div class="col-3" role="alert" id="warnings">
+        <div class="col-3" role="alert" id="warnings">
            Новых платежей:
         </div>
-        <div class="col-3">{{ work_data }}</div>
+        <div class="col-3">
+            {{ work_data }}
+        </div>
+        <div class="col-3">
+            <a href="{% url 'payment:on_work' %}" >Смена старт/стоп</a>
+        </div>
     </div>
 
      {% include 'includes/paginator.html' %}

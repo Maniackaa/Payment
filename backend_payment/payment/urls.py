@@ -28,7 +28,7 @@ urlpatterns = [
     # path('merch_stat/<int:pk>', views.MerchStatView.as_view(), name='merch_stats'),
     path('merchowners/<int:pk>/', views.MerchOwnerDetail.as_view(), name='merch_owner_detail'),
     path('merchowners/', views.MerchOwnerList.as_view(), name='merch_owner_list'),
-
+    path('on_work/', views.on_work, name='on_work'),
 
     path('wait_requisite/<str:pk>/', views.wait_requisite, name='wait_requisite'),
     path('payment_type_not_worked/', views.payment_type_not_worked, name='payment_type_not_worked'),

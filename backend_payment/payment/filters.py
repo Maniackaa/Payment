@@ -84,6 +84,8 @@ class PaymentFilter(django_filters.FilterSet):
                 initial = f.extra.get('initial')
                 if not data.get(name) and initial:
                     data[name] = initial
+        profile = get_current_authenticated_user().profile
+        data['on_work'] = profile.on_work
         super().__init__(data, *args, **kwargs)
 
     id = django_filters.CharFilter(lookup_expr='icontains')
@@ -93,7 +95,7 @@ class PaymentFilter(django_filters.FilterSet):
     # oper2 = django_filters.NumberFilter(label='из', method='my_custom_filter2', initial=1)
     create_at = django_filters.DateFilter(field_name='create_at', lookup_expr='contains',
                                           widget=MyDateInput({'class': 'form-control'}))
-    on_work = django_filters.BooleanFilter(method='operators_filter', widget=forms.CheckboxInput(), label='Опер на смене',)
+    on_work = django_filters.BooleanFilter(method='operators_filter', widget=forms.CheckboxInput(attrs={'disabled': True}), label='Опер на смене',)
 
     class Meta:
         model = Payment

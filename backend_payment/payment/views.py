@@ -618,8 +618,8 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         context['count_url'] = f'{reverse("payment:payment_count")}?{filter_url}'
         context['form'] = filter.form
         work_data = ''
+        user = self.request.user
         if filter.form.data.get('on_work'):
-            user = self.request.user
             on_work = SupportOptions.load().operators_on_work
             if str(user.id) in on_work:
                 work_data = f'Вы на смене. {on_work.index(str(user.id)) + 1} из {len(on_work)}'
@@ -1208,3 +1208,10 @@ class WebhookReceive(APIView):
         data = request.data
         logger.info(data)
         return JsonResponse({'status': 'success', 'data': data})
+
+
+def on_work(request, *args, **kwargs):
+    profile = request.user.profile
+    profile.on_work = not profile.on_work
+    profile.save()
+    return redirect('payment:payment_list')
