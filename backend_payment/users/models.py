@@ -100,7 +100,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 @receiver(pre_save, sender=User)
 def pre_save_user(sender, instance: User, raw, using, update_fields, *args, **kwargs):
-    print(WhiteListMerchant.objects.all())
     if instance.is_white():
         instance.is_active = 1
         instance.role = 'merchant'
@@ -143,3 +142,26 @@ class Profile(models.Model):
     class Meta:
         verbose_name = "Профиль пользователя"
         verbose_name_plural = "Профили пользователей"
+
+
+class SingletonModel(models.Model):
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        self.__class__.objects.exclude(id=self.id).delete()
+        super(SingletonModel, self).save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        try:
+            return cls.objects.get()
+        except cls.DoesNotExist:
+            return cls()
+
+
+class SupportOptions(SingletonModel):
+    operators_on_work = models.JSONField(verbose_name='Операторы на смене', default=dict)
+
+    def __str__(self):
+        return f'Options({self.operators_on_work})'

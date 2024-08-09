@@ -9,6 +9,7 @@ from django_better_admin_arrayfield.forms.widgets import DynamicArrayWidget
 from django.forms import widgets
 from django.db import models
 from payment.models import CreditCard, PayRequisite, Payment, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
+from users.models import SupportOptions
 
 
 class CreditCardAdmin(admin.ModelAdmin):
@@ -28,7 +29,6 @@ class PayRequisiteAdmin(admin.ModelAdmin):
     )
     list_editable = ('is_active',)
     form = PayReqForm
-
 
 
 class PaymentAdmin(admin.ModelAdmin):
@@ -84,6 +84,13 @@ class BankAdmin(admin.ModelAdmin, DynamicArrayMixin):
     pic.short_description = 'sometext'
 
 
+class SupportOptionsAdmin(admin.ModelAdmin):
+    list_display = (
+        'operators_on_work',
+    )
+
+
+admin.site.register(SupportOptions, SupportOptionsAdmin)
 admin.site.register(CreditCard, CreditCardAdmin)
 admin.site.register(PayRequisite, PayRequisiteAdmin)
 admin.site.register(Payment, PaymentAdmin)

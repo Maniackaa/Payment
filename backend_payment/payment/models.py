@@ -223,6 +223,7 @@ class Payment(models.Model):
         self.cached_status = self.status
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, max_length=36, db_index=True, unique=True,)
+    counter = models.IntegerField(null=True, blank=True)
     merchant = models.ForeignKey('Merchant', on_delete=models.CASCADE, related_name='payments')
     order_id = models.CharField(max_length=36, db_index=True)
     amount = models.IntegerField('Сумма заявки', null=True)
@@ -547,6 +548,12 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
 
     except Exception as err:
         logger.error(f'Ошибка сохранения лога: {err}')
+
+    # Счетчик по типу +1
+    if instance.pay_type == 'card_2' and not instance.counter:
+        all_pays = Payment.objects.filter(pay_type='card_2').count()
+        logger.debug(f'all_pays: {all_pays}')
+        instance.counter = all_pays + 1
 
 
 @receiver(post_save, sender=Payment)

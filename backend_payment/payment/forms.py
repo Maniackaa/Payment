@@ -5,7 +5,17 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
 from payment.models import Payment, CreditCard, Merchant, Withdraw
+from users.models import SupportOptions
+
 User = get_user_model()
+
+
+class SupportOptionsForm(forms.ModelForm,):
+    operators_on_work = forms.ModelMultipleChoiceField(queryset=User.objects.filter(role='staff'), widget=forms.CheckboxSelectMultiple)
+
+    class Meta:
+        model = SupportOptions
+        fields = ('operators_on_work',)
 
 
 class InvoiceForm(forms.ModelForm):

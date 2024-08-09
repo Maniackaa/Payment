@@ -3,8 +3,10 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import F, Value
 from django.db.models.functions import Extract
+from django_currentuser.middleware import get_current_authenticated_user
 
 from payment.models import Payment, Withdraw, BalanceChange
+from users.models import SupportOptions
 
 User = get_user_model()
 
@@ -87,10 +89,11 @@ class PaymentFilter(django_filters.FilterSet):
     id = django_filters.CharFilter(lookup_expr='icontains')
     order_id = django_filters.CharFilter(lookup_expr='icontains')
     status = django_filters.MultipleChoiceFilter(choices=Payment.PAYMENT_STATUS)
-    oper1 = django_filters.CharFilter(label='Оператор №', method='my_custom_filter', initial=1, max_length=3)
-    oper2 = django_filters.CharFilter(label='из', method='my_custom_filter2', initial=1)
+    # oper1 = django_filters.NumberFilter(label='Оператор №', method='my_custom_filter', initial=1)
+    # oper2 = django_filters.NumberFilter(label='из', method='my_custom_filter2', initial=1)
     create_at = django_filters.DateFilter(field_name='create_at', lookup_expr='contains',
                                           widget=MyDateInput({'class': 'form-control'}))
+    on_work = django_filters.BooleanFilter(method='operators_filter', widget=forms.CheckboxInput(), label='Опер на смене',)
 
     class Meta:
         model = Payment
@@ -101,15 +104,30 @@ class PaymentFilter(django_filters.FilterSet):
         parent = super(PaymentFilter, self).qs
         return parent.filter()
 
-    def my_custom_filter(self, queryset, name, value):
-        y = int(self.form['oper2'].value())
-        start = 60 / y * (int(value) - 1)
-        return queryset.annotate(minute=Extract('create_at', 'minute')).filter(minute__gte=start)
+    # def my_custom_filter(self, queryset, name, value):
+    #     y = int(self.form['oper2'].value())
+    #     start = 60 / y * (int(value) - 1)
+    #     return queryset.annotate(minute=Extract('create_at', 'minute')).filter(minute__gte=start)
+    #
+    # def my_custom_filter2(self, queryset, name, value):
+    #     x = int(self.form['oper1'].value())
+    #     end = 60 / int(value) * x
+    #     return queryset.annotate(minute=Extract('create_at', 'minute')).filter(minute__lt=end)
 
-    def my_custom_filter2(self, queryset, name, value):
-        x = int(self.form['oper1'].value())
-        end = 60 / int(value) * x
-        return queryset.annotate(minute=Extract('create_at', 'minute')).filter(minute__lt=end)
+    def operators_filter(self, queryset, name, value):
+        if value is True:
+            # Работает фильтр по операм
+            operators_on_work = SupportOptions.load().operators_on_work
+            operators_count = len(operators_on_work)
+            user = str(get_current_authenticated_user().id)
+            if user in operators_on_work:
+                operator_num = int(operators_on_work.index(user)) + 1
+                # print(f'{operator_num}/{operators_count}')
+                return queryset.annotate(mod=F('counter') % operators_count + 1).filter(
+                    pay_type='card_2').filter(mod=operator_num)
+            else:
+                return queryset.none()
+        return queryset
 
 
 class WithdrawFilter(django_filters.FilterSet):

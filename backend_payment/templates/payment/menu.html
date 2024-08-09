@@ -14,8 +14,11 @@
             <a class="" href="{% url 'payment:merch_owner_list' %}">Список мерчей</a>
             {% endif %}
            {% if user.is_staff %}
-               <div><a class="" href="{% url 'payment:payment_list' %}">Заявки payment</a>  <a href="{% url 'payment:export_payments' %}">(Экспорт)</a></div>
-             <a class="" href="{% url 'payment:withdraw_list' %}">Заявки на Выводы withdraw</a>
+               <a class="" href="{% url 'payment:support_options' %}">Операторы на смене</a>
+               <div>
+                   <a class="" href="{% url 'payment:payment_list' %}">Заявки payment</a>  <a href="{% url 'payment:export_payments' %}">(Экспорт)</a>
+               </div>
+                <a class="" href="{% url 'payment:withdraw_list' %}">Заявки на Выводы withdraw</a>
             <hr>
              <a class="" href="{% url 'deposit:incomings' %}">Пополнения смс incomings</a>
              <a class="" href="{% url 'deposit:trash' %}">Смс мусор incomings </a>

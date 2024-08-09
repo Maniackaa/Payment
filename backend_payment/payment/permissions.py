@@ -46,3 +46,12 @@ class MerchantOnlyPerm(AccessMixin):
         if not request.user.role == 'merchant':
             return redirect('payment:menu')
         return super().dispatch(request, *args, **kwargs)
+
+
+class SupportOrSuperuserPerm(AccessMixin):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role == 'support' or request.user.is_superuser:
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return redirect('payment:menu')
+

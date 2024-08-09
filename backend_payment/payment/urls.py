@@ -8,6 +8,8 @@ app_name = 'payment'
 
 urlpatterns = [
 
+    path('support_options/', views.SupportOptionsView.as_view(), name='support_options'),
+
     path('', views.menu, name='menu'),
     path('invoice/', views.invoice, name='pay_check'),
     path('pay_to_card_create/', views.pay_to_card_create, name='pay_to_card_create'),

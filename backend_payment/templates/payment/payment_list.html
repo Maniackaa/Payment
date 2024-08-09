@@ -32,10 +32,12 @@
   </div>
 
        <p hidden id="html_count">{{ html_count }}</p>
-       <div class="col-3" role="alert" id="warnings">
+    <div class="row">
+    <div class="col-3" role="alert" id="warnings">
            Новых платежей:
         </div>
-
+        <div class="col-3">{{ work_data }}</div>
+    </div>
 
      {% include 'includes/paginator.html' %}
      <div class="container-fluid ">
@@ -74,7 +76,7 @@
             </td>
             <td>{{ payment.create_at|date:"d.m H:i" }}</td>
             <td>{{ payment.merchant.name}}{% if payment.merchant.is_new %}🍼{% endif %}</td>
-            <td>{{ payment.pay_type}}</td>
+            <td>{{ payment.pay_type}} ({{ payment.counter|default_if_none:"" }})</td>
             <td>{{ payment.user_login|default_if_none:""}}</td>
             <td>{{ payment.owner_name|default_if_none:""}}</td>
             {% if payment.screenshot %}

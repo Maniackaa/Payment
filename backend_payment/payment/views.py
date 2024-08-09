@@ -36,10 +36,12 @@ from payment import forms
 from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter, \
     MerchPaymentFilter, BalanceFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
-    MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm, MerchBalanceChangeForm
+    MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm, MerchBalanceChangeForm, SupportOptionsForm
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
-from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm, SuperuserOnlyPerm
+from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm, SuperuserOnlyPerm, \
+    SupportOrSuperuserPerm
 from payment.task import send_payment_webhook, send_withdraw_webhook
+from users.models import SupportOptions
 
 logger = structlog.get_logger(__name__)
 User = get_user_model()
@@ -60,6 +62,32 @@ def menu(request, *args, **kwargs):
         merchants = Merchant.objects.filter(owner=user)
         context = {'merchants': merchants}
     return render(request, template_name=template, context=context)
+
+
+class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
+    form_class = SupportOptionsForm
+    template_name = 'options.html'
+    model = SupportOptions
+
+    def get_object(self, queryset=None):
+        obj = SupportOptions.load()
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print(context)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        opers = self.request.POST.getlist('operators_on_work')
+        options = SupportOptions.load()
+        options.operators_on_work = opers
+        options.save()
+        return redirect('payment:menu')
+
+    def form_valid(self, form):
+        print('clean_operators_on_work')
+        return super().form_valid(form)
 
 
 def get_pay_requisite(pay_type: str, amount=None) -> PayRequisite:
@@ -589,6 +617,15 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         filter_url = urlencode(self.request.GET, doseq=True)
         context['count_url'] = f'{reverse("payment:payment_count")}?{filter_url}'
         context['form'] = filter.form
+        work_data = ''
+        if filter.form.data.get('on_work'):
+            user = self.request.user
+            on_work = SupportOptions.load().operators_on_work
+            if str(user.id) in on_work:
+                work_data = f'Вы на смене. {on_work.index(str(user.id)) + 1} из {len(on_work)}'
+            else:
+                work_data = f'Вы не на смене'
+        context['work_data'] = work_data
         return context
 
     def post(self, request, *args, **kwargs):
