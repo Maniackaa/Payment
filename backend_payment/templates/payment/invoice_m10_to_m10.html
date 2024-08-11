@@ -20,13 +20,13 @@
     }
 
     .m10 {
-        color: #11cca7;
+
         font-weight: bold;
-        font-size: x-large;
+        font-size: large;
     }
-    .m10link {
+    .m10-link {
         font-weight: bold;
-        font-size: x-large;
+        font-size: large;
     }
 
 </style>
@@ -70,14 +70,18 @@
                         <div class="col-12 " id="pay_input" style=" width: 100%">
                             <div class="row justify-content-center" style="text-align: center; white-space: nowrap; ">
                                 <div class="col-12">
-                                    <span class="m10">M10</span>
+                                    <div class="md-grid gap-2 col-11 mx-auto">
+                                        <a href="{{ payment.pay_requisite.info2|safe }}" class="m10-link btn btn-info btn-lg btn-block active" style="background-color: #6699СС;" role="button" aria-pressed="true"><span style="color: red">M10</span> açmaq üçün bura basın</a>
+                                    </div>
                                 </div>
 
-                                <span class="row align-items-center justify-content-left">
-                                    <div class="col-9">{{ payment.pay_requisite.info|safe }}</div>
-                                    <div class="col-3"><img align="middle" onclick="CopyToClipboard('m10data')" style=" opacity: 1; background-color: #198653; display: block; margin: auto 20px; width: 75%" class="img-thumbnail"  src="{% static '/img/copy.png' %}"></div>
-                                </span>
-                                <div class="col-12">{{ payment.pay_requisite.info2|safe }}</div>
+                                <div class="row align-items-center justify-content-center my-auto" style="padding-top: 10px">
+                                    <div id="m10data" class="col-8 m10 my-auto">{{ payment.pay_requisite.info|safe }}</div>
+                                    <div class="col-2"><img align="middle" onclick="CopyToClipboard('m10data')" style="display: flex; opacity: 1; background-color: #198653; display: block; margin: auto 1px; height: 100%" class="img-thumbnail"  src="{% static '/img/copy.png' %}"></div>
+                                </div>
+
+
+
 
 
                             </div>
