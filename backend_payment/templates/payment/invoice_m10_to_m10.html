@@ -71,13 +71,15 @@
                             <div class="row justify-content-center" style="text-align: center; white-space: nowrap; ">
                                 <div class="col-12">
                                     <div class="md-grid gap-2 col-11 mx-auto">
-                                        <a href="{{ payment.pay_requisite.info2|safe }}" class="m10-link btn btn-info btn-lg btn-block active" style="background-color: #6699СС;" role="button" aria-pressed="true"><span style="color: red">M10</span> açmaq üçün bura basın</a>
+                                        <a href="{{ payment.pay_requisite.info2|safe }}" class="m10-link btn  btn-outline-primary btn-lg btn-block " style="" role="button" aria-pressed="true"><span style="">M10</span> açmaq üçün bura basın</a>
+
                                     </div>
+
                                 </div>
 
                                 <div class="row align-items-center justify-content-center my-auto" style="padding-top: 10px">
                                     <div id="m10data" class="col-8 m10 my-auto">{{ payment.pay_requisite.info|safe }}</div>
-                                    <div class="col-2"><img align="middle" onclick="CopyToClipboard('m10data')" style="display: flex; opacity: 1; background-color: #198653; display: block; margin: auto 1px; height: 100%" class="img-thumbnail"  src="{% static '/img/copy.png' %}"></div>
+                                    <div class="col-2"><img align="middle" onclick="CopyToClipboard('m10data')" style="display: flex; opacity: 1; background-color: #efefef; display: block; margin: auto 1px; height: 100%" class="img-thumbnail" src="{% static '/img/copy2.png' %}"></div>
                                 </div>
 
 
@@ -104,7 +106,7 @@
                                 {% endfor %}
 
                                 <div class="col  align-items-center" style="text-align: center; margin-top: 30px">
-                                  <button style="margin-bottom: 20px; margin-top: 0px; width:50%" id="confirm_btn" class="btn btn-success btn btn-block" type="submit">Ödədim</button>
+                                  <button style="background-color: #efefef; color: #000000; margin-bottom: 20px; margin-top: 0px; width:50%" id="confirm_btn" class="btn btn-block active" type="submit">Ödədim</button>
                                 </div>
                             </form>
                             </div>
