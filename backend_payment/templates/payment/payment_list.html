@@ -42,6 +42,9 @@
         <div class="col-3">
             <a href="{% url 'payment:on_work' %}" >Смена старт/стоп</a>
         </div>
+        <div class="col-3">
+            <a href="{{ summary_url }}">summary</a>
+        </div>
     </div>
 
      {% include 'includes/paginator.html' %}

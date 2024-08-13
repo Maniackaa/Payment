@@ -589,6 +589,28 @@ class PaymentListCount(ListView):
         return JsonResponse({'new_count': count})
 
 
+class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
+    """Спиcок заявок для оператора"""
+    template_name = 'payment/payment_list_summary.html'
+    model = Payment
+    fields = ('confirmed_amount',
+              'confirmed_incoming')
+    filter = PaymentFilter
+    raise_exception = False
+    paginate_by = settings.PAGINATE
+
+    def get_queryset(self):
+        return PaymentFilter(self.request.GET, queryset=Payment.objects).qs[:4]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        filter_url = urlencode(self.request.GET or self.request.POST, doseq=True)
+        context['filter'] = filter
+        summary_url = reverse('payment:payments_summary') + '?' + filter_url
+        context['summary_url'] = summary_url
+        return context
+
+
 class PaymentListView(StaffOnlyPerm, ListView, ):
     """Спиcок заявок для оператора"""
     template_name = 'payment/payment_list.html'
@@ -626,6 +648,9 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
             else:
                 work_data = f'Вы не на смене'
         context['work_data'] = work_data
+        filter_url = urlencode(self.request.GET or self.request.POST, doseq=True)
+        summary_url = reverse('payment:payments_summary') + '?' + filter_url
+        context['summary_url'] = summary_url
         return context
 
     def post(self, request, *args, **kwargs):
