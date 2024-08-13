@@ -6,6 +6,7 @@
 <style>
     * {
     font-family: "Arial";
+    font-weight: bold;
     font-size: medium;
 }
     .big {
@@ -52,10 +53,10 @@
 
     <div class="row ">
       <div class="">
-        <div class="card" style="margin: 10px 10px 10px 10px; border-radius: 20px">
+        <div class="card" style="margin: 10px 10px 10px 10px; border-radius: 20px; border-color: black">
             <div class="back card-header" style="border-top-left-radius: 20px; border-top-right-radius: 20px">
                 <div class="row justify-content-center align-items-center text-center" >
-                    <div class="col-6">
+                    <div class="col-6" style="font-weight: normal">
                         Ödəniş məbləği:
                     </div>
 
@@ -70,8 +71,8 @@
                         <div class="col-12 " id="pay_input" style=" width: 100%">
                             <div class="row justify-content-center" style="text-align: center; white-space: nowrap; ">
                                 <div class="col-12">
-                                    <div class="md-grid gap-2 col-11 mx-auto">
-                                        <a href="{{ payment.pay_requisite.info2|safe }}" class="m10-link btn  btn-outline-primary btn-lg btn-block " style="" role="button" aria-pressed="true"><span style="">M10</span> açmaq üçün bura basın</a>
+                                    <div class="md-grid gap-2 col-12 mx-auto">
+                                        <a href="{{ payment.pay_requisite.info2|safe }}" class="m10-link btn btn-primary btn-lg btn-block " style="background-color: #000077" role="button" aria-pressed="true">M10 AÇMAQ ÜÇÜN BURA BASIN</a>
 
                                     </div>
 
@@ -81,10 +82,6 @@
                                     <div id="m10data" class="col-8 m10 my-auto">{{ payment.pay_requisite.info|safe }}</div>
                                     <div class="col-2"><img align="middle" onclick="CopyToClipboard('m10data')" style="display: flex; opacity: 1; background-color: #efefef; display: block; margin: auto 1px; height: 100%" class="img-thumbnail" src="{% static '/img/copy2.png' %}"></div>
                                 </div>
-
-
-
-
 
                             </div>
                             <div class="row  justify-content-center " style="">
@@ -97,16 +94,16 @@
                                     {{field}}
                                     {% else %}
 
-                                        <div class="col-12 " style="text-align: center; color: darkgray; font-size: small">Köçürməni etdiyiniz M10 nömrənizi qeyd edin</div>
+                                        <div class="col-12 " style="text-align: center; color: darkgray; font-size: small; font-weight: normal">Köçürməni etdiyiniz M10 nömrənizi qeyd edin</div>
                                         <div class="col-12 align-items-center justify-content-center ">{{field.errors}}</div>
-                                    <div class="col-3" style="text-align: right">+994</div><div class="col-7">{{field}}</div>
+                                        <div class="col-3" style="text-align: right; font-weight: normal">+994</div><div class="col-7">{{field}}</div>
 
                                     {% endif %}
                                 </div>
                                 {% endfor %}
 
                                 <div class="col  align-items-center" style="text-align: center; margin-top: 30px">
-                                  <button style="background-color: #efefef; color: #000000; margin-bottom: 20px; margin-top: 0px; width:50%" id="confirm_btn" class="btn btn-block active" type="submit">Ödədim</button>
+                                  <button style="font-weight: normal; background-color: #efefef; color: #000000; margin-bottom: 20px; margin-top: 0px; width:50%" id="confirm_btn" class="btn btn-block active" type="submit">ÖDEDIM</button>
                                 </div>
                             </form>
                             </div>
