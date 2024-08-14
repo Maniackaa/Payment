@@ -222,7 +222,8 @@ class Payment(models.Model):
         super().__init__(*args, **kwargs)
         self.cached_status = self.status
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, max_length=36, db_index=True, unique=True,)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, max_length=36, db_index=True,
+                          unique=True,)
     counter = models.IntegerField(null=True, blank=True)
     merchant = models.ForeignKey('Merchant', on_delete=models.CASCADE, related_name='payments')
     order_id = models.CharField(max_length=36, db_index=True)
@@ -233,9 +234,9 @@ class Payment(models.Model):
     pay_requisite = models.ForeignKey('PayRequisite', on_delete=models.CASCADE, null=True, blank=True)
     pay_type = models.CharField('Тип платежа', choices=PAY_TYPE)
     screenshot = models.ImageField(upload_to='uploaded_pay_screens/',
-                      verbose_name='Ваша квитанция', null=True, blank=True, help_text='Приложите скриншот квитанции после оплаты')
+                                   verbose_name='Ваша квитанция', null=True, blank=True,
+                                   help_text='Приложите скриншот квитанции после оплаты')
     create_at = models.DateTimeField('Время добавления в базу', auto_now_add=True)
-    # create_at = models.DateTimeField('Время добавления в базу', auto_now_add=False)
     status = models.IntegerField('Статус заявки',
                                  default=0,
                                  choices=PAYMENT_STATUS)
@@ -249,6 +250,8 @@ class Payment(models.Model):
     phone_script_data = models.JSONField(default=str, blank=True)
 
     # Подтверждение:
+    work_operator = models.IntegerField(null=True, blank=True)
+    # operator2 = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     confirmed_amount = models.IntegerField('Подтвержденная сумма заявки', null=True, blank=True)
     comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True, blank=True)
     mask = models.CharField('Маска карты', max_length=16, null=True, blank=True)

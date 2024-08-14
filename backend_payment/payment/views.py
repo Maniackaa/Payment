@@ -592,23 +592,42 @@ class PaymentListCount(ListView):
 class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
     """Спиcок заявок для оператора"""
     template_name = 'payment/payment_list_summary.html'
-    model = Payment
-    fields = ('confirmed_amount',
-              'confirmed_incoming')
-    filter = PaymentFilter
-    raise_exception = False
-    paginate_by = settings.PAGINATE
+    paginate_by = 4
 
     def get_queryset(self):
-        return PaymentFilter(self.request.GET, queryset=Payment.objects).qs[:4]
+        queryset = Payment.objects.filter(
+            pay_type='card_2').filter(
+            status__in=[3, 4, 5, 6, 7]).filter(
+            work_operator=self.request.user.id
+        )
+        return queryset[:4]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        filter_url = urlencode(self.request.GET or self.request.POST, doseq=True)
-        context['filter'] = filter
-        summary_url = reverse('payment:payments_summary') + '?' + filter_url
-        context['summary_url'] = summary_url
+        # filter_url = urlencode(self.request.GET or self.request.POST, doseq=True)
+        # context['filter'] = filter
+        # summary_url = reverse('payment:payments_summary') + '?' + filter_url
+        # context['summary_url'] = summary_url
         return context
+
+    def post(self, request, *args, **kwargs):
+        if 'cancel_payment' in request.POST.keys():
+            payment_id = request.POST['cancel_payment']
+            # Отклонение заявки
+            payment = Payment.objects.get(pk=payment_id)
+            payment.status = -1
+            payment.save()
+            return redirect(reverse('payment:payments_summary'))
+        if 'confirm_payment' in request.POST.keys():
+            payment_id = request.POST['confirm_payment']
+            payment = Payment.objects.get(pk=payment_id)
+            payment.status = 9
+            payment.save()
+            return redirect(reverse('payment:payments_summary'))
+
+    def form_valid(self, form):
+        print('form_valid')
+        return super().form_valid(form)
 
 
 class PaymentListView(StaffOnlyPerm, ListView, ):
@@ -749,6 +768,7 @@ class PaymentInput(StaffOnlyPerm, UpdateView, ):
                     })</script>""")
 
     def get(self, request, *args, **kwargs):
+        # Если в card_data прописан что оператор пуст, то присваивает оператора
         payment = self.object = self.get_object()
         if payment.status in [-1, 9]:
             return redirect(reverse('payment:payment_edit', args=(payment.id,)))
@@ -757,6 +777,7 @@ class PaymentInput(StaffOnlyPerm, UpdateView, ):
             card_data.update(operator=request.user.id)
             payment.card_data = json.dumps(card_data)
             payment.status = 4
+            payment.work_operator = request.user.id
             payment.save()
         else:
             if card_data.get('operator') != request.user.id:
