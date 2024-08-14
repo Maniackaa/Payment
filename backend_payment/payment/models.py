@@ -251,6 +251,7 @@ class Payment(models.Model):
 
     # Подтверждение:
     work_operator = models.IntegerField(null=True, blank=True)
+    operator_counter = models.IntegerField(null=True, blank=True)
     # operator2 = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     confirmed_amount = models.IntegerField('Подтвержденная сумма заявки', null=True, blank=True)
     comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True, blank=True)

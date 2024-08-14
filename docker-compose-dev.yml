@@ -20,26 +20,26 @@ services:
     restart: always
 
 
-#  pgadmin:
-#    container_name: pgadmin_container_payment
-#    image: dpage/pgadmin4
-#    env_file: .env
-#    environment:
-#      PGADMIN_DEFAULT_EMAIL: $PGADMIN_DEFAULT_EMAIL
-#      PGADMIN_DEFAULT_PASSWORD: $PGADMIN_DEFAULT_PASSWORD
-#
-#    depends_on:
-#      - db_postgres
-#    volumes:
-#      - pgadmin_data:/var/lib/pgadmin
-#    ports:
-#      - "5050:80"
-#    restart: always
-#    deploy:
-#      resources:
-#        limits:
-#          cpus: '0.5'
-#          memory: 1G
+  pgadmin:
+    container_name: pgadmin_container_payment
+    image: dpage/pgadmin4
+    env_file: .env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: $PGADMIN_DEFAULT_EMAIL
+      PGADMIN_DEFAULT_PASSWORD: $PGADMIN_DEFAULT_PASSWORD
+
+    depends_on:
+      - db_postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
 
   redis:
     container_name: redis_payment

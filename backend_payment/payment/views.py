@@ -604,10 +604,6 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # filter_url = urlencode(self.request.GET or self.request.POST, doseq=True)
-        # context['filter'] = filter
-        # summary_url = reverse('payment:payments_summary') + '?' + filter_url
-        # context['summary_url'] = summary_url
         return context
 
     def post(self, request, *args, **kwargs):
@@ -624,10 +620,6 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
             payment.status = 9
             payment.save()
             return redirect(reverse('payment:payments_summary'))
-
-    def form_valid(self, form):
-        print('form_valid')
-        return super().form_valid(form)
 
 
 class PaymentListView(StaffOnlyPerm, ListView, ):
@@ -742,12 +734,6 @@ class PaymentEdit(StaffOnlyPerm, UpdateView, ):
         self.object = self.get_object()
         return super().get(request, *args, **kwargs)
 
-    # def post(self, request, *args, **kwargs):
-    #     if request.user.has_perm('deposit.can_hand_edit'):
-    #         self.object = self.get_object()
-    #         return super().post(request, *args, **kwargs)
-    #     return HttpResponseForbidden('У вас нет прав делать ручную корректировку')
-
     def get_context_data(self, **kwargs):
         context = super(PaymentEdit, self).get_context_data(**kwargs)
         # history = self.object.history.order_by('-id').all()
@@ -773,11 +759,14 @@ class PaymentInput(StaffOnlyPerm, UpdateView, ):
         if payment.status in [-1, 9]:
             return redirect(reverse('payment:payment_edit', args=(payment.id,)))
         card_data = json.loads(payment.card_data)
+        user_id = request.user.id
         if not payment.operator():
-            card_data.update(operator=request.user.id)
+            card_data.update(operator=user_id)
             payment.card_data = json.dumps(card_data)
             payment.status = 4
             payment.work_operator = request.user.id
+            payment.operator_counter = Payment.objects.filter(
+                pay_type=payment.pay_type, work_operator=user_id).count() + 1
             payment.save()
         else:
             if card_data.get('operator') != request.user.id:

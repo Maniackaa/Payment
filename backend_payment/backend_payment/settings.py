@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     # 'debug_toolbar',
     # 'rangefilter',
     'spurl',
-    # 'mathfilters',
+    'mathfilters',
     'celery',
     'django_celery_beat',
     'django_structlog',

