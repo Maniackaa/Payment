@@ -8,16 +8,18 @@
 
 <style>
 .img-thumbnail {
-    height: 25px;
-    width: 25px;
-    display: flex;
+    {#height: 50px;#}
+    width: 40px;
+    {#display: flex;#}
     margin-left: 5px;
 }
 </style>
 <div class="container-fluid">
-<div class="row">
+{{ work_data }}
+    <div class="row">
+
     {% for payment in page_obj %}
-    <div class="col-3 card" style="margin: 5px; background-color: #e0fff6">
+    <div class="col-3 card" style="background-color: #e0fff6">
       <form method="post" action=''>
       {% csrf_token %}
 
@@ -40,25 +42,25 @@
             </div>
         </div>
         <div class="card-body" >
-            <div class="row" id="amount">
-                 {{ payment.amount }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('amount')"  src="{% static '/img/copy2.png' %}"></div>
+            <div class="row" id="amount{{ forloop.counter }}">
+                 {{ payment.amount }}<img class="img-thumbnail" onclick="CopyToClipboard('amount{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
             </div>
-            <div class="row" id="card_number">
-                 {{ payment.card_number }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('card_number')"  src="{% static '/img/copy2.png' %}"></div>
+            <div class="row" id="card_number{{ forloop.counter }}">
+                 {{ payment.card_number }}<img class="img-thumbnail" onclick="CopyToClipboard('card_number{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
             </div>
-            <div class="row" id="expired_month">
-                {% if payment.expired_month < 10 %}0{%  endif %}{{ payment.expired_month }}/{{ payment.expired_year }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('expired_month')"  src="{% static '/img/copy2.png' %}"></div>
+            <div class="row" id="expired_month{{ forloop.counter }}">
+                {% if payment.expired_month < 10 %}0{%  endif %}{{ payment.expired_month }}/{{ payment.expired_year }}<img class="img-thumbnail" onclick="CopyToClipboard('expired_month{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
             </div>
-            <div class="row" id="cvv">
-                 {{ payment.cvv }}<div class="col-2"><img class="img-thumbnail" onclick="CopyToClipboard('cvv')"  src="{% static '/img/copy2.png' %}"></div>
+            <div class="row" id="cvv{{ forloop.counter }}">
+                 {{ payment.cvv }}<img class="img-thumbnail" onclick="CopyToClipboard('cvv{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
             </div>
 
             <div class="row">
-                <div class="col-auto" id="sms_code">
+                <div class="col-auto" id="sms_code{{ forloop.counter }}">
                      {{ payment.sms_code|default_if_none:"" }}
 
                 </div>
-                <div class="col-5"><img class="img-thumbnail" onclick="CopyToClipboard('sms_code')"  src="{% static '/img/copy2.png' %}"></div>
+                <img class="img-thumbnail" onclick="CopyToClipboard('sms_code{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
                     <div class="col-2">
                      <button name="confirm_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-success btn-sm">OK</button>
                 </div>

@@ -11,7 +11,9 @@ User = get_user_model()
 
 
 class SupportOptionsForm(forms.ModelForm,):
-    operators_on_work = forms.ModelMultipleChoiceField(queryset=User.objects.filter(role='staff'), widget=forms.CheckboxSelectMultiple)
+    # operators_on_work = forms.ModelMultipleChoiceField(queryset=User.objects.filter(role='staff'), widget=forms.CheckboxSelectMultiple)
+    operators_on_work = forms.ModelMultipleChoiceField(queryset=User.objects.filter(is_staff=True),
+                                                       widget=forms.CheckboxSelectMultiple)
 
     class Meta:
         model = SupportOptions

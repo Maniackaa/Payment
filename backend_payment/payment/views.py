@@ -75,7 +75,6 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        print(context)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -592,18 +591,32 @@ class PaymentListCount(ListView):
 class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
     """Спиcок заявок для оператора"""
     template_name = 'payment/payment_list_summary.html'
-    paginate_by = 4
+    paginate_by = 16
 
     def get_queryset(self):
-        queryset = Payment.objects.filter(
-            pay_type='card_2').filter(
-            status__in=[3, 4, 5, 6, 7]).filter(
-            work_operator=self.request.user.id
-        )
-        return queryset[:4]
+        operators_on_work = SupportOptions.load().operators_on_work
+        operators_count = len(operators_on_work)
+        user = str(get_current_authenticated_user().id)
+        if user in operators_on_work:
+            operator_num = int(operators_on_work.index(user)) + 1
+            queryset = Payment.objects.filter(
+                pay_type='card_2').filter(
+                status__in=[3, 4, 5, 6, 7]).annotate(mod=F('counter') % operators_count + 1).filter(
+                    pay_type='card_2').filter(mod=operator_num).order_by('counter')
+            return queryset
+        else:
+            return Payment.objects.none()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        work_data = ''
+        user = self.request.user
+        on_work = SupportOptions.load().operators_on_work
+        if str(user.id) in on_work:
+            work_data = f'Вы на смене. {on_work.index(str(user.id)) + 1} из {len(on_work)}'
+        else:
+            work_data = f'Вы не на смене'
+        context['work_data'] = work_data
         return context
 
     def post(self, request, *args, **kwargs):
