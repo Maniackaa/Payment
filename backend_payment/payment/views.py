@@ -617,6 +617,12 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
         else:
             work_data = f'Вы не на смене'
         context['work_data'] = work_data
+        last_count = self.get_queryset().last().counter
+
+        if last_count != user.profile.last_id:
+            user.profile.last_id = last_count
+            user.profile.save()
+            context['play_sound'] = True
         return context
 
     def post(self, request, *args, **kwargs):
