@@ -73,6 +73,7 @@
     {% endfor %}
 </div>
 </div>
+
 <script>
 function CopyToClipboard(containerid) {
     if (window.getSelection) {
@@ -99,8 +100,21 @@ function CopyToClipboard(containerid) {
 }
 </script>
 
+<script>
+    let play_sound = {{ play_sound }};
+    function playSound() {
+      const audio = new Audio();
+      audio.src = "{% static '/icq-notification-sound.mp3' %}"
+      return audio.play();
+    }
+    console.log(play_sound)
+    if (play_sound === '1') {
+     playSound();
+}
 
-    {% include 'includes/refresh_3sec.html' %}
+</script>
+{% include 'includes/refresh_3sec.html' %}
+
 
 
 {% endblock %}

@@ -609,7 +609,6 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        work_data = ''
         user = self.request.user
         on_work = SupportOptions.load().operators_on_work
         if str(user.id) in on_work:
@@ -622,7 +621,7 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
         if last_count != user.profile.last_id:
             user.profile.last_id = last_count
             user.profile.save()
-            context['play_sound'] = True
+            context['play_sound'] = '1'
         return context
 
     def post(self, request, *args, **kwargs):
