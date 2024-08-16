@@ -178,7 +178,35 @@
 {% block javascript %}
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
 
+function playSound() {
+  const audio = new Audio();
+  audio.src = "{% static '/icq-notification-sound.mp3' %}"
+  return audio.play();
+}
+                function getPosts() {
+            $.ajax({
+                url: '{{count_url|safe}}',
+                type: 'get',
+                dataType: 'json',
+                data: {},
+                success: function(response) {
+
+                        var html_count = $('#html_count').text().replace(/\D/g, '')
+                        var new_count = response.new_count
+                        var count = new_count - html_count
+                        var div = $('#warnings')
+                        div.html(`Новых платежей: ${count} / ${new_count}`);
+                        if (count >= 1) {
+                            div.addClass("new_count");
+                        }
+                }
+            });
+        }
+        getPosts();
+        setInterval(getPosts, 5000)
+    </script>
     <script>
 function CopyToClipboard(containerid) {
     if (window.getSelection) {
