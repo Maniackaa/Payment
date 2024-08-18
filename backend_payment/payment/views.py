@@ -619,8 +619,6 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
         last_count = 0
         if self.get_queryset().last():
             last_count = self.get_queryset().last().counter
-
-        print(last_count)
         if last_count != user.profile.last_id:
             user.profile.last_id = last_count
             user.profile.save()
@@ -759,6 +757,9 @@ class PaymentEdit(StaffOnlyPerm, UpdateView, ):
         context = super(PaymentEdit, self).get_context_data(**kwargs)
         # history = self.object.history.order_by('-id').all()
         # context['history'] = history
+        for log in self.object.logs.all():
+            print(log)
+            print(type(log.changes))
         return context
 
 

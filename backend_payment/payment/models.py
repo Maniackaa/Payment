@@ -414,6 +414,9 @@ class PaymentLog(models.Model):
     def __str__(self):
         return f'{self.create_at.astimezone(tz=TZ)} {self.user} {self.changes}'
 
+    def loads(self):
+        return json.loads(self.changes)
+
 
 class PhoneScript(models.Model):
     name = models.CharField('Наименование', unique=True)

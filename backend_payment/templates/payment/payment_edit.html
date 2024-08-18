@@ -22,7 +22,7 @@
             </tr>
             <tr>
                 <td>Поступил</td>
-                <td>{{ payment.create_at }}</td>
+                <td>{{ payment.create_at|date:"d.m.Y H:i:s" }}</td>
             </tr>
             <tr>
                 <td>merchant</td>
@@ -90,11 +90,36 @@
         <img class="img" style="object-fit: cover; object-position: 0 0" src="/media/{{payment.screenshot}}" width="300" height="400">
           {% endif %}
 
-          {% for log in payment.logs.all %}
-          {{ log }}<br>
-          {% endfor %}
       </div>
     </div>
+    <div class="row">
+    <div class="col-auto">
+      <table class="table table-bordered table-sm" style="font-size: medium">
+        <thead class="thead-dark align-content-center">
+           <tr>
+               <th>Поле</th>
+               <th>Значение</th>
+           </tr>
+        </thead>
+        <tbody>
+          {% for log in payment.logs.all %}
+            <tr>
+                <td>{{ log.create_at|date:"d.m.Y H:i:s" }} ({{ log.user }}) </td>
+                <td></td>
+            </tr>
+              {% for k, v in log.loads.items %}
+                  <tr>
+                    <td  style="text-align: end">{{ k }}</td>
+                <td>{{ v }}</td>
+                  </tr>
+                  {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+
 
 
     <div class="row justify-content-start  col-md-3">
@@ -108,12 +133,12 @@
         </div>
     </div>
 
-{#    <span>#}
-{#        <hr>#}
-{#          {% for log in history %}#}
-{#             {{ log.time }} {{ log.user }} {{ log.val_name }} {{ log.new_val }}<br>#}
-{#          {% endfor %}#}
-{#    </span>#}
+    <span>
+        <hr>
+          {% for log in history %}
+             {{ log.time }} {{ log.user }} {{ log.val_name }} {{ log.new_val }}<br>
+          {% endfor %}
+    </span>
   </div>
 
 
