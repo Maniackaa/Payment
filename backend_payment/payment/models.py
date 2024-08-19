@@ -39,7 +39,7 @@ class Merchant(models.Model):
                                         default=False)
     white_ip = models.CharField('Принимать только с этих адресов (через ";" Например : "127.0.0.1;127.0.0.2")',
                                 null=True, blank=True, default='')
-    dump_webhook_data = models.BooleanField(default=True)
+    dump_webhook_data = models.BooleanField(default=False)
     # Endpoints
     pay_success_endpoint = models.URLField('Default Url for redirect user back to your site', null=True, blank=True)
 

@@ -10,13 +10,15 @@ instruction = """
 <p>- <span style="color: #993300;">endpoint</span><sup>*</sup> для отправки webhook о подтверждении оплаты</p>
 <p>- <span style="color: #993300;">endpoint_withdraw</span><sup>*</sup> для отправки withdraw о подтверждении выплаты</p>
 <p>- <span style="color: #993300;">secret_key</span><sup>*</sup></p>
-<p>- <span style="color: #993300;">url</span> для возврата пользователя после подтверждения платежа. Будет использоваться при отсутствии <span style="color: green">back_url</span>.</p>
+<p>- <span style="color: #993300;">url</span> для возврата пользователя после подтверждения платежа. Будет использоваться при отсутствии <span style="color: green;">back_url</span>.</p>
 <p>- <span style="color: #993300;">ip</span> адреса, с которых будут приниматься запросы по API. При пустом поле будут приниматься с любых адресов.</p>
+<p><span style="color: #993300;">- Dump webhook data&nbsp;<span style="color: #000000;">экранирование ответа в webhook</span> </span></p>
 <p>&nbsp;</p>
-<p>Вашему магазину будет присвоен <b>merchant_id</b></p>
-<p>В настоящий момент работает 2 метода оплаты:</p>
-<p>Метод <b>“card-to-card”</b> (Перевод на карту)</p>
-<p>Метод <b>“card_2”</b> (Пополнение баланса по реквизитам карты)</p>
+<p>Вашему магазину будет присвоен <strong>merchant_id</strong></p>
+<p>В настоящий момент работает 3 метода оплаты:</p>
+<p>Метод <strong>&ldquo;card-to-card&rdquo;</strong> (Перевод на карту)</p>
+<p>Метод <strong>&ldquo;card_2&rdquo;</strong> (Пополнение баланса по реквизитам карты)</p>
+<p>Метод <strong>&ldquo;m10_to_m10&rdquo;</strong> (Пополнение баланса на кошелек М10)</p>
 <p>&nbsp;</p>
 <p><strong>II Проведение оплаты</strong></p>
 <p><strong>II.1 Метод card_2 (Пополнение баланса по реквизитам карты)</strong></p>
@@ -102,7 +104,6 @@ instruction = """
 <p>тип платежа</p>
 </td>
 </tr>
-
 <tr>
 <td>
 <p>back_url</p>
@@ -114,7 +115,6 @@ instruction = """
 <p>Ссылка для возврата</p>
 </td>
 </tr>
-
 <tr>
 <td>
 <p>signature<sup>*</sup></p>
@@ -143,7 +143,7 @@ instruction = """
 <p>Расчет signature:</p>
 <p>string = merchant_id + order_id + secret_key (encoding UTF-8)</p>
 <p><em>signature</em><em> = hash('sha256', $string)</em></p>
-<p>В примере string = 1<i>xxxx-yyyy-zzz-12335</i><span style="color: #993300;">secret_key</span></p>
+<p>В примере string = 1<em>xxxx-yyyy-zzz-12335</em><span style="color: #993300;">secret_key</span></p>
 <p>&nbsp;</p>
 <p>Далее пользователь действует по инструкции сайта. После <strong>подтверждения</strong> платежа на endpoint указанный при регистрации отправляется POST-запрос:</p>
 <p>&nbsp;</p>
@@ -191,25 +191,32 @@ instruction = """
 <p>Для авторизации используется JWT Bearer Authorization.</p>
 <p>ACCESS_TOKEN_LIFETIME: 1 hours</p>
 <p>REFRESH_TOKEN_LIFETIME: 1 days</p>
-<i><p>curl --location https://asu-payme.com/api/v1/payment/' \</p>
+<p>curl --location https://asu-payme.com/api/v1/payment/' \</p>
 <p>--header 'Content-Type: application/json' \</p>
-<p>--header 'Authorization: Bearer eyJhbGciOiJI••••••' \</p>
+<p>--header 'Authorization: Bearer eyJhbGciOiJI&bull;&bull;&bull;&bull;&bull;&bull;' \</p>
 <p>--data '{</p>
 <p>&emsp;'merchant': '2',</p>
 <p>&emsp;'order_id': 'test_id',</p>
 <p>&emsp;'amount': '15',</p>
 <p>&emsp;'pay_type': 'card_2'</p>
-<p>}'</p></i>
-
-<p>1.	Отправка данных для создания платежа</p>
-<p>2.	Отправка даных карты</p>
-<p>3.	Отправка кода подтверждения из смс (при необходимости)</p>
-
-<br>
+<p>}'</p>
+<p>1. Отправка данных для создания платежа</p>
+<p>2. Отправка даных карты</p>
+<p>3. Отправка кода подтверждения из смс (при необходимости)</p>
+<p>&nbsp;</p>
 <p><strong>II.2 Метод card-to-card (Перевод на карту)</strong></p>
 <p><strong>Вариант 1.</strong></p>
-<p>Аналогичен методу II.1, за исключнием того, что amount является обязательным параметром.
+<p>Аналогичен методу II.1, за исключнием того, что amount является обязательным параметром.</p>
 <p><strong>Вариант 2. Воспользоваться API:</strong></p>
 <p>Для авторизации используется JWT Bearer Authorization.</p>
-<p>1.	Отправка данных для создания платежа. В ответ присылаются реквизиты для оплаты</p>
+<p>1. Отправка данных для создания платежа. В ответ присылаются реквизиты для оплаты</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>II.3 Метод <strong>m10_to_m10</strong> (Пополнение кошелька М10)</strong></p>
+<p><strong>Вариант 1.</strong></p>
+<p>Аналогичен методу II.1, за исключнием того, что amount является обязательным параметром.</p>
+<p><strong>Вариант 2. Воспользоваться API:</strong></p>
+<p>Для авторизации используется JWT Bearer Authorization.</p>
+<p>1. Отправка данных для создания платежа.</p>
+<p>2. Отправка телефона отправителя. В ответ присылаются реквизиты для оплаты.</p>
 """
