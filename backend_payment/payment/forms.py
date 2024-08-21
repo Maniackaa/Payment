@@ -182,7 +182,7 @@ class PaymentListConfirmForm(forms.ModelForm):
 
 
 class MerchantForm(forms.ModelForm):
-    name = forms.CharField(label='235')
+    name = forms.CharField(label='Название')
 
     class Meta:
         model = Merchant
