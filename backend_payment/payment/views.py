@@ -14,7 +14,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, AccessMixin, Log
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.db.models import F, Avg, Sum
+from django.db.models import F, Avg, Sum, Count
 
 from django.http import HttpResponse, QueryDict, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, \
     JsonResponse, HttpResponseRedirect, Http404
@@ -30,7 +30,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from urllib3 import Retry, PoolManager
 
-from core.global_func import hash_gen, TZ
+from core.global_func import hash_gen, TZ, export_payments_func
 from deposit.models import Incoming
 from payment import forms
 from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter, \
@@ -42,6 +42,8 @@ from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnly
     SupportOrSuperuserPerm
 from payment.task import send_payment_webhook, send_withdraw_webhook
 from users.models import SupportOptions
+
+
 
 logger = structlog.get_logger(__name__)
 User = get_user_model()
@@ -681,15 +683,19 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         filter_url = urlencode(self.request.GET or self.request.POST, doseq=True)
         summary_url = reverse('payment:payments_summary') + '?' + filter_url
         context['summary_url'] = summary_url
+        context['stat'] = self.get_queryset().aggregate(sum=Sum('amount'), count=Count('amount'))
         return context
 
     def post(self, request, *args, **kwargs):
-        logger.debug('Обработка нажатия кнопки списка заявок')
         logger.info(request.POST.keys())
         logger.info(request.POST.dict())
-
+        logger.debug('Обработка нажатия кнопки')
         payment_id = confirmed_amount = confirmed_incoming_id = None
         for key in request.POST.keys():
+            if 'export' in request.POST.keys():
+                products = PaymentFilter(self.request.GET or self.request.POST, queryset=self.get_queryset()).qs
+                return export_payments_func(products)
+
             if 'cancel_payment' in request.POST.keys():
                 payment_id = request.POST['cancel_payment']
                 # Отклонение заявки

@@ -23,10 +23,11 @@ from api.filters import BalanceChangeFilter
 from api.permissions import PaymentOwnerOrStaff, IsStaff, IsStaffOrReadOnly
 from api.serializers import PaymentCreateSerializer, PaymentInputCardSerializer, \
     PaymentInputSmsCodeSerializer, PaymentTypesSerializer, WithdrawCreateSerializer, \
-    WithdrawSerializer, PaymentGuestSerializer, BalanceSerializer
+    WithdrawSerializer, PaymentGuestSerializer, BalanceSerializer, PaymentInputPhoneSerializer
 from core.global_func import hash_gen, get_client_ip
 from payment.models import Payment, PayRequisite, Withdraw, BalanceChange
 from payment.views import get_phone_script, get_bank_from_bin
+
 
 logger = structlog.get_logger(__name__)
 
@@ -279,9 +280,64 @@ signature = hash('sha256', $string)""",
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(tags=['API Payment process'],
+                   request=PaymentInputPhoneSerializer,
+                   summary="Отправка номера телефона (For pay_type ['m10_to_m10]')",
+                   description="Телефон в формате +994555001122",
+                   responses={status.HTTP_200_OK: OpenApiResponse(
+                       response=PaymentInputPhoneSerializer,
+                       description='Ok',
+                       examples=[
+                           OpenApiExample(
+                               "example1",
+                               value={
+                                   "m10_phone": "+994513467642",
+                                   "m10_link": "https://link.api.m10.az/arrHkAGFAnC3efBp8"
+                               },
+                               status_codes=[200],
+                               response_only=False,
+                           ),]),
+                       status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+                           response=BadResponse,
+                           description='Bad number',
+                           examples=[
+                               OpenApiExample(
+                                   "Bad number",
+                                   value={"phone": ["Phone format must be +994555001122"]},
+                                   status_codes=[400],
+                                   response_only=False,
+                               ),
+                           ])
+                   },
+                   )
+    @action(detail=True,
+            methods=["PUT"],
+            permission_classes=[PaymentOwnerOrStaff],)
+    def send_phone(self, request, *args, **kwargs):
+        payment = get_object_or_404(Payment, id=self.kwargs.get("pk"))
+        merchant = payment.merchant
+        if merchant.white_ip:
+            ip = get_client_ip(request)
+            if ip not in merchant.ip_list():
+                raise serializers.ValidationError(f'Your ip {ip} not in white list')
+        if payment.status == -1:
+            raise serializers.ValidationError({'status': 'payment Declined!'})
+        serializer = PaymentInputPhoneSerializer(data=request.data)
+        if serializer.is_valid():
+            phone = serializer.validated_data['phone']
+            payment.phone = phone
+            payment.status = 3
+            payment.save()
+            return Response(data={
+                'm10_phone': payment.pay_requisite.info,
+                'm10_link': payment.pay_requisite.info2,
+            }, status=status.HTTP_200_OK)
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    @extend_schema(tags=['API Payment process'],
                    request=PaymentInputSmsCodeSerializer,
                    summary="Отправка кода подтверждения (For pay_type ['card_2]')",
-                   description="Необходим если в предыдущем шаге sms_required=True.",
+                   description="Необходим если в шаге 'Отправка даных карты' sms_required=True.",
                    responses={status.HTTP_200_OK: OpenApiResponse(
                        response=ResponseInputSms,
                        examples=[

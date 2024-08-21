@@ -3,6 +3,8 @@ import logging
 
 import pytz
 import requests
+from django.http import HttpResponse
+from openpyxl.workbook import Workbook
 
 from backend_payment import settings
 from backend_payment.settings import TIME_ZONE
@@ -49,3 +51,28 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
+
+def export_payments_func(products):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="payments.xlsx"'
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Payments"
+    headers = ["id", "order_id", "pay_type", "create_at", 'merchant', "amount", "confirmed_amount", "comission",
+               "status",
+               "user_login", "owner_name", "mask", "referrer", "confirmed_time", "response_status_code", "comment"]
+    ws.append(headers)
+    for payment in products:
+        row = []
+        for field in headers:
+            value = getattr(payment, field)
+            if not value:
+                value = ''
+            if field in ('id', 'order_id', 'merchant', 'create_at', 'confirmed_time'):
+                row.append(str(value))
+            else:
+                row.append(value)
+        ws.append(row)
+    wb.save(response)
+    return response

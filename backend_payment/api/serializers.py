@@ -141,6 +141,18 @@ class PaymentInputSmsCodeSerializer(serializers.ModelSerializer):
         )
 
 
+class PaymentInputPhoneSerializer(serializers.Serializer):
+    phone = serializers.CharField()
+
+    def validate_phone(self, data):
+        phone = ''.join([x for x in data if x.isdigit() or x in ['+']])
+        if all(
+                (phone.startswith('+994'), len(phone) == 13)
+        ):
+            return phone
+        raise ValidationError('Phone format must be +994555001122')
+
+
 class DummyDetailSerializer(serializers.Serializer):
     status = serializers.IntegerField()
     amount = serializers.CharField()
