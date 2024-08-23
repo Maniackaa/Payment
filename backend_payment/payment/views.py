@@ -4,6 +4,7 @@ import json
 import random
 import uuid
 from http import HTTPStatus
+from pprint import pprint
 
 import requests
 import structlog
@@ -14,7 +15,8 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, AccessMixin, Log
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.db.models import F, Avg, Sum, Count
+from django.db.models import F, Avg, Sum, Count, Window, Q
+from django.db.models.functions import TruncDate
 
 from django.http import HttpResponse, QueryDict, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, \
     JsonResponse, HttpResponseRedirect, Http404
@@ -909,10 +911,30 @@ class MerchOwnerList(SuperuserOnlyPerm, ListView):
     paginate_by = settings.PAGINATE
 
     def get_queryset(self):
-        return User.objects.filter(role='merchant')
+        queryset = User.objects.filter().annotate(total=Sum('merchants__payments__amount')).order_by('id')
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        seven_days_ago = timezone.now() - datetime.timedelta(days=7)
+        users = self.get_queryset().prefetch_related('merchants__payments').annotate(
+            daily_payments=Sum('merchants__payments__amount',
+                               filter=Q(merchants__payments__create_at__gte=seven_days_ago))).values(
+            'username', 'daily_payments', 'merchants__payments__create_at').annotate(
+            date=TruncDate('merchants__payments__create_at'))
+        result = {}
+        for user in users:
+            date = user['date']
+            if date:
+                days_ago = (timezone.now().date() - date).days
+            else:
+                days_ago = 100
+            if date not in result:
+                result[days_ago] = {}
+            result[days_ago][user['username']] = user['daily_payments']
+        pprint(result)
+        context['result'] = result
         return context
 
 

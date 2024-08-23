@@ -7,16 +7,48 @@
 
 
 </style>
-
+{% load filters %}
 {% include 'includes/operator_menu.html' %}
 <div class="container">
+ {% include 'includes/paginator.html' %}
+   <div class="container">
+     <table class="table table-bordered">
+       <thead class="">
+            <tr class="" style="text-align: center">
+                <th>Мерч</th>
+                <th>Ссылка</th>
+                <th>Итого</th>
+                <th>Сегодня</th>
+                <th>1</th>
+                <th>2</th>
+                <th>3</th>
+                                <th>4</th>
+                <th>5</th>
+                <th>6</th>
+            </tr>
+       </thead>
+          <tbody style="text-align: start" >
+             {% for obj in page_obj %}
+                <tr class="text-center">
+                    <td>{{obj}}</td>
+                    <td><a href="{% url 'payment:merch_owner_detail' obj.id%}">Изменить баланс/выплата</a></td>
+                    <td style="">{{ obj.total }}</td>
+                    <td style="">{{ result|get_value_from_dict:0|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
+                    <td style="">{{ result|get_value_from_dict:1|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
+                    <td style="">{{ result|get_value_from_dict:2|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
+                    <td style="">{{ result|get_value_from_dict:3|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
+                    <td style="">{{ result|get_value_from_dict:4|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
+                    <td style="">{{ result|get_value_from_dict:5|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
+                    <td style="">{{ result|get_value_from_dict:6|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
 
-     {% include 'includes/paginator.html' %}
-     <div class="container">
-         {% for obj in page_obj %}
-         {{obj}} <a href="{% url 'payment:merch_owner_detail' obj.id%}">Изменить баланс/выплата</a><br>
-         {% endfor %}
+
+                 </tr>
+             {% endfor %}
+          </tbody>
+     </table>
    </div>
+
+
    {% include 'includes/paginator.html' %}
 
 </div>
