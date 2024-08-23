@@ -911,7 +911,7 @@ class MerchOwnerList(SuperuserOnlyPerm, ListView):
     paginate_by = settings.PAGINATE
 
     def get_queryset(self):
-        queryset = User.objects.filter().annotate(total=Sum('merchants__payments__confirmed_amount',
+        queryset = User.objects.filter(role='merchant', is_active=True).annotate(total=Sum('merchants__payments__confirmed_amount',
                                                             filter=Q(merchants__payments__status=9))).order_by('id')
         return queryset
 
