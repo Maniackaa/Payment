@@ -911,7 +911,7 @@ class MerchOwnerList(SuperuserOnlyPerm, ListView):
     paginate_by = settings.PAGINATE
 
     def get_queryset(self):
-        queryset = User.objects.filter().annotate(total=Sum('merchants__payments__amount')).order_by('id')
+        queryset = User.objects.filter().annotate(total=Sum('merchants__payments__confirmed_amount')).order_by('id')
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -919,8 +919,8 @@ class MerchOwnerList(SuperuserOnlyPerm, ListView):
 
         seven_days_ago = timezone.now() - datetime.timedelta(days=7)
         users = self.get_queryset().prefetch_related('merchants__payments').annotate(
-            daily_payments=Sum('merchants__payments__amount',
-                               filter=Q(merchants__payments__create_at__gte=seven_days_ago))).values(
+            daily_payments=Sum('merchants__payments__confirmed_amount',
+                               filter=Q(merchants__payments__create_at__gte=seven_days_ago) & Q(merchants__payments__status=9))).values(
             'username', 'daily_payments', 'merchants__payments__create_at').annotate(
             date=TruncDate('merchants__payments__create_at'))
         result = {}
@@ -933,7 +933,6 @@ class MerchOwnerList(SuperuserOnlyPerm, ListView):
             if date not in result:
                 result[days_ago] = {}
             result[days_ago][user['username']] = user['daily_payments']
-        pprint(result)
         context['result'] = result
         return context
 
