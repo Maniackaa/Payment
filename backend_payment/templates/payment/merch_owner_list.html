@@ -18,13 +18,7 @@
                 <th>Мерч</th>
                 <th>Ссылка</th>
                 <th>Итого</th>
-                <th>Сегодня</th>
-                <th>1</th>
-                <th>2</th>
-                <th>3</th>
-                                <th>4</th>
-                <th>5</th>
-                <th>6</th>
+                <th>Сутки</th>
             </tr>
        </thead>
           <tbody style="text-align: start" >
@@ -33,13 +27,7 @@
                     <td>{{obj}}</td>
                     <td><a href="{% url 'payment:merch_owner_detail' obj.id%}">Изменить баланс/выплата</a></td>
                     <td style="">{{ obj.total }}</td>
-                    <td style="">{{ result|get_value_from_dict:0|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
-                    <td style="">{{ result|get_value_from_dict:1|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
-                    <td style="">{{ result|get_value_from_dict:2|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
-                    <td style="">{{ result|get_value_from_dict:3|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
-                    <td style="">{{ result|get_value_from_dict:4|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
-                    <td style="">{{ result|get_value_from_dict:5|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
-                    <td style="">{{ result|get_value_from_dict:6|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
+                    <td style="">{{ result.day_1|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>
 
 
                  </tr>

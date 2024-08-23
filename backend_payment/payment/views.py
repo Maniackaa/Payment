@@ -911,28 +911,28 @@ class MerchOwnerList(SuperuserOnlyPerm, ListView):
     paginate_by = settings.PAGINATE
 
     def get_queryset(self):
-        queryset = User.objects.filter().annotate(total=Sum('merchants__payments__confirmed_amount')).order_by('id')
+        queryset = User.objects.filter().annotate(total=Sum('merchants__payments__confirmed_amount',
+                                                            filter=Q(merchants__payments__status=9))).order_by('id')
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        seven_days_ago = timezone.now() - datetime.timedelta(days=7)
+        start_date = (timezone.now() - datetime.timedelta(days=1))
+        q = Payment.objects.filter(create_at__gte=start_date)
+        for p in q:
+            print(p, p.create_at, p.amount)
         users = self.get_queryset().prefetch_related('merchants__payments').annotate(
-            daily_payments=Sum('merchants__payments__confirmed_amount',
-                               filter=Q(merchants__payments__create_at__gte=seven_days_ago) & Q(merchants__payments__status=9))).values(
-            'username', 'daily_payments', 'merchants__payments__create_at').annotate(
-            date=TruncDate('merchants__payments__create_at'))
-        result = {}
+            day_1=Sum('merchants__payments__confirmed_amount',
+                      filter=Q(merchants__payments__create_at__gte=start_date) & Q(merchants__payments__status=9))).values(
+            'username', 'day_1', 'merchants__payments__create_at')
+        result = {'day_1': {}}
         for user in users:
-            date = user['date']
-            if date:
-                days_ago = (timezone.now().date() - date).days
-            else:
-                days_ago = 100
-            if date not in result:
-                result[days_ago] = {}
-            result[days_ago][user['username']] = user['daily_payments']
+            if user['day_1']:
+                print(user)
+                username = user['username']
+                old_value = result['day_1'].get(username, 0)
+                result['day_1'][username] = old_value + user['day_1']
         context['result'] = result
         return context
 
