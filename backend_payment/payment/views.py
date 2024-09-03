@@ -421,13 +421,13 @@ def pay_to_m10_create(request, *args, **kwargs):
 
     elif request.method == 'POST':
         # Обработка нажатия кнопки
-        print(request.POST)
+        # print(request.POST)
         post_data = request.POST.dict()
         payment_id = request.POST.get('payment_id')
         payment = Payment.objects.get(pk=payment_id)
         initial_data = {'payment_id': payment.id}
         initial_data.update(post_data)
-        print('initial_data:', initial_data)
+        # print('initial_data:', initial_data)
         form = InvoiceM10Form(request.POST, instance=payment, initial=initial_data)
         context = {'form': form, 'payment': payment, 'data': get_time_remaining_data(payment)}
 
@@ -599,17 +599,11 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
 
     def get_queryset(self):
         operators_on_work = SupportOptions.load().operators_on_work
-        operators_count = len(operators_on_work)
-        user = str(get_current_authenticated_user().id)
-        if user in operators_on_work:
-            operator_num = int(operators_on_work.index(user)) + 1
-            queryset = Payment.objects.filter(
-                pay_type='card_2').filter(
-                status__in=[3, 4, 5, 6, 7]).annotate(mod=F('counter') % operators_count + 1).filter(
-                    pay_type='card_2').filter(mod=operator_num).order_by('counter')
-            return queryset
-        else:
-            return Payment.objects.none()
+        user_id = str(get_current_authenticated_user().id)
+        queryset = Payment.objects.filter(
+            pay_type='card_2').filter(
+            status__in=[3, 4, 5, 6, 7]).filter(work_operator=user_id).order_by('counter')
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

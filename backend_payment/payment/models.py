@@ -22,6 +22,7 @@ from django_currentuser.middleware import get_current_user, get_current_authenti
 from core.global_func import hash_gen, TZ
 from deposit.text_response_func import tz
 from payment.task import send_payment_webhook, send_withdraw_webhook, send_message_tg_task
+from users.models import SupportOptions
 
 logger = structlog.get_logger(__name__)
 
@@ -252,7 +253,6 @@ class Payment(models.Model):
     # Подтверждение:
     work_operator = models.IntegerField(null=True, blank=True)
     operator_counter = models.IntegerField(null=True, blank=True)
-    # operator2 = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     confirmed_amount = models.IntegerField('Подтвержденная сумма заявки', null=True, blank=True)
     comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True, blank=True)
     mask = models.CharField('Маска карты', max_length=16, null=True, blank=True)
@@ -316,7 +316,8 @@ class Payment(models.Model):
         if not self.card_data:
             return ''
         data = json.loads(self.card_data)
-        return data.get('expired_month')
+        month = int(data.get('expired_month'))
+        return month
 
     def expired_year(self):
         if not self.card_data:
@@ -563,6 +564,14 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
 
     if instance.pay_type == 'card_2' and instance.status == 3:
         instance.status = 4
+        # Выбор оператора для summary
+        if not instance.work_operator:
+            operators_on_work = SupportOptions.load().operators_on_work
+            if operators_on_work:
+                order_num = instance.counter % len(operators_on_work)
+                work_operator = operators_on_work[order_num]
+                instance.work_operator = work_operator
+                logger.debug(f'on_work: {operators_on_work}. order_num: {order_num}. work_operator: {work_operator}')
 
 
 @receiver(post_save, sender=Payment)

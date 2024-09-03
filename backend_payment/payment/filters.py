@@ -120,13 +120,10 @@ class PaymentFilter(django_filters.FilterSet):
         if value is True:
             # Работает фильтр по операм
             operators_on_work = SupportOptions.load().operators_on_work
-            operators_count = len(operators_on_work)
-            user = str(get_current_authenticated_user().id)
-            if user in operators_on_work:
-                operator_num = int(operators_on_work.index(user)) + 1
-                # print(f'{operator_num}/{operators_count}')
-                return queryset.annotate(mod=F('counter') % operators_count + 1).filter(
-                    pay_type='card_2').filter(mod=operator_num)
+            user_id = str(get_current_authenticated_user().id)
+            if user_id in operators_on_work:
+                return queryset.filter(pay_type='card_2').filter(status__in=[3, 4, 5, 6, 7]).filter(
+                    work_operator=user_id).order_by('counter')
             else:
                 return queryset.none()
         return queryset
