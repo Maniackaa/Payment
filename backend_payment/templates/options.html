@@ -2,10 +2,21 @@
 {% block title %}Настройки
 {% endblock %}
 {% block content %}
+<div class="row">
+  <div class="col-6">
+    <form method="POST">
+       {% csrf_token %}
+       {% include 'includes/form_fields.html' %}
+       <input type="submit" value="Сохранить">
+   </form>
+  </div>
+  <div class="col-6">
+  <br>
+    За последние сутки:<br>
+    {% for u in last_day %}
+       {{ u.username }}: {{ u.step_count }} ({{ u.step_sum }} azn)
+    {% endfor %}
+  </div>
+</div>
 
-        <form method="POST">
-            {% csrf_token %}
-              {% include 'includes/form_fields.html' %}
-            <input type="submit" value="Сохранить">
-        </form>
 {% endblock %}

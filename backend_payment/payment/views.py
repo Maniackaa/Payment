@@ -16,7 +16,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import F, Avg, Sum, Count, Window, Q
-from django.db.models.functions import TruncDate
+from django.db.models.functions import TruncDate, ExtractHour
 
 from django.http import HttpResponse, QueryDict, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, \
     JsonResponse, HttpResponseRedirect, Http404
@@ -79,6 +79,29 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['stat'] = 123
+        user: User = self.request.user
+        filtered_payments = Payment.objects.filter(pay_type='card_2').filter(status=9).filter(
+            confirmed_time__gt=timezone.now() - datetime.timedelta(days=1))
+        
+        all_steps = (
+            filtered_payments
+            .annotate(date1=TruncDate('confirmed_time', tzinfo=TZ))
+            .annotate(username=F('confirmed_user__username'))
+            # .annotate(hour=ExtractHour('confirmed_time'))
+            # .filter(confirmed_time__hour__gte=0)
+            .annotate(step_sum=Window(expression=Sum('confirmed_amount'), partition_by=['confirmed_user']))
+            .annotate(step_count=Window(expression=Count('confirmed_amount'), partition_by=['confirmed_user']))
+        )
+        print(all_steps)
+        # step1 = all_steps.filter(Q(confirmed_time__hour__gte=18) | Q(confirmed_time__hour__lt=2))
+        # for payment in all_steps:
+        #     print(payment.confirmed_amount, payment.confirmed_time.astimezone(tz=TZ), payment.date1, payment.hour)
+        last_day = all_steps.values('username',
+            'step_sum', 'step_count',
+            ).distinct('username').order_by('username')
+        print(last_day)
+        context['last_day'] = last_day
         return context
 
     def post(self, request, *args, **kwargs):
@@ -89,7 +112,6 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
         return redirect('payment:menu')
 
     def form_valid(self, form):
-        print('clean_operators_on_work')
         return super().form_valid(form)
 
 
