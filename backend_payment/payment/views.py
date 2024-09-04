@@ -5,7 +5,7 @@ import random
 import uuid
 from http import HTTPStatus
 from pprint import pprint
-
+import pandas as pd
 import requests
 import structlog
 from django.conf import settings
@@ -94,8 +94,52 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
         # step1 = all_steps.filter(Q(confirmed_time__hour__gte=18) | Q(confirmed_time__hour__lt=2))
         # for payment in all_steps:
         #     print(payment.confirmed_amount, payment.confirmed_time.astimezone(tz=TZ), payment.date1, payment.hour)
-        last_day = all_steps.values('username','step_sum', 'step_count').distinct('username').order_by('username')
+        last_day = all_steps.values('username', 'step_sum', 'step_count').distinct('username').order_by('username')
         context['last_day'] = last_day
+
+        stat_date = datetime.datetime(2024, 9, 3, 2)
+        end_day = stat_date + datetime.timedelta(days=1)
+        print(end_day)
+        day_filtered_payments = Payment.objects.filter(pay_type='card_2').filter(status=9).filter(
+            confirmed_time__gte=stat_date, confirmed_time__lt=end_day).annotate(
+            username=F('confirmed_user__username')).annotate(
+            user_sum=Window(expression=Sum('confirmed_amount'), partition_by=['username'])).values(
+            'username', 'user_sum').distinct('username').order_by('username')
+
+        print(day_filtered_payments)
+        for p in day_filtered_payments:
+            print(p)
+
+        """
+        1) 02:00-09:00  00:00-07:00
+        2) 09:00-18:00  07:00-16:00
+        3) 18:00-02:00  16:00-00:00
+        """
+
+        def get_step(value):
+            hour = value.hour
+            if hour < 7:
+                return 1
+            if hour < 16:
+                return 2
+            return 3
+
+        pay_list = Payment.objects.filter(status=9).values(
+            'confirmed_amount', 'confirmed_user__username', 'confirmed_time').order_by('-confirmed_time')
+        index = Payment.objects.filter(status=9).values('confirmed_time').order_by('confirmed_time')
+        df = pd.DataFrame(list(pay_list), index=index)
+        df.columns = ['amount', 'oper', 'confirmed_time']
+        df['step_time'] = df['confirmed_time'] + pd.Timedelta(hours=3 - 2)
+        df['step_date'] = df['step_time'].apply(datetime.datetime.date)
+        df['step'] = df['step_time'].apply(get_step)
+        step_grouped = df.groupby(['step_date', 'oper', 'step'])
+        day_grouped = df.groupby(['step_date', 'oper'])
+        result_step = step_grouped.agg({'amount': 'sum'})
+        result_day = day_grouped.agg({'amount': 'sum'})
+        html = result_step.to_html(justify='justify-all', border=1, col_space=100, bold_rows=False, )
+        html2 = result_day.to_html(justify='justify-all', border=1, col_space=100, bold_rows=False, )
+        context['html'] = html
+        context['html2'] = html2
         return context
 
     def post(self, request, *args, **kwargs):

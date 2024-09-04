@@ -14,9 +14,25 @@
   <br>
     За последние сутки:<br>
     {% for u in last_day %}
-       {{ u.username }}: {{ u.step_count }} ({{ u.step_sum }} azn)
+       {{ u.username }}: {{ u.step_count }} ({{ u.step_sum }} azn)<br>
     {% endfor %}
   </div>
+</div>
+<hr>
+<div class="card">
+    <div class="card-header">
+        Статистика 2:00 - 2:00. 1) 02:00-09:00 2) 09:00-18:00 3) 18:00-02:00
+    </div>
+    <div class="card-body">
+      <div class="row">
+          <div class="col-6">
+            {{ html|safe }}
+          </div>
+          <div class="col-6">
+            {{ html2|safe }}
+          </div>
+      </div>
+    </div>
 </div>
 
 {% endblock %}
