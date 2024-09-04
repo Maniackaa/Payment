@@ -562,7 +562,7 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         all_pays = Payment.objects.filter(pay_type='card_2').count()
         instance.counter = all_pays + 1
 
-    if instance.pay_type == 'card_2' and instance.status == 3:
+    if instance.pay_type == 'card_2' and instance.status == 3 and not instance.merchant.is_new:
         instance.status = 4
         # Выбор оператора для summary
         if not instance.work_operator:

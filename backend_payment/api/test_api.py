@@ -144,7 +144,7 @@ class TestAPI(APITestCase):
         response = self.client.put(url, data)
         assert response.status_code == 200, f'Не верный прием данных карты: {data}'
         payment = Payment.objects.get(pk=pk)
-        self.assertEqual(payment.status, 4, 'Payment статус не 4')
+        self.assertEqual(payment.status, 3, 'Payment статус не 3')
 
         url = start_url + f'{pk}/send_sms_code/'
         data = {"sms_code": "134q"}

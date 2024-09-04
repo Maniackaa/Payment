@@ -135,7 +135,9 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
         step_grouped = df.groupby(['step_date', 'oper', 'step'])
         day_grouped = df.groupby(['step_date', 'oper'])
         result_step = step_grouped.agg({'amount': 'sum'})
+        result_step.sort_values(by=['step_date', 'step'], ascending=[False, True], inplace=True)
         result_day = day_grouped.agg({'amount': 'sum'})
+        result_day.sort_values(by='step_date', ascending=False, inplace=True)
         html = result_step.to_html(justify='justify-all', border=1, col_space=100, bold_rows=False, )
         html2 = result_day.to_html(justify='justify-all', border=1, col_space=100, bold_rows=False, )
         context['html'] = html
