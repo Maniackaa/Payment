@@ -79,8 +79,6 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['stat'] = 123
-        user: User = self.request.user
         filtered_payments = Payment.objects.filter(pay_type='card_2').filter(status=9).filter(
             confirmed_time__gt=timezone.now() - datetime.timedelta(days=1))
         
@@ -93,14 +91,10 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
             .annotate(step_sum=Window(expression=Sum('confirmed_amount'), partition_by=['confirmed_user']))
             .annotate(step_count=Window(expression=Count('confirmed_amount'), partition_by=['confirmed_user']))
         )
-        print(all_steps)
         # step1 = all_steps.filter(Q(confirmed_time__hour__gte=18) | Q(confirmed_time__hour__lt=2))
         # for payment in all_steps:
         #     print(payment.confirmed_amount, payment.confirmed_time.astimezone(tz=TZ), payment.date1, payment.hour)
-        last_day = all_steps.values('username',
-            'step_sum', 'step_count',
-            ).distinct('username').order_by('username')
-        print(last_day)
+        last_day = all_steps.values('username','step_sum', 'step_count').distinct('username').order_by('username')
         context['last_day'] = last_day
         return context
 
@@ -1272,8 +1266,6 @@ class MerchStatView(DetailView, ):
         count_declined = declined.count()
         conversion = int(round(count_confirmed / count_total * 100, 0))
         operator_avg_time = filtered_payments.aggregate(operator_avg_time=Avg('oper_time'))['operator_avg_time'].total_seconds()
-
-
 
         context['stat'] = {
             'count_total': count_total,
