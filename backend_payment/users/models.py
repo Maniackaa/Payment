@@ -58,8 +58,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     balance = models.DecimalField('Баланс', max_digits=18, decimal_places=2, default=0)
-    tax = models.FloatField('Комиссия', default=9)
-    withdraw_tax = models.FloatField('Комиссия на вывод', default=3)
+    tax = models.FloatField('Комиссия card_2', default=9)
+    tax_m10 = models.FloatField('Комиссия m10_to_m10', default=7)
+    tax_card = models.FloatField('Комиссия card-to-card', default=7)
+    withdraw_tax = models.FloatField('Комиссия на вывод', default=2)
 
     class Meta:
         verbose_name = "Пользователь"

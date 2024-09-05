@@ -269,6 +269,15 @@ class Payment(models.Model):
         string = f'{self.__class__.__name__} {self.id}'
         return string
 
+    def get_tax(self):
+        if self.pay_type == 'card_2':
+            return self.merchant.owner.tax
+        if self.pay_type == 'm10_to_m10':
+            return self.merchant.owner.tax_m10
+        if self.pay_type == 'card-to-card':
+            return self.merchant.owner.tax_card
+        return 0
+
     def get_pay_data(self):
         card = self.pay_requisite.card
         return {
@@ -397,10 +406,10 @@ class Payment(models.Model):
             data = {}
         return data
 
-    def get_comission(self):
-        user: User = self.merchant.owner
-        tax = user.tax
-        return tax
+    # def get_comission(self):
+    #     user: User = self.merchant.owner
+    #     tax = user.tax
+    #     return tax
 
     class Meta:
         ordering = ('-create_at',)
@@ -519,7 +528,7 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
             instance.confirmed_time = timezone.now()
         if not instance.confirmed_amount:
             instance.confirmed_amount = instance.amount
-        instance.comission = Decimal(round(instance.confirmed_amount * instance.get_comission() / 100, 2))
+        instance.comission = Decimal(round(instance.confirmed_amount * instance.get_tax() / 100, 2))
         # Сохраним маску
         card_number = instance.card_number()
         if card_number:
@@ -584,7 +593,8 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         # Плюсуем баланс
         with transaction.atomic():
             user = User.objects.get(pk=instance.merchant.owner.id)
-            tax = Decimal(round(instance.confirmed_amount * user.tax / 100, 2))
+            # tax = Decimal(round(instance.confirmed_amount * user.tax / 100, 2))
+            tax = Decimal(round(instance.confirmed_amount * instance.get_tax() / 100, 2))
 
             logger.info(f'user: {user}. {user.balance} -> {user.balance} + {instance.confirmed_amount} - {tax} = {user.balance + instance.confirmed_amount - tax}')
             user.balance = F('balance') + Decimal(str(instance.confirmed_amount)) - tax

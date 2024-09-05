@@ -83,7 +83,7 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('is_superuser', 'is_staff', 'role')
     fieldsets = (
         (None, {'fields': ('username', 'email', 'password')}),
-        ('Personal info', {'fields': ('role', 'tax', 'withdraw_tax', 'balance')}),
+        ('Personal info', {'fields': ('role', 'tax', 'tax_m10', 'tax_card', 'withdraw_tax', 'balance')}),
         ('Permissions', {'fields': ('is_staff', 'is_active', "groups", "user_permissions",)}),
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
