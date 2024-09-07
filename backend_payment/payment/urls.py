@@ -12,11 +12,11 @@ urlpatterns = [
 
     path('', views.menu, name='menu'),
     path('invoice/', views.invoice, name='pay_check'),
-    path('pay_to_card_create/', views.pay_to_card_create, name='pay_to_card_create'),
-    path('pay_to_m10_create/', views.pay_to_m10_create, name='pay_to_m10_create'),
+    path('pay_to_card_create/', views.pay_to_card_create, name='pay_to_card_create'),  # card-to-card
+    path('pay_to_m10_create/', views.pay_to_m10_create, name='pay_to_m10_create'),  # card_2
     path('pay_to_m10_wait_work/', views.pay_to_m10_wait_work, name='pay_to_m10_wait_work'),
     path('pay_to_m10_sms_input/', views.pay_to_m10_sms_input, name='pay_to_m10_sms_input'),
-    path('m10_to_m10_create/', views.m10_to_m10_create, name='m10_to_m10_create'),
+    path('m10_to_m10_create/', views.m10_to_m10_create, name='m10_to_m10_create'),  # m10_to_m10
     path('pay_result/<str:pk>/', views.PayResultView.as_view(), name='pay_result'),
     path('payments/', views.PaymentListView.as_view(), name='payment_list'),
     path('payments_summary/', views.PaymentListSummaryView.as_view(), name='payments_summary'),

@@ -462,6 +462,12 @@ class Bank(models.Model):
     image = models.ImageField('Иконка банка', upload_to='bank_icons', null=True, blank=True)
 
 
+class Work(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    change_time = models.DateTimeField('Время изменения в базе', auto_now_add=True)
+    status = models.IntegerField()
+
+
 @receiver(pre_save, sender=Withdraw)
 def pre_save_withdraw(sender, instance: Withdraw, raw, using, update_fields, *args, **kwargs):
     logger.debug(f'pre_save_status = {instance.status} cashed: {instance.cached_status}')
@@ -514,6 +520,14 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
                 url=instance.merchant.host_withdraw or instance.merchant.host, data=data,
                 dump_data=instance.merchant.dump_webhook_data)
             logger.debug(f'answer {instance.id}: {result}')
+
+        if created:
+            try:
+                text = f'Новая заявка на вывод Withdraw\nОт {instance.merchant} на {instance.amount} ₼'
+                send_message_tg_task.delay(text, settings.ALARM_IDS)
+            except Merchant.DoesNotExist:
+                pass
+
     except Exception as err:
         logger.error(f'Ошибка при сохранении Withdraw: {err}')
 
@@ -575,7 +589,14 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         instance.status = 4
         # Выбор оператора для summary
         if not instance.work_operator:
-            operators_on_work = SupportOptions.load().operators_on_work
+            operators_on_work: list = SupportOptions.load().operators_on_work
+            logger.debug(f'start operators_on_work: {operators_on_work}')
+            for oper_id in operators_on_work:
+                oper: User = User.objects.filter(pk=oper_id).first()
+                logger.debug(f'{oper} on_work: {oper.profile.on_work}')
+                if oper and not oper.profile.on_work:
+                    logger.debug(f'Опер {oper} не на смене - удаляем из распределения')
+                    operators_on_work.remove(str(oper.id))
             if operators_on_work:
                 order_num = instance.counter % len(operators_on_work)
                 work_operator = operators_on_work[order_num]

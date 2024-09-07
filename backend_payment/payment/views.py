@@ -15,8 +15,10 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, AccessMixin, Log
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import F, Avg, Sum, Count, Window, Q
 from django.db.models.functions import TruncDate, ExtractHour
+from django.db.transaction import atomic
 
 from django.http import HttpResponse, QueryDict, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest, \
     JsonResponse, HttpResponseRedirect, Http404
@@ -39,7 +41,8 @@ from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, 
     MerchPaymentFilter, BalanceFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
     MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm, MerchBalanceChangeForm, SupportOptionsForm
-from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
+from payment.func import work_calc
+from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange, Work
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm, SuperuserOnlyPerm, \
     SupportOrSuperuserPerm
 from payment.task import send_payment_webhook, send_withdraw_webhook
@@ -87,38 +90,30 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
             .annotate(date1=TruncDate('confirmed_time', tzinfo=TZ))
             .annotate(username=F('confirmed_user__username'))
             # .annotate(hour=ExtractHour('confirmed_time'))
-            # .filter(confirmed_time__hour__gte=0)
             .annotate(step_sum=Window(expression=Sum('confirmed_amount'), partition_by=['confirmed_user']))
             .annotate(step_count=Window(expression=Count('confirmed_amount'), partition_by=['confirmed_user']))
         )
-        # step1 = all_steps.filter(Q(confirmed_time__hour__gte=18) | Q(confirmed_time__hour__lt=2))
-        # for payment in all_steps:
-        #     print(payment.confirmed_amount, payment.confirmed_time.astimezone(tz=TZ), payment.date1, payment.hour)
+
         last_day = all_steps.values('username', 'step_sum', 'step_count').distinct('username').order_by('username')
         context['last_day'] = last_day
 
-        stat_date = datetime.datetime(2024, 9, 3, 2)
-        end_day = stat_date + datetime.timedelta(days=1)
-        print(end_day)
-        day_filtered_payments = Payment.objects.filter(pay_type='card_2').filter(status=9).filter(
-            confirmed_time__gte=stat_date, confirmed_time__lt=end_day).annotate(
-            username=F('confirmed_user__username')).annotate(
-            user_sum=Window(expression=Sum('confirmed_amount'), partition_by=['username'])).values(
-            'username', 'user_sum').distinct('username').order_by('username')
-
-        print(day_filtered_payments)
-        for p in day_filtered_payments:
-            print(p)
+        # stat_date = datetime.datetime(2024, 9, 3, 2)
+        # end_day = stat_date + datetime.timedelta(days=1)
+        # day_filtered_payments = Payment.objects.filter(pay_type='card_2').filter(status=9).filter(
+        #     confirmed_time__gte=stat_date, confirmed_time__lt=end_day).annotate(
+        #     username=F('confirmed_user__username')).annotate(
+        #     user_sum=Window(expression=Sum('confirmed_amount'), partition_by=['username'])).values(
+        #     'username', 'user_sum').distinct('username').order_by('username')
 
         """
-        1) 02:00-09:00  00:00-07:00
-        2) 09:00-18:00  07:00-16:00
+        1) 02:00-10:00  00:00-08:00
+        2) 10:00-18:00  08:00-16:00
         3) 18:00-02:00  16:00-00:00
         """
 
         def get_step(value):
             hour = value.hour
-            if hour < 7:
+            if hour < 8:
                 return 1
             if hour < 16:
                 return 2
@@ -142,17 +137,27 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
         html2 = result_day.to_html(justify='justify-all', border=1, col_space=100, bold_rows=False, )
         context['html'] = html
         context['html2'] = html2
+        opers_work_calc = work_calc()
+        context['opers_work_calc'] = opers_work_calc
+
+        # df['timestamp'] = pd.to_datetime(df['timestamp'])
+
         return context
 
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
-        opers = self.request.POST.getlist('operators_on_work')
+        print('post')
+        new_opers = self.request.POST.getlist('operators_on_work')
+        print(f'new_opers: {new_opers}')
         options = SupportOptions.load()
-        options.operators_on_work = opers
+        print(f'old_opers: {options.operators_on_work}')
+        options.operators_on_work = new_opers
         options.save()
+        worked_after_change = User.objects.filter(pk__in=new_opers, profile__on_work=True).count()
+        logger.debug(f'worked_after_change: {worked_after_change}')
+        if worked_after_change < 1:
+            return HttpResponseBadRequest('Некорректный выбор - не остается ни одного работающего оператора')
         return redirect('payment:menu')
-
-    def form_valid(self, form):
-        return super().form_valid(form)
 
 
 def get_pay_requisite(pay_type: str, amount=None) -> PayRequisite:
@@ -670,19 +675,27 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        on_work = SupportOptions.load().operators_on_work
-        if str(user.id) in on_work:
-            work_data = f'Вы на смене. {on_work.index(str(user.id)) + 1} из {len(on_work)}'
+        active_opers_id = SupportOptions.load().operators_on_work
+        opers_on_work = User.objects.filter(profile__on_work=True).all()
+        work_usernames = ', '.join([u.username for u in opers_on_work])
+        if str(user.id) in active_opers_id:
+            work_data = f'{user.username}, можете работать. '
         else:
-            work_data = f'Вы не на смене'
-        context['work_data'] = work_data
+            work_data = f'Вы не можете выйти на смену.'
+        work_data += f'Операторы в работе ({len(opers_on_work)}): {work_usernames}. '
+
+        profile_on_work = user.profile.on_work
+        if profile_on_work:
+            profile_on_work_text = 'Вы на смене.'
+        else:
+            profile_on_work_text = 'Вы не на смене. Новые заявки не назначаются!'
+        context['work_data'] = work_data + f' {profile_on_work_text}'
         last_count = 0
         if self.get_queryset().last():
             last_count = self.get_queryset().last().counter
         if last_count != user.profile.last_id:
             user.profile.last_id = last_count
             user.profile.save()
-            context['play_sound'] = '1'
         return context
 
     def post(self, request, *args, **kwargs):
@@ -1349,7 +1362,24 @@ class WebhookReceive(APIView):
 
 
 def on_work(request, *args, **kwargs):
+    """Вход-выход на смену"""
     profile = request.user.profile
-    profile.on_work = not profile.on_work
-    profile.save()
+    oper_id = str(request.user.id)
+    operators_on_work: list = SupportOptions.load().operators_on_work
+
+    if not profile.on_work:
+        # Если пытаешься включить
+        if oper_id not in operators_on_work:
+            return HttpResponseBadRequest('Вы не на смене и не можете подключиться')
+
+    if profile.on_work:
+        # Если пытаешься выключить
+        oper_count = User.objects.filter(profile__on_work=True).count()
+        if oper_count <= 1:
+            return HttpResponseBadRequest('Вы один на смене и не можете отключиться')
+    with transaction.atomic():
+        profile.on_work = not profile.on_work
+        work = Work(user_id=oper_id, status=profile.on_work)
+        work.save()
+        profile.save()
     return redirect('payment:payment_list')
