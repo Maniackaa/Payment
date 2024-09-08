@@ -56,6 +56,7 @@
            <th>create time</th>
            <th>Merchant</th>
            <th>Type</th>
+           <th>O</th>
            <th>User</th>
            <th>Owner</th>
            <th>Сумм</th>
@@ -85,7 +86,8 @@
             <td>{{ payment.create_at|date:"d.m H:i" }}</td>
             <td>{{ payment.merchant.name}}{% if payment.merchant.is_new %}🍼{% endif %}</td>
             <td>{{ payment.pay_type}} ({{ payment.counter|default_if_none:"" }})</td>
-            <td>{{ payment.user_login|default_if_none:""}}</td>
+            <td>{{ payment.work_operator|default_if_none:""}}</td>
+             <td>{{ payment.user_login|default_if_none:""}}</td>
             <td>{{ payment.owner_name|default_if_none:""}}</td>
             {% if payment.screenshot %}
               <td><a target="_blank" href="/media/{{ payment.screenshot }}">{{ payment.amount }}</a></td>

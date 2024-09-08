@@ -696,6 +696,7 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
         if last_count != user.profile.last_id:
             user.profile.last_id = last_count
             user.profile.save()
+            context['play_sound'] = '1'
         return context
 
     def post(self, request, *args, **kwargs):
