@@ -475,7 +475,8 @@ def pre_save_withdraw(sender, instance: Withdraw, raw, using, update_fields, *ar
     if instance.status == 9 and instance.cached_status != 9:
         if not instance.confirmed_time:
             instance.confirmed_time = timezone.now()
-        instance.comission = Decimal(round(instance.amount * instance.merchant.owner.tax / 100, 2))
+        withdraw_tax = instance.merchant.owner.withdraw_tax
+        instance.comission = Decimal(round(instance.amount * withdraw_tax / 100, 2))
 
 
 @receiver(post_save, sender=Withdraw)
@@ -488,17 +489,17 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
             # Минусуем баланс
             with transaction.atomic():
                 user = User.objects.get(pk=instance.merchant.owner.id)
-                tax = Decimal(round(instance.amount * user.withdraw_tax / 100, 2))
-                logger.info(f'user: {user}. {user.balance} -> {round(user.balance - Decimal(f"{instance.amount}") - tax, 2)}')
-                user.balance = F('balance') - Decimal(f"{instance.amount}") - tax
+                withdraw_tax = Decimal(round(instance.amount * user.withdraw_tax / 100, 2))
+                logger.info(f'user: {user}. {user.balance} -> {round(user.balance - Decimal(f"{instance.amount}") - withdraw_tax, 2)}')
+                user.balance = F('balance') - Decimal(f"{instance.amount}") - withdraw_tax
                 user.save()
                 user = User.objects.get(pk=instance.merchant.owner.id)
                 logger.info(f'New balance: {user.balance}')
                 # Фиксируем историю
                 new_log = BalanceChange.objects.create(
                     user=user,
-                    amount=- instance.amount - tax,
-                    comment=f'Withdraw {instance.amount} ₼: {instance.id}. {round(-instance.amount - tax, 2)} ₼. (Tax: {round(tax, 2)} ₼)',
+                    amount=- instance.amount - withdraw_tax,
+                    comment=f'Withdraw {instance.amount} ₼: {instance.id}. {round(-instance.amount - withdraw_tax, 2)} ₼. (Tax: {round(withdraw_tax, 2)} ₼)',
                     current_balance=user.balance
                 )
                 new_log.save()

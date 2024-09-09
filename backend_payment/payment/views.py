@@ -690,13 +690,12 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
         else:
             profile_on_work_text = 'Вы не на смене. Новые заявки не назначаются!'
         context['work_data'] = work_data + f' {profile_on_work_text}'
-        last_count = 0
         if self.get_queryset().last():
             last_count = self.get_queryset().last().counter
-        if last_count != user.profile.last_id:
-            user.profile.last_id = last_count
-            user.profile.save()
-            context['play_sound'] = '1'
+            if last_count != user.profile.last_id:
+                user.profile.last_id = last_count
+                user.profile.save()
+                context['play_sound'] = '1'
         return context
 
     def post(self, request, *args, **kwargs):

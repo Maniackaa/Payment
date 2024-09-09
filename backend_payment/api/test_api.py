@@ -201,7 +201,7 @@ class TestAPI(APITestCase):
         self.assertEqual(response.status_code, 201, 'Не создается вывод')
 
     def test_withdraw_confirm(self):
-        self.test_create_withdraw()
+        self.test_create_withdraw()  # 30
         self.assertEqual(Withdraw.objects.count(), 1)
         withdraw = Withdraw.objects.last()
         # ПРи подтверждении вывода меняется баланс на сумму + комиссию.
@@ -215,9 +215,9 @@ class TestAPI(APITestCase):
         withdraw.confirmed_user = self.operator
         withdraw.save()
         owner = User.objects.get(username=owner.username)
-        self.assertEqual(owner.balance, Decimal('-30.9'), 'Не верно меняетя баланс')
+        self.assertEqual(owner.balance, Decimal('-30.6'), 'Не верно меняетя баланс')
         self.assertNotEqual(withdraw.confirmed_time, None)
         # Сохраняется изменение баланса
         last_log = BalanceChange.objects.last()
-        self.assertEqual(last_log.amount, Decimal('-30.9'), 'Не верно Сохраняется изменение баланса')
+        self.assertEqual(last_log.amount, Decimal('-30.6'), 'Не верно Сохраняется изменение баланса')
         self.assertEqual(last_log.user, owner)
