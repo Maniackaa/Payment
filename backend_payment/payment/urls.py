@@ -47,6 +47,7 @@ urlpatterns = [
     path('export_payments/', views.export_payments, name='export_payments'),
 
     path('receive_webhook/', views.WebhookReceive.as_view(), name='receive_webhook'),
+    path('repeat_webhook/<str:pk>', views.WebhookRepeat.as_view(), name='repeat_webhook'),
     ]
 
 if settings.DEBUG:

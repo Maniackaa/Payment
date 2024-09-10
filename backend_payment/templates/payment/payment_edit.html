@@ -122,8 +122,8 @@
 
 
 
-    <div class="row justify-content-start  col-md-3">
-        <div class="col">
+    <div class="row justify-content-start  col-md-6">
+        <div class="col-6">
         <br><b>Ручная корректировка:</b>
         <form method="POST">
             {% csrf_token %}
@@ -131,6 +131,14 @@
             <input type="submit" value="Сохранить">
         </form>
         </div>
+
+    </div>
+  <br><hr>
+    <div class="col-6">
+            <form method="POST" action="{%  url 'payment:repeat_webhook' payment.id %}">
+            {% csrf_token %}
+            <input type="submit" value="Повторно отправить Вэбхук">
+            </form>
     </div>
 
     <span>
@@ -140,6 +148,7 @@
           {% endfor %}
     </span>
   </div>
+
 
 
 {% endblock %}

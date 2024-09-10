@@ -1364,6 +1364,21 @@ class WebhookReceive(APIView):
         return JsonResponse({'status': 'success', 'data': data})
 
 
+class WebhookRepeat(StaffOnlyPerm, UpdateView, ):
+    model = Payment
+    success_url = reverse_lazy('payment:payment_list')
+
+    def post(self, request, *args, **kwargs):
+        payment = self.get_object()
+        data = payment.webhook_data()
+        print(data)
+        logger.debug(f'Отправка повторного вэбхук {payment.id}: {data}')
+        result = send_payment_webhook.delay(url=payment.merchant.host, data=data,
+                                                dump_data=payment.merchant.dump_webhook_data)
+        print(result)
+        return HttpResponse(f'Вэбхук отправлен:<br>{data}')
+
+
 def on_work(request, *args, **kwargs):
     """Вход-выход на смену"""
     profile = request.user.profile
