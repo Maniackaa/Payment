@@ -124,19 +124,22 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
         index = Payment.objects.filter(status=9).values('confirmed_time').order_by('confirmed_time')
         df = pd.DataFrame(list(pay_list), index=index)
         df.columns = ['amount', 'oper', 'confirmed_time']
-        df['step_time'] = df['confirmed_time'] + pd.Timedelta(hours=3 - 2)
+        df['step_time'] = df['confirmed_time'] + pd.Timedelta(hours=3 + 2)
         df['step_date'] = df['step_time'].apply(datetime.datetime.date)
         df['step'] = df['step_time'].apply(get_step)
         step_grouped = df.groupby(['step_date', 'oper', 'step'])
         day_grouped = df.groupby(['step_date', 'oper'])
-        result_step = step_grouped.agg({'amount': 'sum'})
+        result_step = step_grouped.agg({'amount': ['sum', 'count']})
+        print(result_step)
         result_step.sort_values(by=['step_date', 'oper', 'step'], ascending=[False, True, True], inplace=True)
-        result_day = day_grouped.agg({'amount': 'sum'})
+        result_day = day_grouped.agg({'amount': ['sum', 'count']})
         result_day.sort_values(by='step_date', ascending=False, inplace=True)
-        html = result_step.to_html(justify='justify-all', border=1, col_space=100, bold_rows=False, )
-        html2 = result_day.to_html(justify='justify-all', border=1, col_space=100, bold_rows=False, )
+        html = result_step.to_html(justify='justify-all', border=1, col_space=50, bold_rows=False, )
+        html2 = result_day.to_html(justify='justify-all', border=1, col_space=50, bold_rows=False, )
         context['html'] = html
         context['html2'] = html2
+
+        # Расчет рабочего времени
         opers_work_calc = work_calc()
         context['opers_work_calc'] = opers_work_calc
 

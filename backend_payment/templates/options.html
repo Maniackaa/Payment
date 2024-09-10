@@ -33,9 +33,9 @@
           </div>
           <div class="col-4">
               {% for oper, calc in opers_work_calc.items %}
-                {{ oper }}
+                {{ oper }}<br>
                   {% for day, duration in calc.items %}
-                      {{ day }}: {{ duration }}
+                      {{ day|date:"Y-m-d" }}: {{ duration }}<br>
                 {% endfor %}
               {% endfor %}
           </div>
