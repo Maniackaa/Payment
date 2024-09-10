@@ -16,7 +16,7 @@ def work_calc():
         if works:
             df = pd.DataFrame(list(works.values()))
             df.columns = ['pk', 'user_id', 'timestamp', 'status']
-            df['timestamp'] = df['timestamp'] + pd.Timedelta(hours=3 + 2)
+            df['timestamp'] = df['timestamp'] + pd.Timedelta(hours=3 - 2)
 
             result = []
             current_start = None
