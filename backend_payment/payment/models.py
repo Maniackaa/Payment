@@ -592,12 +592,17 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         if not instance.work_operator:
             operators_on_work: list = SupportOptions.load().operators_on_work
             logger.debug(f'start operators_on_work: {operators_on_work}')
+            operators_to_remove = []
             for oper_id in operators_on_work:
-                oper: User = User.objects.filter(pk=oper_id).first()
+                oper: User = User.objects.get(pk=oper_id)
                 logger.debug(f'{oper} on_work: {oper.profile.on_work}')
                 if oper and not oper.profile.on_work:
                     logger.debug(f'Опер {oper} не на смене - удаляем из распределения')
-                    operators_on_work.remove(str(oper.id))
+                    operators_to_remove.append(oper_id)
+
+            operators_on_work = list(set(operators_on_work) ^ set(operators_to_remove))
+            operators_on_work.sort()
+
             if operators_on_work:
                 order_num = instance.counter % len(operators_on_work)
                 work_operator = operators_on_work[order_num]

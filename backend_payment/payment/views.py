@@ -1371,11 +1371,9 @@ class WebhookRepeat(StaffOnlyPerm, UpdateView, ):
     def post(self, request, *args, **kwargs):
         payment = self.get_object()
         data = payment.webhook_data()
-        print(data)
         logger.debug(f'Отправка повторного вэбхук {payment.id}: {data}')
         result = send_payment_webhook.delay(url=payment.merchant.host, data=data,
                                                 dump_data=payment.merchant.dump_webhook_data)
-        print(result)
         return HttpResponse(f'Вэбхук отправлен:<br>{data}')
 
 
@@ -1400,4 +1398,5 @@ def on_work(request, *args, **kwargs):
         work = Work(user_id=oper_id, status=profile.on_work)
         work.save()
         profile.save()
+        logger.debug(f'Смена смены {request.user}: текущий статус {profile.on_work}')
     return redirect('payment:payment_list')
