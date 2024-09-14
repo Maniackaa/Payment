@@ -901,11 +901,13 @@ class WithdrawListView(LoginRequiredMixin, ListView):
     paginate_by = settings.PAGINATE
 
     def get_queryset(self):
-        if self.request.user.is_staff:
+        user = self.request.user
+        if user.is_staff:
             return WithdrawFilter(self.request.GET, queryset=Withdraw.objects).qs
-        if self.request.user.role == 'merchant':
-            return WithdrawFilter(self.request.GET,
-                                  queryset=Withdraw.objects.filter(merchant__owner=self.request.user)).qs
+        if user.role == 'merchant' or 'merch_viewer':
+            withdraws_to_view = Withdraw.objects.filter(merchant__merch_viewers__contains=[user.username])
+            queryset = Withdraw.objects.filter(merchant__owner=self.request.user) | withdraws_to_view
+            return WithdrawFilter(self.request.GET, queryset=queryset).qs
         return Withdraw.objects.none()
 
     def get_context_data(self, **kwargs):
