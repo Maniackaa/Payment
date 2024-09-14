@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     # 'corsheaders',
     'django_better_admin_arrayfield',
     'drf_spectacular',
-    # 'd2a'
+    'django.contrib.postgres',
 ] + MY_APPS
 
 MIDDLEWARE = [

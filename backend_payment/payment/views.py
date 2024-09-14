@@ -28,6 +28,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.http import urlencode
 from django.views.generic import CreateView, DetailView, FormView, UpdateView, ListView, DeleteView
+from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from django_currentuser.middleware import get_current_user, get_current_authenticated_user
 from openpyxl.workbook import Workbook
 from rest_framework.permissions import AllowAny
@@ -40,11 +41,11 @@ from payment import forms
 from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter, \
     MerchPaymentFilter, BalanceFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
-    MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm, MerchBalanceChangeForm, SupportOptionsForm
+     MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm, MerchBalanceChangeForm, SupportOptionsForm
 from payment.func import work_calc
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange, Work
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm, SuperuserOnlyPerm, \
-    SupportOrSuperuserPerm
+    SupportOrSuperuserPerm, MerchantOrViewPerm
 from payment.task import send_payment_webhook, send_withdraw_webhook
 from users.models import SupportOptions
 
@@ -737,23 +738,11 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         filter = PaymentFilter(self.request.GET, queryset=self.get_queryset())
         context['filter'] = filter
         # Количество заявок с занятыми реквизитами
-        in_work = Payment.objects.filter(status__range=(0, 8), pay_type='card-to-card', pay_requisite__isnull=False)
-        used = Payment.objects.filter(status__in=[-1, 9], pay_type='card-to-card', pay_requisite__isnull=False)
-        context['used'] = used.count()
-        context['in_work'] = in_work.count()
         context['html_count'] = filter.qs.count()
         filter_url = urlencode(self.request.GET, doseq=True)
         context['count_url'] = f'{reverse("payment:payment_count")}?{filter_url}'
         context['form'] = filter.form
-        work_data = ''
         user = self.request.user
-        if filter.form.data.get('on_work'):
-            on_work = SupportOptions.load().operators_on_work
-            if str(user.id) in on_work:
-                work_data = f'Вы на смене. {on_work.index(str(user.id)) + 1} из {len(on_work)}'
-            else:
-                work_data = f'Вы не на смене'
-        context['work_data'] = work_data
         filter_url = urlencode(self.request.GET or self.request.POST, doseq=True)
         summary_url = reverse('payment:payments_summary') + '?' + filter_url
         context['summary_url'] = summary_url
@@ -1141,7 +1130,7 @@ class MerchantCreate(LoginRequiredMixin, MerchantOnlyPerm, CreateView):
         return super().form_valid(form)
 
 
-class MerchantOrders(LoginRequiredMixin, MerchantOnlyPerm, ListView):
+class MerchantOrders(LoginRequiredMixin, MerchantOrViewPerm, ListView):
     # Список поступлений (Payments) юзера.
     template_name = 'payment/merchant_orders.html'
     model = Payment
@@ -1151,7 +1140,8 @@ class MerchantOrders(LoginRequiredMixin, MerchantOnlyPerm, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Payment.objects.filter(merchant__owner=user)
+        payments_to_view = Payment.objects.filter(merchant__merch_viewers__contains=[user.username])
+        queryset = Payment.objects.filter(merchant__owner=user) | payments_to_view
         return MerchPaymentFilter(self.request.GET, queryset=queryset).qs
 
     def get_context_data(self, **kwargs):
@@ -1187,13 +1177,23 @@ class MerchantOrders(LoginRequiredMixin, MerchantOnlyPerm, ListView):
         return response
 
 
-class MerchantDetail(AuthorRequiredMixin, UpdateView,):
+class MerchantDetail(AuthorRequiredMixin, UpdateView):
     template_name = 'payment/merchant.html'
     model = Merchant
-    # form = MerchantForm
     success_url = reverse_lazy('payment:menu')
     fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint', 'secret', 'check_balance', 'white_ip',
-              'dump_webhook_data')
+              'dump_webhook_data', 'merch_viewers')
+
+    def get_context_data(self, **kwargs):
+        viewers = self.object.merch_viewers
+        print(viewers)
+        context = super().get_context_data(**kwargs)
+        context['form'] = MerchantForm(instance=self.object)
+        viewers_user = User.objects.filter(username__in=viewers)
+        context['viewers_user'] = viewers_user
+        print(viewers_user)
+
+        return context
 
 
 class MerchantDelete(AuthorRequiredMixin, SuccessMessageMixin, DeleteView):

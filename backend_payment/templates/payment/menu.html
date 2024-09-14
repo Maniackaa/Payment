@@ -23,7 +23,7 @@
              <a class="" href="{% url 'deposit:incomings' %}">Пополнения смс incomings</a>
              <a class="" href="{% url 'deposit:trash' %}">Смс мусор incomings </a>
            {% endif %}
-           {% if user.role == 'merchant' %}
+           {% if user.role == 'merchant' or  user.role == 'merchviewer' %}
                <div><a class="" href="{% url 'payment:merchant_orders' %}">merchant_orders</a> <a href="{% url 'payment:export_payments' %}">(Экспорт)</a></div>
             <a class="" href="{% url 'payment:withdraw_list' %}">Заявки на Выводы withdraw</a>
            {% endif %}

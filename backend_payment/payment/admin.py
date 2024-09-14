@@ -58,7 +58,7 @@ class BalanceChangeAdmin(admin.ModelAdmin):
     list_filter = ('user',)
 
 
-class MerchantAdmin(admin.ModelAdmin):
+class MerchantAdmin(admin.ModelAdmin, DynamicArrayMixin):
     list_display = (
         'id', 'name', 'owner', 'host', 'is_new'
     )

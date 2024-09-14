@@ -67,7 +67,6 @@ class M10ToM10Form(forms.ModelForm):
         return phone
 
 
-
 class InvoiceTestForm(forms.ModelForm):
     amount = forms.CharField(widget=forms.TextInput(attrs={'placeholder': '₼',}), required=False)
     owner_name = forms.CharField(label='owner_name',
@@ -180,14 +179,15 @@ class PaymentListConfirmForm(forms.ModelForm):
             'confirmed_incoming'
         )
 
-
+from django.contrib.postgres.forms import SimpleArrayField
 class MerchantForm(forms.ModelForm):
     name = forms.CharField(label='Название')
+    merch_viewers = SimpleArrayField(base_field=forms.CharField(), required=False, label='Логины помощников через запятую')
 
     class Meta:
         model = Merchant
         fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint',
-                  'secret', 'check_balance', 'white_ip')
+                  'secret', 'check_balance', 'white_ip', 'merch_viewers')
 
 
 class MerchBalanceChangeForm(forms.ModelForm):

@@ -1,6 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import AccessMixin
 from django.contrib import messages
 from django.shortcuts import redirect
+User = get_user_model()
 
 
 class AuthorRequiredMixin(AccessMixin):
@@ -46,6 +48,14 @@ class MerchantOnlyPerm(AccessMixin):
         if not request.user.role == 'merchant':
             return redirect('payment:menu')
         return super().dispatch(request, *args, **kwargs)
+
+
+class MerchantOrViewPerm(AccessMixin):
+    def dispatch(self, request, *args, **kwargs):
+        role = request.user.role
+        print(role)
+        if role in (User.MERCHVIEWER, User.MERCHANT):
+            return super().dispatch(request, *args, **kwargs)
 
 
 class SupportOrSuperuserPerm(AccessMixin):

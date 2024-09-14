@@ -24,12 +24,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     ADMIN = "admin"
     MODERATOR = "editor"
     MERCHANT = "merchant"
+    MERCHVIEWER = "merchviewer"
     ROLES = (
         (USER, "Пользователь"),
         (ADMIN, "Администратор"),
         (STAFF, "Оператор"),
         (MODERATOR, "Корректировщик"),
         (MERCHANT, "Мерчант"),
+        (MERCHVIEWER, "Помощник мерча")
     )
 
     USERNAME_FIELD = 'username'

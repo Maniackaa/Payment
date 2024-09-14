@@ -9,6 +9,12 @@
         <form method="POST">
             {% csrf_token %}
             {% include 'includes/form_fields.html' %}
+            <div class="col">
+            Выбранные помощники:<br>
+                {% for viewer in  viewers_user %}
+                    {{ viewer }}<br>
+                {% endfor %}
+            </div>
             <button type="submit" class="btn btn-warning btn-sm">Save</button>
             <a href="{% url 'payment:menu' %}" class="btn btn-info btn-sm">Cancel</a>
         </form>

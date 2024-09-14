@@ -6,6 +6,7 @@ from typing import Any
 
 import pytz
 import structlog
+from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
@@ -16,7 +17,7 @@ from django.db.models import F, Sum, Model
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
-from django_better_admin_arrayfield.models.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField
 from django_currentuser.middleware import get_current_user, get_current_authenticated_user
 
 from core.global_func import hash_gen, TZ
@@ -43,6 +44,10 @@ class Merchant(models.Model):
     dump_webhook_data = models.BooleanField(default=False)
     # Endpoints
     pay_success_endpoint = models.URLField('Default Url for redirect user back to your site', null=True, blank=True)
+    merch_viewers = ArrayField(
+            models.CharField(max_length=50, blank=True),
+            size=5, default=list, blank=True
+        )
 
     def stat(self):
         confirmed_payments = self.payments.filter(status=9)
