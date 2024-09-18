@@ -492,7 +492,7 @@ def pay_to_m10_create(request, *args, **kwargs):
 
     elif request.method == 'POST':
         # Обработка нажатия кнопки
-        # print(request.POST)
+        print(request.POST)
         post_data = request.POST.dict()
         payment_id = request.POST.get('payment_id')
         payment = Payment.objects.get(pk=payment_id)
@@ -1141,9 +1141,11 @@ class MerchantOrders(LoginRequiredMixin, MerchantOrViewPerm, ListView):
     paginate_by = settings.PAGINATE
 
     def get_queryset(self):
+        print('get_queryset')
         user = self.request.user
         payments_to_view = Payment.objects.filter(merchant__merch_viewers__contains=[user.username])
         queryset = Payment.objects.filter(merchant__owner=user) | payments_to_view
+        print('queryset', queryset)
         return MerchPaymentFilter(self.request.GET, queryset=queryset).qs
 
     def get_context_data(self, **kwargs):

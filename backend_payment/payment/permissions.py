@@ -56,6 +56,7 @@ class MerchantOrViewPerm(AccessMixin):
         print(role)
         if role in (User.MERCHVIEWER, User.MERCHANT):
             return super().dispatch(request, *args, **kwargs)
+        return redirect('payment:menu')
 
 
 class SupportOrSuperuserPerm(AccessMixin):

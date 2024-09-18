@@ -586,13 +586,13 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
     except Exception as err:
         logger.error(f'Ошибка сохранения лога: {err}')
 
-    # Счетчик по типу +1
-    if instance.pay_type == 'card_2' and not instance.counter:
-        all_pays = Payment.objects.filter(pay_type='card_2').count()
+    # Пришли данные карты. Присваиваем счетчик и распределяем заявку
+    if instance.pay_type == 'card_2' and instance.status == 3 and not instance.merchant.is_new and not instance.counter:
+        instance.status = 4
+        # Счетчик по типу +1
+        all_pays = Payment.objects.filter(pay_type='card_2', counter__isnull=False).count()
         instance.counter = all_pays + 1
 
-    if instance.pay_type == 'card_2' and instance.status == 3 and not instance.merchant.is_new:
-        instance.status = 4
         # Выбор оператора для summary
         if not instance.work_operator:
             operators_on_work: list = SupportOptions.load().operators_on_work
@@ -670,6 +670,7 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
                                             dump_data=instance.merchant.dump_webhook_data)
         logger.info(f'answer {instance.id}: {result}')
 
+    # Уведомление в тг о новой заявке от новичков
     if created:
         try:
             if instance.merchant and instance.merchant.is_new is True:
