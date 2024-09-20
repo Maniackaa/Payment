@@ -52,7 +52,15 @@
                  <button name="cancel_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-danger btn-sm">X</button>
             </div>
             <div class="row "position-relative">
+            <div class="col position-relative text-center">{{ payment.merchant.name }} ({{ payment.user_login }})</div>
                 <div class="col position-relative text-center">{{ payment.bank_name }}
+                    {% if payment.card_number is None or payment.card_number == '' %}
+                    -
+                    {% elif payment.luna_check == True %}
+                    ✅
+                    {% else %}
+                    ❓
+                {% endif %}
                 </div>
             </div>
         </div>

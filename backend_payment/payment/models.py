@@ -317,6 +317,22 @@ class Payment(models.Model):
         data = json.loads(self.card_data)
         return data.get('card_number')
 
+    def luna_check(self):
+        # Проверка номера карты по алгоритму луна
+        card_number = self.card_number()
+        if card_number:
+            def digits_of(n):
+                return [int(digit) for digit in str(n)]
+            digits = digits_of(card_number)
+            odd_digits = digits[-1::-2]
+            even_digits = digits[-2::-2]
+            checksum = 0
+            checksum += sum(odd_digits)
+            for d in even_digits:
+                checksum += sum(digits_of(d * 2))
+            check = checksum % 10
+            return check == 0
+
     def bank_name(self) -> str:
         card_num = self.card_number()
 
