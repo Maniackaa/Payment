@@ -1248,6 +1248,7 @@ def merchant_test_webhook(request, *args, **kwargs):
     if 'payment_decline' in request.POST:
         payment.status = -1
         data = payment.webhook_data()
+        data['help'] = "It's test webhook!"
         send_payment_webhook.delay(merchant.host, data,
                                    dump_data=payment.merchant.dump_webhook_data)
     elif 'payment_accept' in request.POST:
@@ -1255,16 +1256,19 @@ def merchant_test_webhook(request, *args, **kwargs):
         payment.status = 9
         payment.confirmed_time = timezone.now()
         data = payment.webhook_data()
+        data['help'] = "It's test webhook!"
         send_payment_webhook.delay(merchant.host, data, payment.merchant.dump_webhook_data)
     elif 'withdraw_accept' in request.POST:
         withdraw.status = 9
         withdraw.confirmed_time = timezone.now()
         data = withdraw.webhook_data()
+        data['help'] = "It's test webhook!"
         send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data,
                                     dump_data=withdraw.merchant.dump_webhook_data)
     else:
         withdraw.status = -1
         data = withdraw.webhook_data()
+        data['help'] = "It's test webhook!"
         send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data,
                                     dump_data=withdraw.merchant.dump_webhook_data)
 

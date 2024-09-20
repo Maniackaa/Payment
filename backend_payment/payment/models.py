@@ -444,6 +444,9 @@ class PaymentLog(models.Model):
     create_at = models.DateTimeField('Время добавления в базу', auto_now_add=True)
     changes = models.JSONField()
 
+    class Meta:
+        ordering = ('-create_at',)
+
     def __str__(self):
         return f'{self.create_at.astimezone(tz=TZ)} {self.user} {self.changes}'
 
@@ -527,9 +530,9 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
                 )
                 new_log.save()
 
-            # Отправляем вэбхук
+            # Отправляем вэбхук 9
             data = instance.webhook_data()
-            logger.debug(f'Отправка вэбхук {instance.id}: {data}')
+            logger.debug(f'Отправка вэбхук withdraw {instance.id}: {data}')
             result = send_withdraw_webhook.delay(
                 url=instance.merchant.host_withdraw or instance.merchant.host, data=data,
                 dump_data=instance.merchant.dump_webhook_data)
@@ -629,14 +632,24 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
             my_username = 'Maniac'
             my = User.objects.get(username=my_username)
             my_pay = Payment.objects.filter(work_operator=my.id, status__in=[3, 4, 5, 6, 7]).count()
+            my_username2 = 'ManiacAutomaton1'
+            my2 = User.objects.get(username=my_username2)
+            my_pay2 = Payment.objects.filter(work_operator=my2.id, status__in=[3, 4, 5, 6, 7]).count()
             if operators_on_work:
                 order_num = instance.counter % len(operators_on_work)
                 if my.profile.on_work and str(my.id) in operators_on_work and my_pay < 1 and instance.bank_name() == 'kapital':
                     logger.debug('kapital')
                     work_operator = str(my.id)
+                elif my2.profile.on_work and str(my2.id) in operators_on_work and my_pay2 < 1 and instance.bank_name() == 'kapital':
+                    logger.debug('kapital my2')
+                    work_operator = str(my2.id)
                 else:
                     if len(operators_on_work) > 1:
-                        operators_on_work.remove(str(my.id))
+                        if str(my.id) in operators_on_work:
+                            operators_on_work.remove(str(my.id))
+                        if str(my2.id) in operators_on_work:
+                            operators_on_work.remove(str(my2.id))
+
                     order_num = instance.counter % len(operators_on_work)
                     work_operator = operators_on_work[order_num]
                 instance.work_operator = work_operator

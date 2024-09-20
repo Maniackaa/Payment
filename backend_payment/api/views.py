@@ -438,6 +438,7 @@ signature_text = """<p><b>signature</b>* - required field (string)<br><br></p>
 <p>string = merchant + card_number + amount + secret_key (encoding UTF-8)</p>
 <p>signature = hash('sha256', $string)</p>
 В примере string = "2111122223333444430secret_key"
+(card_number 16 цифр без лишних символов)
 """
 
 
@@ -458,7 +459,7 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
                                "withdraw_id": "your_withdraw_id-aaaa15320",
                                "card_data": {
                                    "owner_name": "Vasya Pupkin",
-                                   "card_number": "1111222233334444",
+                                   "card_number": "1111-2222-3333-4444",
                                    "expired_month": "12",
                                    "expired_year": "26"
                                },
