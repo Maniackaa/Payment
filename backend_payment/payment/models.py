@@ -614,11 +614,13 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
             my = User.objects.get(username=my_username)
             my_pay = Payment.objects.filter(work_operator=my.id, status__in=[3, 4, 5, 6, 7]).count()
             if operators_on_work:
-                order_num = instance.counter % len(operators_on_work)
                 if my.profile.on_work in operators_on_work and my_pay < 1 and instance.bank_name() == 'kapital':
                     logger.debug('kapital')
                     work_operator = my.id
                 else:
+                    if len(operators_on_work) > 1:
+                        operators_on_work.remove(str(my.id))
+                    order_num = instance.counter % len(operators_on_work)
                     work_operator = operators_on_work[order_num]
                 instance.work_operator = work_operator
                 logger.debug(f'on_work: {operators_on_work}. order_num: {order_num}. work_operator: {work_operator}')
