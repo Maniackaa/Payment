@@ -158,14 +158,20 @@ class DummyDetailSerializer(serializers.Serializer):
     amount = serializers.CharField()
 
 
+class PaymentFullSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('id', 'card_data', 'phone_script_data', 'work_operator', 'counter', 'bank_name')
+        model = Payment
+
+
 class PaymentGuestSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('id', 'status')
+        fields = ('id', 'status', 'confirmed_amount', 'mask')
         model = Payment
 
     def validate_status(self, value):
-        logger.debug(f'validate {self}')
         if self.instance.status in (-1, 9):
+            logger.debug(f'Платеж уже обработан: status {self.instance.status}')
             raise serializers.ValidationError("Платеж уже обработан")
         return value
 

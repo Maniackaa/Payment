@@ -15,6 +15,10 @@ v1_router.register("payment_types", views.PaymentTypesView, basename='payment_ty
 v1_router.register("withdraw", views.WithdrawViewSet, basename='withdraw'),
 v1_router.register("balance_changes", views.BalanceViewSet, basename='balance_changes'),
 
+# Для робота
+v1_router.register("full_info", views.FullInfoView, basename='full_info'),
+v1_router.register("worker_payments", views.WorkerPaymentsView, basename='worker_payments'),
+
 urlpatterns = [
     path("", include(v1_router.urls)),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

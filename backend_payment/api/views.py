@@ -23,7 +23,7 @@ from api.filters import BalanceChangeFilter
 from api.permissions import PaymentOwnerOrStaff, IsStaff, IsStaffOrReadOnly
 from api.serializers import PaymentCreateSerializer, PaymentInputCardSerializer, \
     PaymentInputSmsCodeSerializer, PaymentTypesSerializer, WithdrawCreateSerializer, \
-    WithdrawSerializer, PaymentGuestSerializer, BalanceSerializer, PaymentInputPhoneSerializer
+    WithdrawSerializer, PaymentGuestSerializer, BalanceSerializer, PaymentInputPhoneSerializer, PaymentFullSerializer
 from core.global_func import hash_gen, get_client_ip
 from payment.models import Payment, PayRequisite, Withdraw, BalanceChange
 from payment.views import get_phone_script, get_bank_from_bin
@@ -388,6 +388,29 @@ class BalanceViewSet(viewsets.GenericViewSet, generics.ListAPIView):
 
     def get_queryset(self):
         return BalanceChange.objects.filter(user=self.request.user)
+
+
+class WorkerPaymentsView(mixins.ListModelMixin, viewsets.GenericViewSet):
+
+    serializer_class = PaymentFullSerializer
+    queryset = Payment.objects.all()
+    permission_classes = [IsStaff]
+
+    def get_queryset(self):
+        logger.debug(f'work_operator: {self.request.user}')
+        return Payment.objects.filter(status__in=[3, 4, 5, 6, 7], work_operator=self.request.user.id).order_by('counter')
+
+
+class FullInfoView(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    serializer_class = PaymentFullSerializer
+    queryset = Payment.objects.all()
+    permission_classes = [IsStaff]
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        return Response(data)
 
 
 class PaymentStatusView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):

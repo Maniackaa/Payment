@@ -324,6 +324,8 @@ class Payment(models.Model):
             bank = Bank.objects.filter(bins__contains=[card_num[:6]]).first()
             if bank:
                 return bank.name
+        else:
+            return ''
         return 'default'
 
     def expired_month(self):
@@ -608,9 +610,16 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
             operators_on_work = list(set(operators_on_work) ^ set(operators_to_remove))
             operators_on_work.sort()
 
+            my_username = 'Maniac'
+            my = User.objects.get(username=my_username)
+            my_pay = Payment.objects.filter(work_operator=my.id, status__in=[3, 4, 5, 6, 7]).count()
             if operators_on_work:
                 order_num = instance.counter % len(operators_on_work)
-                work_operator = operators_on_work[order_num]
+                if my.profile.on_work in operators_on_work and my_pay < 1 and instance.bank_name() == 'kapital':
+                    logger.debug('kapital')
+                    work_operator = my.id
+                else:
+                    work_operator = operators_on_work[order_num]
                 instance.work_operator = work_operator
                 logger.debug(f'on_work: {operators_on_work}. order_num: {order_num}. work_operator: {work_operator}')
 

@@ -17,7 +17,7 @@ logger = structlog.get_logger(__name__)
 def send_payment_webhook(url, data: dict, dump_data=True):
     """Отправка вебхука принятия или отклонения заявки payment"""
     try:
-        logger.info(f'Отправка webhook на {url}: {data}.')
+        logger.info(f'Отправка payment webhook на {url}: {data}.')
         headers = {"Content-Type": "application/json"}
         if dump_data:
             response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=5)
@@ -44,7 +44,7 @@ def send_payment_webhook(url, data: dict, dump_data=True):
 @shared_task()
 def send_withdraw_webhook(url, data: dict, dump_data=True):
     try:
-        logger.info(f'Отправка webhook на {url}: {data}')
+        logger.info(f'Отправка withdraw webhook на {url}: {data}')
         headers = {"Content-Type": "application/json"}
         if dump_data:
             response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=10)

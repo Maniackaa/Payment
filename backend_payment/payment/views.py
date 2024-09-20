@@ -145,7 +145,8 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
         context['opers_work_calc'] = opers_work_calc
 
         # df['timestamp'] = pd.to_datetime(df['timestamp'])
-
+        opers_on_work = User.objects.filter(profile__on_work=True).all()
+        context['opers_on_work'] = opers_on_work
         return context
 
     @transaction.atomic

@@ -100,8 +100,8 @@ def pre_save_incoming(sender, instance: Incoming, raw, using, update_fields, *ar
 def post_save_incoming(sender, instance: Incoming, created, raw, using, update_fields, *args, **kwargs):
     print(f'post_save_incoming: {instance}. created: {created}')
     if created:
-        logger.debug(f'Проверим заявки m10_to_m10')
         threshold = datetime.datetime.now(tz=TZ) - datetime.timedelta(minutes=10)
+        logger.debug(f'Проверим заявки m10_to_m10. threshold: {threshold}')
         target_payments = Payment.objects.filter(
             pay_type='m10_to_m10',
             phone=instance.sender,
