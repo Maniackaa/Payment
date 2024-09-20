@@ -160,7 +160,7 @@ class DummyDetailSerializer(serializers.Serializer):
 
 class PaymentFullSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('id', 'card_data', 'phone_script_data', 'work_operator', 'counter', 'bank_name')
+        fields = ('id', 'amount', 'card_data', 'phone_script_data', 'work_operator', 'counter', 'bank_name')
         model = Payment
 
 
