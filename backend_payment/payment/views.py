@@ -539,9 +539,9 @@ def pay_to_m10_create(request, *args, **kwargs):
 def pay_to_m10_wait_work(request, *args, **kwargs):
     payment_id = request.GET.get('payment_id')
     payment = get_object_or_404(Payment, pk=payment_id)
-    if payment.status in [4]:
+    if payment.status in [4, 8]:
         return redirect(reverse('payment:pay_to_m10_sms_input') + f'?payment_id={payment.id}')
-    if payment.status not in [0, 3]:
+    if payment.status in [-1, 9]:
         return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
     return render(request, template_name='payment/invoice_m10_wait.html',
                   context={'payment': payment, 'data': get_time_remaining_data(payment)})
