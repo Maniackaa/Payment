@@ -43,7 +43,11 @@
              {% endif %}
              ;">
             <div class="col">
-                 № {{ payment.counter }}
+                 № {{ payment.counter }}<br>
+                Статус: {{ payment.status }}
+
+                 <button name="reset_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-danger btn-sm">X</button>
+
             </div>
             <div class="col">
                  {{ payment.create_at|date:"d.m.Y H:i:s" }}

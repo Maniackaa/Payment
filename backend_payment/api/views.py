@@ -398,7 +398,7 @@ class WorkerPaymentsView(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def get_queryset(self):
         logger.debug(f'work_operator: {self.request.user}')
-        return Payment.objects.filter(status__in=[3, 4, 5, 6, 7], work_operator=self.request.user.id).order_by('counter')
+        return Payment.objects.filter(status__in=[3, 4], work_operator=self.request.user.id).order_by('counter')
 
 
 class FullInfoView(mixins.RetrieveModelMixin, viewsets.GenericViewSet):

@@ -22,7 +22,7 @@ from django_currentuser.middleware import get_current_user, get_current_authenti
 
 from core.global_func import hash_gen, TZ
 from deposit.text_response_func import tz
-from payment.task import send_payment_webhook, send_withdraw_webhook, send_message_tg_task
+from payment.task import send_payment_webhook, send_withdraw_webhook, send_message_tg_task, send_payment_to_work_oper
 from users.models import SupportOptions
 
 logger = structlog.get_logger(__name__)
@@ -220,6 +220,7 @@ class Payment(models.Model):
         (5, '5. Wait Sms'),
         (6, '6. Sms input'),
         (7, '7. Await confirm'),
+        (8, '8. AutoBot in work'),
         (9, '9. Confirmed'),
     )
 
@@ -439,13 +440,14 @@ class Payment(models.Model):
 
 
 class PaymentLog(models.Model):
+    # Лог изменений
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name='logs')
     user = models.ForeignKey(to=User, null=True, blank=True, on_delete=models.CASCADE)
     create_at = models.DateTimeField('Время добавления в базу', auto_now_add=True)
     changes = models.JSONField()
 
     class Meta:
-        ordering = ('-create_at',)
+        ordering = ('create_at',)
 
     def __str__(self):
         return f'{self.create_at.astimezone(tz=TZ)} {self.user} {self.changes}'
@@ -609,51 +611,52 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
 
     # Пришли данные карты. Присваиваем счетчик и распределяем заявку
     if instance.pay_type == 'card_2' and instance.status == 3 and not instance.merchant.is_new and not instance.counter:
-        instance.status = 4
+        # instance.status = 4
         # Счетчик по типу +1
         all_pays = Payment.objects.filter(pay_type='card_2', counter__isnull=False).count()
         instance.counter = all_pays + 1
 
+
         # Выбор оператора для summary
-        if not instance.work_operator:
-            operators_on_work: list = SupportOptions.load().operators_on_work
-            logger.debug(f'start operators_on_work: {operators_on_work}')
-            operators_to_remove = []
-            for oper_id in operators_on_work:
-                oper: User = User.objects.get(pk=oper_id)
-                logger.debug(f'{oper} on_work: {oper.profile.on_work}')
-                if oper and not oper.profile.on_work:
-                    logger.debug(f'Опер {oper} не на смене - удаляем из распределения')
-                    operators_to_remove.append(oper_id)
-
-            operators_on_work = list(set(operators_on_work) ^ set(operators_to_remove))
-            operators_on_work.sort()
-
-            my_username = 'Maniac'
-            my = User.objects.get(username=my_username)
-            my_pay = Payment.objects.filter(work_operator=my.id, status__in=[3, 4, 5, 6, 7]).count()
-            my_username2 = 'ManiacAutomaton1'
-            my2 = User.objects.get(username=my_username2)
-            my_pay2 = Payment.objects.filter(work_operator=my2.id, status__in=[3, 4, 5, 6, 7]).count()
-            if operators_on_work:
-                order_num = instance.counter % len(operators_on_work)
-                if my.profile.on_work and str(my.id) in operators_on_work and my_pay < 1 and instance.bank_name() == 'kapital':
-                    logger.debug('kapital')
-                    work_operator = str(my.id)
-                elif my2.profile.on_work and str(my2.id) in operators_on_work and my_pay2 < 1 and instance.bank_name() == 'kapital':
-                    logger.debug('kapital my2')
-                    work_operator = str(my2.id)
-                else:
-                    if len(operators_on_work) > 1:
-                        if str(my.id) in operators_on_work:
-                            operators_on_work.remove(str(my.id))
-                        if str(my2.id) in operators_on_work:
-                            operators_on_work.remove(str(my2.id))
-
-                    order_num = instance.counter % len(operators_on_work)
-                    work_operator = operators_on_work[order_num]
-                instance.work_operator = work_operator
-                logger.debug(f'on_work: {operators_on_work}. order_num: {order_num}. work_operator: {work_operator}')
+        # if not instance.work_operator:
+            # operators_on_work: list = SupportOptions.load().operators_on_work
+            # logger.debug(f'start operators_on_work: {operators_on_work}')
+            # operators_to_remove = []
+            # for oper_id in operators_on_work:
+            #     oper: User = User.objects.get(pk=oper_id)
+            #     logger.debug(f'{oper} on_work: {oper.profile.on_work}')
+            #     if oper and not oper.profile.on_work:
+            #         logger.debug(f'Опер {oper} не на смене - удаляем из распределения')
+            #         operators_to_remove.append(oper_id)
+            #
+            # operators_on_work = list(set(operators_on_work) ^ set(operators_to_remove))
+            # operators_on_work.sort()
+            #
+            # my_username = 'Maniac'
+            # my = User.objects.get(username=my_username)
+            # my_pay = Payment.objects.filter(work_operator=my.id, status__in=[3, 4, 5, 6, 7]).count()
+            # my_username2 = 'ManiacAutomaton1'
+            # my2 = User.objects.get(username=my_username2)
+            # my_pay2 = Payment.objects.filter(work_operator=my2.id, status__in=[3, 4, 5, 6, 7]).count()
+            # if operators_on_work:
+            #     order_num = instance.counter % len(operators_on_work)
+            #     if my.profile.on_work and str(my.id) in operators_on_work and my_pay < 1 and instance.bank_name() == 'kapital':
+            #         logger.debug('kapital')
+            #         work_operator = str(my.id)
+            #     elif my2.profile.on_work and str(my2.id) in operators_on_work and my_pay2 < 1 and instance.bank_name() == 'kapital':
+            #         logger.debug('kapital my2')
+            #         work_operator = str(my2.id)
+            #     else:
+            #         if len(operators_on_work) > 1:
+            #             if str(my.id) in operators_on_work:
+            #                 operators_on_work.remove(str(my.id))
+            #             if str(my2.id) in operators_on_work:
+            #                 operators_on_work.remove(str(my2.id))
+            #
+            #         order_num = instance.counter % len(operators_on_work)
+            #         work_operator = operators_on_work[order_num]
+            #     instance.work_operator = work_operator
+            #     logger.debug(f'on_work: {operators_on_work}. order_num: {order_num}. work_operator: {work_operator}')
 
 
 @receiver(post_save, sender=Payment)
@@ -719,3 +722,7 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
                 send_message_tg_task.delay(text, settings.ALARM_IDS)
         except Merchant.DoesNotExist:
             pass
+
+    if instance.pay_type == 'card_2' and instance.status == 3 and not instance.work_operator:
+        logger.debug(f'send_payment_to_work_oper')
+        send_payment_to_work_oper.delay(instance.id)

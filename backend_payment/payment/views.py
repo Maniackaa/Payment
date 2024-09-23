@@ -674,7 +674,7 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
         user_id = str(get_current_authenticated_user().id)
         queryset = Payment.objects.filter(
             pay_type='card_2').filter(
-            status__in=[3, 4, 5, 6, 7]).filter(work_operator=user_id).order_by('counter')
+            status__in=[3, 4, 5, 6, 7, 8]).filter(work_operator=user_id).order_by('counter')
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -716,6 +716,15 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
             payment = Payment.objects.get(pk=payment_id)
             payment.status = 9
             payment.save()
+            return redirect(reverse('payment:payments_summary'))
+
+        if 'reset_payment' in request.POST.keys():
+            payment_id = request.POST['reset_payment']
+            print(payment_id)
+            payment = Payment.objects.get(pk=payment_id)
+            payment.status = 4
+            payment.save()
+
             return redirect(reverse('payment:payments_summary'))
 
 
