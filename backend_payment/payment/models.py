@@ -255,6 +255,7 @@ class Payment(models.Model):
     referrer = models.URLField('Ссылка для возврата', null=True, blank=True)
     card_data = models.JSONField(default=str, blank=True)
     phone_script_data = models.JSONField(default=str, blank=True)
+    bank_str = models.CharField(null=True, blank=True)
 
     # Подтверждение:
     work_operator = models.IntegerField(null=True, blank=True)
@@ -564,6 +565,10 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
 @receiver(pre_save, sender=Payment)
 def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **kwargs):
     logger.debug(f'pre_save_status = {instance.status} cashed: {instance.cached_status}')
+    # Если статус изменился на 3 (Получена карта):
+    if instance.status == 3 and instance.cached_status != 9:
+        instance.bank_str = instance.bank_name()
+
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
         if not instance.confirmed_time:

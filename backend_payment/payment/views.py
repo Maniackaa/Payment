@@ -710,22 +710,27 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
             payment = Payment.objects.get(pk=payment_id)
             payment.status = -1
             payment.save()
-            return redirect(reverse('payment:payments_summary'))
+            # return redirect(reverse('payment:payments_summary'))
         if 'confirm_payment' in request.POST.keys():
             payment_id = request.POST['confirm_payment']
             payment = Payment.objects.get(pk=payment_id)
             payment.status = 9
             payment.save()
-            return redirect(reverse('payment:payments_summary'))
+            # return redirect(reverse('payment:payments_summary'))
 
         if 'reset_payment' in request.POST.keys():
             payment_id = request.POST['reset_payment']
-            print(payment_id)
             payment = Payment.objects.get(pk=payment_id)
             payment.status = 4
             payment.save()
 
-            return redirect(reverse('payment:payments_summary'))
+        if 'my_payment' in request.POST.keys():
+            payment_id = request.POST['my_payment']
+            payment = Payment.objects.get(pk=payment_id)
+            payment.status = 5
+            payment.save()
+
+        return redirect(reverse('payment:payments_summary'))
 
 
 class PaymentListView(StaffOnlyPerm, ListView, ):
