@@ -259,7 +259,7 @@ class Payment(models.Model):
     bank = models.ForeignKey(to='Bank', on_delete=models.CASCADE, null=True, blank=True)
 
     # Подтверждение:
-    work_operator = models.ForeignKey(to=User, on_delete=models.CASCADE, null=True, blank=True, related_name='oper_payments')
+    work_operator = models.ForeignKey(to=User, on_delete=models.SET_NULL, null=True, blank=True, related_name='oper_payments')
     operator_counter = models.IntegerField(null=True, blank=True)
     confirmed_amount = models.IntegerField('Подтвержденная сумма заявки', null=True, blank=True)
     comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True, blank=True)
