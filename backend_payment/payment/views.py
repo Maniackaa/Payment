@@ -13,7 +13,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import PermissionRequiredMixin, AccessMixin, LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import F, Avg, Sum, Count, Window, Q
@@ -47,9 +47,7 @@ from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, W
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm, SuperuserOnlyPerm, \
     SupportOrSuperuserPerm, MerchantOrViewPerm
 from payment.task import send_payment_webhook, send_withdraw_webhook
-from users.models import SupportOptions
-
-
+from users.models import SupportOptions, Profile
 
 logger = structlog.get_logger(__name__)
 User = get_user_model()
@@ -93,10 +91,13 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
             # .annotate(hour=ExtractHour('confirmed_time'))
             .annotate(step_sum=Window(expression=Sum('confirmed_amount'), partition_by=['confirmed_user']))
             .annotate(step_count=Window(expression=Count('confirmed_amount'), partition_by=['confirmed_user']))
+            .annotate(last_day_sum=Window(expression=Sum('confirmed_amount')))
         )
 
-        last_day = all_steps.values('username', 'step_sum', 'step_count').distinct('username').order_by('username')
+        last_day = all_steps.values('username', 'step_sum', 'step_count', 'last_day_sum').distinct('username').order_by('username')
         context['last_day'] = last_day
+        context['last_day_sum'] = filtered_payments.aggregate(day_sum=Sum('confirmed_amount'))['day_sum']
+
 
         # stat_date = datetime.datetime(2024, 9, 3, 2)
         # end_day = stat_date + datetime.timedelta(days=1)
@@ -131,7 +132,7 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
         step_grouped = df.groupby(['step_date', 'oper', 'step'])
         day_grouped = df.groupby(['step_date', 'oper'])
         result_step = step_grouped.agg({'amount': ['sum', 'count']})
-        print(result_step)
+        # print(result_step)
         result_step.sort_values(by=['step_date', 'oper', 'step'], ascending=[False, True, True], inplace=True)
         result_day = day_grouped.agg({'amount': ['sum', 'count']})
         result_day.sort_values(by='step_date', ascending=False, inplace=True)
@@ -151,17 +152,24 @@ class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        print('post')
+        savepoint = transaction.savepoint()
         new_opers = self.request.POST.getlist('operators_on_work')
         print(f'new_opers: {new_opers}')
         options = SupportOptions.load()
         print(f'old_opers: {options.operators_on_work}')
         options.operators_on_work = new_opers
         options.save()
+        # Снятие со смены остальных
+        not_selected_opers = User.objects.prefetch_related('profile').filter(role='staff').exclude(
+            pk__in=new_opers).all()
+        Profile.objects.filter(pk__in=not_selected_opers).update(on_work=False)
+
         worked_after_change = User.objects.filter(pk__in=new_opers, profile__on_work=True).count()
         logger.debug(f'worked_after_change: {worked_after_change}')
         if worked_after_change < 1:
+            transaction.savepoint_rollback(savepoint)
             return HttpResponseBadRequest('Некорректный выбор - не остается ни одного работающего оператора')
+
         return redirect('payment:menu')
 
 
@@ -1423,3 +1431,27 @@ def on_work(request, *args, **kwargs):
         profile.save()
         logger.debug(f'Смена смены {request.user}: текущий статус {profile.on_work}')
     return redirect('payment:payment_list')
+
+
+from subprocess import Popen, PIPE, STDOUT
+from django.http import HttpResponse
+
+
+def main_function(request):
+    if request.method == 'GET':
+            command = ["bash", "bashtest.sh"]
+            try:
+                    process = Popen(command, stdout=PIPE, stderr=STDOUT)
+                    output = process.stdout.read()
+                    exitstatus = process.poll()
+                    if (exitstatus==0):
+                            result = {"status": "Success", "output":str(output)}
+                    else:
+                            result = {"status": "Failed", "output":str(output)}
+
+            except Exception as e:
+                    result =  {"status": "failed", "output":str(e)}
+
+            html = f"<html><body>Script status: {result['status']} \n Output: {result['output']}</body></html>"
+            return HttpResponse(html)
+

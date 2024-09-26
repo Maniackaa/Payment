@@ -143,6 +143,8 @@ class Profile(models.Model):
     on_work = models.BooleanField(default=False)
     limit_to_work = models.IntegerField(default=0)
     last_id = models.IntegerField(default=0)
+    is_bot = models.BooleanField(default=False)
+    banks = models.ManyToManyField(to='payment.Bank', blank=True)
 
     def __str__(self):
         return f'{self.user.username}'

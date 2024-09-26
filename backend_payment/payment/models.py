@@ -256,9 +256,10 @@ class Payment(models.Model):
     card_data = models.JSONField(default=str, blank=True)
     phone_script_data = models.JSONField(default=str, blank=True)
     bank_str = models.CharField(null=True, blank=True)
+    bank = models.ForeignKey(to='Bank', on_delete=models.CASCADE, null=True, blank=True)
 
     # Подтверждение:
-    work_operator = models.IntegerField(null=True, blank=True)
+    work_operator = models.ForeignKey(to=User, on_delete=models.CASCADE, null=True, blank=True, related_name='oper_payments')
     operator_counter = models.IntegerField(null=True, blank=True)
     confirmed_amount = models.IntegerField('Подтвержденная сумма заявки', null=True, blank=True)
     comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True, blank=True)
@@ -345,6 +346,16 @@ class Payment(models.Model):
         else:
             return ''
         return 'default'
+
+    def get_bank(self) -> str:
+        card_num = self.card_number()
+
+        if card_num:
+            bank = Bank.objects.filter(bins__contains=[card_num[:6]]).first()
+            if bank:
+                return bank
+        return Bank.objects.get(name='default')
+
 
     def expired_month(self):
         if not self.card_data:
@@ -490,6 +501,9 @@ class Bank(models.Model):
     instruction = models.CharField('Инструкция', null=True, blank=True)
     image = models.ImageField('Иконка банка', upload_to='bank_icons', null=True, blank=True)
 
+    def __str__(self):
+        return f'{self.id}. {self.name}'
+
 
 class Work(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -568,6 +582,7 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
     # Если статус изменился на 3 (Получена карта):
     if instance.status == 3 and instance.cached_status != 9:
         instance.bank_str = instance.bank_name()
+        instance.bank = instance.get_bank()
 
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
@@ -623,45 +638,7 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
 
 
         # Выбор оператора для summary
-        # if not instance.work_operator:
-            # operators_on_work: list = SupportOptions.load().operators_on_work
-            # logger.debug(f'start operators_on_work: {operators_on_work}')
-            # operators_to_remove = []
-            # for oper_id in operators_on_work:
-            #     oper: User = User.objects.get(pk=oper_id)
-            #     logger.debug(f'{oper} on_work: {oper.profile.on_work}')
-            #     if oper and not oper.profile.on_work:
-            #         logger.debug(f'Опер {oper} не на смене - удаляем из распределения')
-            #         operators_to_remove.append(oper_id)
-            #
-            # operators_on_work = list(set(operators_on_work) ^ set(operators_to_remove))
-            # operators_on_work.sort()
-            #
-            # my_username = 'Maniac'
-            # my = User.objects.get(username=my_username)
-            # my_pay = Payment.objects.filter(work_operator=my.id, status__in=[3, 4, 5, 6, 7]).count()
-            # my_username2 = 'ManiacAutomaton1'
-            # my2 = User.objects.get(username=my_username2)
-            # my_pay2 = Payment.objects.filter(work_operator=my2.id, status__in=[3, 4, 5, 6, 7]).count()
-            # if operators_on_work:
-            #     order_num = instance.counter % len(operators_on_work)
-            #     if my.profile.on_work and str(my.id) in operators_on_work and my_pay < 1 and instance.bank_name() == 'kapital':
-            #         logger.debug('kapital')
-            #         work_operator = str(my.id)
-            #     elif my2.profile.on_work and str(my2.id) in operators_on_work and my_pay2 < 1 and instance.bank_name() == 'kapital':
-            #         logger.debug('kapital my2')
-            #         work_operator = str(my2.id)
-            #     else:
-            #         if len(operators_on_work) > 1:
-            #             if str(my.id) in operators_on_work:
-            #                 operators_on_work.remove(str(my.id))
-            #             if str(my2.id) in operators_on_work:
-            #                 operators_on_work.remove(str(my2.id))
-            #
-            #         order_num = instance.counter % len(operators_on_work)
-            #         work_operator = operators_on_work[order_num]
-            #     instance.work_operator = work_operator
-            #     logger.debug(f'on_work: {operators_on_work}. order_num: {order_num}. work_operator: {work_operator}')
+
 
 
 @receiver(post_save, sender=Payment)
@@ -702,13 +679,13 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         except Exception as err:
             logger.error(f'Ошибка при отправке вэбхука: {err}')
     
-    # Отправка вэбхука если статус изменился на 5 - ожидание смс и api:
-    if instance.source == 'api' and instance.status == 5 and instance.cached_status != 5:
-        data = instance.webhook_data()
-        logger.debug(f'{instance} API status 5')
-        result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
-                                            dump_data=instance.merchant.dump_webhook_data)
-        logger.info(f'answer {instance.id}: {result}')
+    # # Отправка вэбхука если статус изменился на 5 - ожидание смс и api:
+    # if instance.source == 'api' and instance.status == 5 and instance.cached_status != 5:
+    #     data = instance.webhook_data()
+    #     logger.debug(f'{instance} API status 5')
+    #     result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
+    #                                         dump_data=instance.merchant.dump_webhook_data)
+    #     logger.info(f'answer {instance.id}: {result}')
 
     # Если статус изменился на -1 (Отклонен):
     if instance.status == -1 and instance.cached_status != -1:
@@ -731,3 +708,4 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
     if instance.pay_type == 'card_2' and instance.status == 3 and not instance.work_operator:
         logger.debug(f'send_payment_to_work_oper')
         send_payment_to_work_oper.delay(instance.id)
+        # send_payment_to_work_oper(instance.id)
