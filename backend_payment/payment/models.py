@@ -356,7 +356,6 @@ class Payment(models.Model):
                 return bank
         return Bank.objects.get(name='default')
 
-
     def expired_month(self):
         if not self.card_data:
             return ''

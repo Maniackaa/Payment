@@ -39,7 +39,7 @@ from core.global_func import hash_gen, TZ, export_payments_func
 from deposit.models import Incoming
 from payment import forms
 from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter, \
-    MerchPaymentFilter, BalanceFilter
+    MerchPaymentFilter, BalanceFilter, BalanceStaffFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
      MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm, MerchBalanceChangeForm, SupportOptionsForm
 from payment.func import work_calc
@@ -752,7 +752,8 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
     paginate_by = settings.PAGINATE
 
     def get_queryset(self):
-        return PaymentFilter(self.request.GET, queryset=Payment.objects).qs
+        return PaymentFilter(self.request.GET, queryset=Payment.objects.prefetch_related(
+            'merchant', 'pay_requisite', 'bank', 'work_operator', 'confirmed_incoming', 'confirmed_user', 'merchant__owner')).qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -966,6 +967,27 @@ class WithdrawListView(LoginRequiredMixin, ListView):
             ws.append(row)
         wb.save(response)
         return response
+
+
+class BalanceHistoryListView(StaffOnlyPerm, LoginRequiredMixin, ListView):
+    """Список Изменения баланса. Для персонала"""
+    template_name = 'payment/balance_list.html'
+    model = BalanceChange
+    paginate_by = settings.PAGINATE
+    filter = BalanceStaffFilter
+
+    def get_queryset(self):
+        queryset = BalanceChange.objects.all()
+        if self.request.user.is_superuser:
+            return BalanceStaffFilter(self.request.GET, queryset=queryset).qs
+        if self.request.user.role not in ('operator'):
+            return BalanceChange.objects.none()
+        return BalanceStaffFilter(self.request.GET, queryset=queryset.filter(user=self.request.user)).qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filter'] = BalanceStaffFilter(self.request.GET, queryset=self.get_queryset())
+        return context
 
 
 class BalanceListView(LoginRequiredMixin, ListView):

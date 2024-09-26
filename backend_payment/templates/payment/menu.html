@@ -12,6 +12,7 @@
             </div>
             {% if user.is_superuser %}
             <a class="" href="{% url 'payment:merch_owner_list' %}">Список мерчей</a>
+            <a class="" href="{% url 'payment:balance_history_list' %}">Изменения баланса мерчей</a><br>
             {% endif %}
            {% if user.is_staff %}
                <a class="" href="{% url 'payment:support_options' %}">Операторы на смене</a>

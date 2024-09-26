@@ -16,6 +16,30 @@ class MyDateInput(forms.DateInput):
     format = '%Y-%m-%d'
 
 
+class BalanceStaffFilter(django_filters.FilterSet):
+    # История баланса для персонала
+    def __init__(self, data=None, *args, **kwargs):
+        if data is not None:
+            data = data.copy()
+            for name, f in self.base_filters.items():
+                initial = f.extra.get('initial')
+                if not data.get(name) and initial:
+                    data[name] = initial
+        super().__init__(data, *args, **kwargs)
+
+    create_at = django_filters.DateFilter(field_name='create_at', lookup_expr='contains',
+                                             widget=MyDateInput({'class': 'form-control'}))
+
+    @property
+    def qs(self):
+        parent = super(BalanceStaffFilter, self).qs
+        return parent.filter()
+
+    class Meta:
+        model = BalanceChange
+        fields = ['create_at', 'user']
+
+
 class BalanceFilter(django_filters.FilterSet):
     def __init__(self, data=None, *args, **kwargs):
         if data is not None:
@@ -76,6 +100,7 @@ class MerchPaymentFilter(django_filters.FilterSet):
 
 
 class PaymentFilter(django_filters.FilterSet):
+    # Фильтр где весь список заявок для оперов
 
     def __init__(self, data=None, *args, **kwargs):
         if data is not None:
@@ -99,7 +124,7 @@ class PaymentFilter(django_filters.FilterSet):
 
     class Meta:
         model = Payment
-        fields = ['id', 'order_id', 'status', 'pay_type', 'amount', 'merchant']
+        fields = ['id', 'order_id', 'status', 'pay_type', 'amount', 'merchant', 'merchant__owner']
 
     @property
     def qs(self):

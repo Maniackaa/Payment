@@ -26,7 +26,7 @@ urlpatterns = [
     path('payments_input/<str:pk>/', views.PaymentInput.as_view(), name='payment_input'),
     path('withdraws/', views.WithdrawListView.as_view(), name='withdraw_list'),
     path('withdraws/<str:pk>/', views.WithdrawEdit.as_view(), name='withdraw_edit'),
-    path('balance/', views.BalanceListView.as_view(), name='balance_list'),
+    path('balance_history/', views.BalanceHistoryListView.as_view(), name='balance_history_list'),
     # path('merch_stat/<int:pk>', views.MerchStatView.as_view(), name='merch_stats'),
     path('merchowners/<int:pk>/', views.MerchOwnerDetail.as_view(), name='merch_owner_detail'),
     path('merchowners/', views.MerchOwnerList.as_view(), name='merch_owner_list'),
@@ -46,6 +46,7 @@ urlpatterns = [
     path('merchant_orders/', views.MerchantOrders.as_view(), name='merchant_orders'),
     path('merchant_test_webhook/', views.merchant_test_webhook, name='merchant_test_webhook'),
     path('export_payments/', views.export_payments, name='export_payments'),
+    path('balance/', views.BalanceListView.as_view(), name='balance_list'),
 
     path('receive_webhook/', views.WebhookReceive.as_view(), name='receive_webhook'),
     path('repeat_webhook/<str:pk>', views.WebhookRepeat.as_view(), name='repeat_webhook'),

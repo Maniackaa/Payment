@@ -37,6 +37,8 @@ class PaymentAdmin(admin.ModelAdmin):
         'status', 'card_number', 'sms_code', 'bank_name', 'response_status_code'
     )
     list_filter = ('merchant', 'pay_requisite', 'response_status_code', 'pay_type', 'work_operator')
+    list_select_related = ['merchant', 'pay_requisite', 'bank', 'work_operator',
+                           'confirmed_incoming', 'confirmed_user', 'merchant__owner']
 
     # Кастомное поле
     # def card_number(self, obj):
