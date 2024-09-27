@@ -1,6 +1,8 @@
 from django import forms
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.admin import SimpleListFilter
+from django.contrib.auth import get_user_model
 from django.db.models import TextField
 from django.utils.html import format_html
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
@@ -10,6 +12,9 @@ from django.forms import widgets
 from django.db import models
 from payment.models import CreditCard, PayRequisite, Payment, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
 from users.models import SupportOptions
+
+
+User = get_user_model()
 
 
 class CreditCardAdmin(admin.ModelAdmin):
@@ -31,12 +36,25 @@ class PayRequisiteAdmin(admin.ModelAdmin):
     form = PayReqForm
 
 
+class MerchantOwnerFilter(SimpleListFilter):
+    title = 'Мерч'
+    parameter_name = 'merchowner'
+
+    def lookups(self, request, model_admin):
+        users = User.objects.filter(role='merchant')
+        return [(user.id, user) for user in users]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(merchant__owner=self.value())
+
+
 class PaymentAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'create_at', 'merchant', 'order_id', 'amount',
         'status', 'card_number', 'sms_code', 'bank_name', 'response_status_code'
     )
-    list_filter = ('merchant', 'pay_requisite', 'response_status_code', 'pay_type', 'work_operator')
+    list_filter = (MerchantOwnerFilter, 'merchant', 'pay_requisite', 'response_status_code', 'pay_type', 'work_operator')
     list_select_related = ['merchant', 'pay_requisite', 'bank', 'work_operator',
                            'confirmed_incoming', 'confirmed_user', 'merchant__owner']
 

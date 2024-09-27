@@ -107,6 +107,7 @@ def send_payment_to_work_oper(instance_id):
 
     bank_bots = User.objects.prefetch_related('profile').filter(
         profile__is_bot=True,
+        profile__on_work=True,
         profile__banks__in=[instance.bank],
     )
     logger.debug(f'bank_bots: {bank_bots}')
@@ -116,7 +117,7 @@ def send_payment_to_work_oper(instance_id):
         # Если есть резерв - назначаем боту
         if bot_limit > bot_payments:
             instance.work_operator = bot
-            instance.status = 8
+            instance.status = 4
             instance.save()
             logger.debug(f' {instance} work_operator bot: {bot}')
             return

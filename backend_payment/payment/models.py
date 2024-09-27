@@ -88,6 +88,7 @@ class BalanceChange(models.Model):
     create_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='balance_history')
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Изменение баланса')
+    # tax = models.DecimalField('Комиссия по операции', max_digits=10, decimal_places=2, default=0)
     current_balance = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Текущий баланс', null=True)
     comment = models.CharField(null=True, blank=True)
 
