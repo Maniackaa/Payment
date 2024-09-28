@@ -54,7 +54,8 @@ class PaymentAdmin(admin.ModelAdmin):
         'id', 'create_at', 'merchant', 'order_id', 'amount',
         'status', 'card_number', 'sms_code', 'bank_name', 'response_status_code'
     )
-    list_filter = (MerchantOwnerFilter, 'merchant', 'pay_requisite', 'response_status_code', 'pay_type', 'work_operator')
+    list_filter = (MerchantOwnerFilter, 'merchant', 'pay_requisite', 'response_status_code', 'pay_type',
+                   'work_operator', 'status')
     list_select_related = ['merchant', 'pay_requisite', 'bank', 'work_operator',
                            'confirmed_incoming', 'confirmed_user', 'merchant__owner']
 
