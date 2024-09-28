@@ -68,8 +68,9 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
             'user_login',
             'owner_name',
             'status',
+            'mask'
         )
-        read_only_fields = ('status',)
+        read_only_fields = ('status', 'mask')
         validators = [
             validators.UniqueTogetherValidator(
                 queryset=Payment.objects.all(),

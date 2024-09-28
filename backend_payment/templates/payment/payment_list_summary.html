@@ -22,6 +22,8 @@
 }
 </style>
 <div class="container-fluid">
+{% load l10n %}
+{% localize off %}
 {{ work_data }}
 
     <div class="row">
@@ -71,8 +73,7 @@
         </div>
         <div class="card-body" {% if payment.sms_code %} style="background-color: rgba(20,245,255,0.58)"{% endif %}>
 
-            {% load l10n %}
-            {% localize off %}
+
             <div class="row">
                 {{ payment.id}}
             </div>
@@ -80,7 +81,7 @@
                  {{ payment.amount }}<img class="img-thumbnail" onclick="CopyToClipboard('amount{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
 
             </div>
-            {% endlocalize %}
+
             <div class="row">
                 <div class="col-auto" style="" id="card_number{{ forloop.counter }}">{{ payment.card_number }}</div><img class="img-thumbnail" onclick="CopyToClipboard('card_number{{ forloop.counter }}')"  src="{% static '/img/copy2.png' %}">
             </div>
@@ -121,6 +122,7 @@
     </div>
 
     {% endfor %}
+{% endlocalize %}
 </div>
 </div>
 

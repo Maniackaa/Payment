@@ -127,13 +127,15 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
                    ])
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        return Response(data={'id': instance.id,
-                              'oreder_id': instance.order_id,
-                              'status': instance.status,
-                              'amount': instance.amount,
-                              'confirmed_amount': instance.confirmed_amount,
-                              'mask': instance.mask,
-                              }, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(instance=instance)
+        # return Response(data={'id': instance.id,
+        #                       'oreder_id': instance.order_id,
+        #                       'status': instance.status,
+        #                       'amount': instance.amount,
+        #                       'confirmed_amount': instance.confirmed_amount,
+        #                       'mask': instance.mask,
+        #                       }, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
     @extend_schema(tags=['API Payment process'], request=PaymentCreateSerializer, summary="Создание платежа",
                    description='Отправка данных для создания платежа',
