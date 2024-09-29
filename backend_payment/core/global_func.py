@@ -61,7 +61,7 @@ def export_payments_func(products):
     ws.title = "Payments"
     headers = ["id", "order_id", "pay_type", "create_at", 'merchant', "amount", "confirmed_amount", "comission",
                "status",
-               "user_login", "owner_name", "mask", "referrer", "confirmed_time", "response_status_code", "comment"]
+               "user_login", "owner_name", "bank", "mask", "referrer", "confirmed_time", "response_status_code", "comment"]
     ws.append(headers)
     for payment in products:
         row = []
@@ -69,7 +69,7 @@ def export_payments_func(products):
             value = getattr(payment, field)
             if not value:
                 value = ''
-            if field in ('id', 'order_id', 'merchant', 'create_at', 'confirmed_time'):
+            if field in ('id', 'order_id', 'merchant', 'create_at', 'confirmed_time', 'bank'):
                 row.append(str(value))
             else:
                 row.append(value)

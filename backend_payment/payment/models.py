@@ -502,7 +502,7 @@ class Bank(models.Model):
     image = models.ImageField('Иконка банка', upload_to='bank_icons', null=True, blank=True)
 
     def __str__(self):
-        return f'{self.id}. {self.name}'
+        return f'{self.name}'
 
 
 class Work(models.Model):

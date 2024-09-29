@@ -1319,34 +1319,34 @@ def merchant_test_webhook(request, *args, **kwargs):
     return JsonResponse(json.dumps(data), safe=False)
 
 
-@login_required()
-def export_payments(request, *args, **kwargs):
-    response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="payments.xlsx"'
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Payments"
-    headers = ["Id", "order_id", "pay_type", "create_at", 'merchant', "amount", "comission", "confirmed_amount", "status", "user_login", "owner_name", "mask", "referrer", "confirmed_time", "response_status_code", "comment"]
-    ws.append(headers)
-    if request.user.is_staff:
-        products = Payment.objects.all()
-    else:
-        products = Payment.objects.filter(merchant__owner=request.user)
-    for payment in products:
-        row = []
-        for field in headers:
-            value = getattr(payment, field)
-            if not value:
-                value = ''
-            if field in ('id', 'order_id', 'merchant', 'create_at', 'confirmed_time'):
-                row.append(str(value))
-            else:
-                row.append(value)
-        ws.append(row)
-
-    # Save the workbook to the HttpResponse
-    wb.save(response)
-    return response
+# @login_required()
+# def export_payments(request, *args, **kwargs):
+#     response = HttpResponse(content_type='application/ms-excel')
+#     response['Content-Disposition'] = 'attachment; filename="payments.xlsx"'
+#     wb = Workbook()
+#     ws = wb.active
+#     ws.title = "Payments"
+#     headers = ["Id", "order_id", "pay_type", "create_at", 'merchant', "amount", "comission", "confirmed_amount", "status", "user_login", "owner_name", "bank", "mask", "referrer", "confirmed_time", "response_status_code", "comment"]
+#     ws.append(headers)
+#     if request.user.is_staff:
+#         products = Payment.objects.all()
+#     else:
+#         products = Payment.objects.filter(merchant__owner=request.user)
+#     for payment in products:
+#         row = []
+#         for field in headers:
+#             value = getattr(payment, field)
+#             if not value:
+#                 value = ''
+#             if field in ('id', 'order_id', 'merchant', 'create_at', 'confirmed_time'):
+#                 row.append(str(value))
+#             else:
+#                 row.append(value)
+#         ws.append(row)
+#
+#     # Save the workbook to the HttpResponse
+#     wb.save(response)
+#     return response
 
 
 class MerchStatView(DetailView, ):

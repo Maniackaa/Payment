@@ -5,7 +5,7 @@ from django.db.models import F, Value
 from django.db.models.functions import Extract
 from django_currentuser.middleware import get_current_authenticated_user
 
-from payment.models import Payment, Withdraw, BalanceChange
+from payment.models import Payment, Withdraw, BalanceChange, Bank
 from users.models import SupportOptions
 
 User = get_user_model()
@@ -124,7 +124,7 @@ class PaymentFilter(django_filters.FilterSet):
 
     class Meta:
         model = Payment
-        fields = ['id', 'order_id', 'status', 'pay_type', 'amount', 'merchant', 'merchant__owner']
+        fields = ['id', 'order_id', 'status', 'pay_type', 'amount', 'merchant', 'merchant__owner', 'bank']
 
     @property
     def qs(self):
