@@ -338,24 +338,30 @@ class Payment(models.Model):
             return check == 0
 
     def bank_name(self) -> str:
-        card_num = self.card_number()
+        # card_num = self.card_number()
+        #
+        # if card_num:
+        #     bank = Bank.objects.filter(bins__contains=[card_num[:6]]).first()
+        #     if bank:
+        #         return bank.name
+        # else:
+        #     return ''
+        # return 'default'
+        if self.bank:
+            return self.bank.name
+        return ''
 
-        if card_num:
-            bank = Bank.objects.filter(bins__contains=[card_num[:6]]).first()
-            if bank:
-                return bank.name
-        else:
-            return ''
-        return 'default'
-
-    def get_bank(self) -> str:
+    def get_bank(self):
+        # Возвращает модель Bank по 6ти цифрам
         card_num = self.card_number()
 
         if card_num:
             bank = Bank.objects.filter(bins__contains=[card_num[:6]]).first()
             if bank:
                 return bank
-        return Bank.objects.get(name='default')
+            else:
+                return Bank.objects.get(name='default')
+        return None
 
     def expired_month(self):
         if not self.card_data:
@@ -581,8 +587,10 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
     logger.debug(f'pre_save_status = {instance.status} cashed: {instance.cached_status}')
     # Если статус изменился на 3 (Получена карта):
     if instance.status == 3 and instance.cached_status != 9:
-        instance.bank_str = instance.bank_name()
+
         instance.bank = instance.get_bank()
+        if instance.bank:
+            instance.bank_str = instance.bank.name
 
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
@@ -638,7 +646,6 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
 
 
         # Выбор оператора для summary
-
 
 
 @receiver(post_save, sender=Payment)
