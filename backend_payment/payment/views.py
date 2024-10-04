@@ -571,7 +571,8 @@ def pay_to_m10_sms_input(request, *args, **kwargs):
         sms_code = form.cleaned_data.get('sms_code')
         card_data['sms_code'] = sms_code
         payment.card_data = json.dumps(card_data, ensure_ascii=False)
-        payment.status = 6
+        if not phone_script.step_2_required:
+            payment.status = 6
         payment.save()
         return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
     return render(request, context=context, template_name='payment/invoice_m10_sms.html')
