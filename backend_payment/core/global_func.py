@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import logging
 
@@ -8,6 +9,7 @@ from openpyxl.workbook import Workbook
 
 from backend_payment import settings
 from backend_payment.settings import TIME_ZONE
+from deposit.text_response_func import tz
 
 TZ = pytz.timezone(TIME_ZONE)
 logger = logging.getLogger(__name__)
@@ -69,6 +71,8 @@ def export_payments_func(products):
             value = getattr(payment, field)
             if not value:
                 value = ''
+            if isinstance(value, datetime.datetime):
+                value = value.astimezone(tz=tz)
             if field in ('id', 'order_id', 'merchant', 'create_at', 'confirmed_time', 'bank'):
                 row.append(str(value))
             else:
