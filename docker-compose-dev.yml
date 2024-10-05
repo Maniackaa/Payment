@@ -68,7 +68,7 @@ services:
     volumes:
       - static:/app/collected_static/
       - media:/app/media/
-      - ./logs/backend_payment:/app/logs
+      - ./logs:/app/logs
     entrypoint: bash /app/entrypoint.sh
 
 
@@ -79,7 +79,7 @@ services:
     command: celery -A backend_payment.celery:app worker -l warning -n myworker --concurrency=4 --logfile=logs/celery.log
     volumes:
       - media:/app/media/
-      - ./logs/celery:/app/logs
+      - ./logs:/app/logs
     env_file: .env
     depends_on:
       redis:

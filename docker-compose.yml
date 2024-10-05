@@ -16,8 +16,8 @@ services:
       - ./postgres/init_db:/docker-entrypoint-initdb.d
       - pg_data:/var/lib/postgresql/data
       - ./postgres/root:/root
-#    ports:
-#      - "15432:5432"
+    ports:
+      - "15432:5432"
     restart: always
 
 
@@ -68,7 +68,7 @@ services:
     volumes:
       - static:/app/collected_static/
       - media:/app/media/
-      - ./logs/backend_payment:/app/logs
+      - ./logs:/app/logs
       - ./backend_payment:/app
     entrypoint: bash /app/entrypoint.sh
 
@@ -79,7 +79,7 @@ services:
     env_file: .env
     volumes:
       - media:/app/media/
-      - ./logs/celery:/app/logs
+      - ./logs:/app/logs
     depends_on:
       redis:
         condition: service_started
