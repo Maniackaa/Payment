@@ -12,7 +12,7 @@ import payment.models as models
 from core.global_func import send_message_tg
 from users.models import SupportOptions
 
-logger = structlog.get_logger(__name__)
+logger = structlog.get_logger('payment')
 User = get_user_model()
 
 

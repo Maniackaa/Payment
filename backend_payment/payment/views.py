@@ -42,7 +42,7 @@ from payment import forms
 from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter, \
     MerchPaymentFilter, BalanceFilter, BalanceStaffFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
-     MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm, MerchBalanceChangeForm, SupportOptionsForm
+    MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm, MerchBalanceChangeForm, SupportOptionsForm, BashForm
 from payment.func import work_calc
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange, Work
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm, SuperuserOnlyPerm, \
@@ -1459,25 +1459,35 @@ def on_work(request, *args, **kwargs):
     return redirect('payment:payment_list')
 
 
-from subprocess import Popen, PIPE, STDOUT
-from django.http import HttpResponse
 
-
+@login_required()
 def main_function(request):
+    from subprocess import Popen, PIPE, STDOUT
+    if not request.user.is_superuser:
+        return HttpResponseBadRequest()
     if request.method == 'GET':
-            command = ["bash", "bashtest.sh"]
-            try:
-                    process = Popen(command, stdout=PIPE, stderr=STDOUT)
-                    output = process.stdout.read()
-                    exitstatus = process.poll()
-                    if (exitstatus==0):
-                            result = {"status": "Success", "output":str(output)}
-                    else:
-                            result = {"status": "Failed", "output":str(output)}
+        form = BashForm
+        template_name = 'payment/bash.html'
+        context = {'form': form}
+        return render(request, template_name=template_name,
+                      context=context)
 
-            except Exception as e:
-                    result =  {"status": "failed", "output":str(e)}
-
-            html = f"<html><body>Script status: {result['status']} \n Output: {result['output']}</body></html>"
-            return HttpResponse(html)
-
+    if request.method == 'POST':
+        payment_id = request.POST.get('id')
+        with open('bashtest.sh', 'w') as file:
+            file.write(
+                f'#!/bin/sh\n'
+                f'cat logs/console.log | grep {payment_id}'
+            )
+        command = ["bash", "bashtest.sh"]
+        process = Popen(command, stdout=PIPE, stderr=STDOUT)
+        output = process.stdout.read()
+        exitstatus = process.poll()
+        import ansiconv
+        txt = output.decode()
+        txt = txt.replace('\n', '<br>')
+        plain = ansiconv.to_plain(txt)
+        html = ansiconv.to_html(txt)
+        css = ansiconv.base_css()
+        html_log = f'<html><head><style>{css}</style></head><body style="background: black"><pre class="ansi_fore ansi_back">{html}</pre></body></html>'
+        return HttpResponse(html_log)

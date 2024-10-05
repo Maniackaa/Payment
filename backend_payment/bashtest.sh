@@ -1,2 +1,2 @@
 #!/bin/sh
-cat logs/console.log | grep error
+cat logs/console.log | grep 2345

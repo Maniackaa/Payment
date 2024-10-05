@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+        <form method="POST" enctype="multipart/form-data" style="height:100%; padding: 1px; margin: 1px">
+          {% csrf_token %}
+            {{form.as_p}}
+
+            <button id="confirm_btn" class="btn btn-success btn btn-block" type="submit">Ok</button>
+        </form>
+        </div>
+        </div>
+</body>
+</html>

@@ -239,3 +239,7 @@ class DateFilterForm(forms.Form):
                            widget=MyDateInput({
                                'class': 'form-control'
                            }))
+
+
+class BashForm(forms.Form):
+    id = forms.CharField()
