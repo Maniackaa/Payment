@@ -222,7 +222,7 @@ class WithdrawCardSerializer(serializers.ModelSerializer):
 
 
 class WithdrawCreateSerializer(serializers.ModelSerializer):
-    """Передача данных карты для оплаты"""
+    """Создание заявки на вывод"""
     card_data = WithdrawCardSerializer()
     # signature = serializers.CharField()
 

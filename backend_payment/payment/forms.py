@@ -3,6 +3,7 @@ import uuid
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.contrib.postgres.forms import SimpleArrayField
 
 from payment.models import Payment, CreditCard, Merchant, Withdraw
 from users.models import SupportOptions
@@ -179,7 +180,7 @@ class PaymentListConfirmForm(forms.ModelForm):
             'confirmed_incoming'
         )
 
-from django.contrib.postgres.forms import SimpleArrayField
+
 class MerchantForm(forms.ModelForm):
     name = forms.CharField(label='Название')
     merch_viewers = SimpleArrayField(base_field=forms.CharField(), required=False, label='Логины помощников через запятую')
@@ -187,7 +188,7 @@ class MerchantForm(forms.ModelForm):
     class Meta:
         model = Merchant
         fields = ('name', 'host', 'host_withdraw', 'pay_success_endpoint',
-                  'secret', 'check_balance', 'white_ip', 'merch_viewers')
+                  'secret', 'check_balance', 'dump_webhook_data', 'white_ip', 'merch_viewers')
 
 
 class MerchBalanceChangeForm(forms.ModelForm):

@@ -571,12 +571,12 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
                 dump_data=instance.merchant.dump_webhook_data)
             logger.debug(f'answer {instance.id}: {result}')
 
-        if created:
-            try:
-                text = f'Новая заявка на вывод Withdraw\nОт {instance.merchant} на {instance.amount} ₼'
-                send_message_tg_task.delay(text, settings.ALARM_IDS)
-            except Merchant.DoesNotExist:
-                pass
+        # if created:
+        #     try:
+        #         text = f'Новая заявка на вывод Withdraw\nОт {instance.merchant} на {instance.amount} ₼'
+        #         send_message_tg_task.delay(text, settings.ALARM_IDS)
+        #     except Merchant.DoesNotExist:
+        #         pass
 
     except Exception as err:
         logger.error(f'Ошибка при сохранении Withdraw: {err}')
@@ -638,7 +638,7 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         logger.error(f'Ошибка сохранения лога: {err}')
 
     # Пришли данные карты. Присваиваем счетчик и распределяем заявку
-    if instance.pay_type == 'card_2' and instance.status == 3 and not instance.merchant.is_new and not instance.counter:
+    if instance.pay_type == 'card_2' and instance.status == 3 and not instance.counter:
         # instance.status = 4
         # Счетчик по типу +1
         all_pays = Payment.objects.filter(pay_type='card_2', counter__isnull=False).count()

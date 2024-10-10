@@ -97,49 +97,53 @@ def send_message_tg_task(message: str, chat_ids: list = settings.ADMIN_IDS):
 
 @shared_task()
 def send_payment_to_work_oper(instance_id):
-    logger.debug(f'send_payment_to_work_oper: {instance_id}')
-    instance = models.Payment.objects.get(pk=instance_id)
-    logger.debug(instance)
+    try:
+        logger.debug(f'send_payment_to_work_oper: {instance_id}')
+        instance = models.Payment.objects.get(pk=instance_id)
+        logger.debug(instance)
 
-    # Свободные боты на смене
-    free_bots = User.objects.filter(profile__is_bot=True, profile__on_work=True)
-    logger.debug(f'free_bots: {free_bots}')
+        # Свободные боты на смене
+        free_bots = User.objects.filter(profile__is_bot=True, profile__on_work=True)
+        logger.debug(f'free_bots: {free_bots}')
 
-    bank_bots = User.objects.prefetch_related('profile').filter(
-        profile__is_bot=True,
-        profile__on_work=True,
-        profile__banks__in=[instance.bank],
-    )
-    logger.debug(f'bank_bots: {bank_bots}')
-    for bot in bank_bots:
-        bot_limit = bot.profile.limit_to_work
-        bot_payments = bot.oper_payments.exclude(status__in=[-1, 9]).count()
-        # Если есть резерв - назначаем боту
-        if bot_limit > bot_payments:
-            instance.work_operator = bot
+        bank_bots = User.objects.prefetch_related('profile').filter(
+            profile__is_bot=True,
+            profile__on_work=True,
+            profile__banks__in=[instance.bank],
+        )
+        logger.debug(f'bank_bots: {bank_bots}')
+        for bot in bank_bots:
+            bot_limit = bot.profile.limit_to_work
+            bot_payments = bot.oper_payments.exclude(status__in=[-1, 9]).count()
+            # Если есть резерв - назначаем боту
+            if bot_limit > bot_payments:
+                instance.work_operator = bot
+                instance.status = 4
+                instance.save()
+                logger.debug(f' {instance} work_operator bot: {bot}')
+                return
+
+        operators_on_work: list = SupportOptions.load().operators_on_work
+        logger.debug(f'start operators_on_work: {operators_on_work}')
+        operators_to_remove = []
+        for oper_id in operators_on_work:
+            oper: User = User.objects.get(pk=oper_id)
+            logger.debug(f'{oper} on_work: {oper.profile.on_work}')
+            if oper and not oper.profile.on_work or oper.profile.is_bot:
+                logger.debug(f'Опер {oper} не на смене или бот - удаляем из распределения')
+                operators_to_remove.append(oper_id)
+
+        operators_on_work = list(set(operators_on_work) ^ set(operators_to_remove))
+        operators_on_work.sort()
+        logger.debug(f'operators_on_work: {operators_on_work}')
+
+        if operators_on_work:
+            order_num = instance.counter % len(operators_on_work)
+            work_operator = User.objects.get(pk=operators_on_work[order_num])
+            instance.work_operator = work_operator
             instance.status = 4
             instance.save()
-            logger.debug(f' {instance} work_operator bot: {bot}')
-            return
-
-    operators_on_work: list = SupportOptions.load().operators_on_work
-    logger.debug(f'start operators_on_work: {operators_on_work}')
-    operators_to_remove = []
-    for oper_id in operators_on_work:
-        oper: User = User.objects.get(pk=oper_id)
-        logger.debug(f'{oper} on_work: {oper.profile.on_work}')
-        if oper and not oper.profile.on_work or oper.profile.is_bot:
-            logger.debug(f'Опер {oper} не на смене или бот - удаляем из распределения')
-            operators_to_remove.append(oper_id)
-
-    operators_on_work = list(set(operators_on_work) ^ set(operators_to_remove))
-    operators_on_work.sort()
-    logger.debug(f'operators_on_work: {operators_on_work}')
-
-    if operators_on_work:
-        order_num = instance.counter % len(operators_on_work)
-        work_operator = User.objects.get(pk=operators_on_work[order_num])
-        instance.work_operator = work_operator
-        instance.status = 4
-        instance.save()
-        logger.debug(f'on_work: {operators_on_work}. order_num: {order_num}. work_operator: {work_operator}')
+            logger.debug(f'on_work: {operators_on_work}. order_num: {order_num}. work_operator: {work_operator}')
+    except Exception as err:
+        logger.error(err)
+        raise err

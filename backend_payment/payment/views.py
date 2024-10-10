@@ -688,59 +688,67 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
         return queryset
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        active_opers_id = SupportOptions.load().operators_on_work
-        opers_on_work = User.objects.filter(profile__on_work=True).all()
-        work_usernames = ', '.join([u.username for u in opers_on_work])
-        if str(user.id) in active_opers_id:
-            work_data = f'{user.username}, можете работать. '
-        else:
-            work_data = f'Вы не можете выйти на смену.'
-        work_data += f'Операторы в работе ({len(opers_on_work)}): {work_usernames}. '
+        try:
+            context = super().get_context_data(**kwargs)
+            user = self.request.user
+            active_opers_id = SupportOptions.load().operators_on_work
+            opers_on_work = User.objects.filter(profile__on_work=True).all()
+            work_usernames = ', '.join([u.username for u in opers_on_work])
+            if str(user.id) in active_opers_id:
+                work_data = f'{user.username}, можете работать. '
+            else:
+                work_data = f'Вы не можете выйти на смену.'
+            work_data += f'Операторы в работе ({len(opers_on_work)}): {work_usernames}. '
 
-        profile_on_work = user.profile.on_work
-        if profile_on_work:
-            profile_on_work_text = 'Вы на смене.'
-        else:
-            profile_on_work_text = 'Вы не на смене. Новые заявки не назначаются!'
-        context['work_data'] = work_data + f' {profile_on_work_text}'
-        if self.get_queryset().last():
-            last_count = self.get_queryset().last().counter
-            if last_count != user.profile.last_id:
-                user.profile.last_id = last_count
-                user.profile.save()
-                context['play_sound'] = '1'
-        return context
+            profile_on_work = user.profile.on_work
+            if profile_on_work:
+                profile_on_work_text = 'Вы на смене.'
+            else:
+                profile_on_work_text = 'Вы не на смене. Новые заявки не назначаются!'
+            context['work_data'] = work_data + f' {profile_on_work_text}'
+            if self.get_queryset().last():
+                last_count = self.get_queryset().last().counter
+                logger.debug(f'last_count: {last_count}')
+                if last_count is not None and last_count != user.profile.last_id:
+                    user.profile.last_id = last_count
+                    user.profile.save()
+                    context['play_sound'] = '1'
+            return context
+        except Exception as err:
+            logger.error(err)
+            # raise err
 
     def post(self, request, *args, **kwargs):
-        if 'cancel_payment' in request.POST.keys():
-            payment_id = request.POST['cancel_payment']
-            # Отклонение заявки
-            payment = Payment.objects.get(pk=payment_id)
-            payment.status = -1
-            payment.save()
-            # return redirect(reverse('payment:payments_summary'))
-        if 'confirm_payment' in request.POST.keys():
-            payment_id = request.POST['confirm_payment']
-            payment = Payment.objects.get(pk=payment_id)
-            payment.status = 9
-            payment.save()
-            # return redirect(reverse('payment:payments_summary'))
+        try:
+            if 'cancel_payment' in request.POST.keys():
+                payment_id = request.POST['cancel_payment']
+                # Отклонение заявки
+                payment = Payment.objects.get(pk=payment_id)
+                payment.status = -1
+                payment.save()
+                # return redirect(reverse('payment:payments_summary'))
+            if 'confirm_payment' in request.POST.keys():
+                payment_id = request.POST['confirm_payment']
+                payment = Payment.objects.get(pk=payment_id)
+                payment.status = 9
+                payment.save()
+                # return redirect(reverse('payment:payments_summary'))
 
-        if 'reset_payment' in request.POST.keys():
-            payment_id = request.POST['reset_payment']
-            payment = Payment.objects.get(pk=payment_id)
-            payment.status = 4
-            payment.save()
+            if 'reset_payment' in request.POST.keys():
+                payment_id = request.POST['reset_payment']
+                payment = Payment.objects.get(pk=payment_id)
+                payment.status = 4
+                payment.save()
 
-        if 'my_payment' in request.POST.keys():
-            payment_id = request.POST['my_payment']
-            payment = Payment.objects.get(pk=payment_id)
-            payment.status = 5
-            payment.save()
+            if 'my_payment' in request.POST.keys():
+                payment_id = request.POST['my_payment']
+                payment = Payment.objects.get(pk=payment_id)
+                payment.status = 5
+                payment.save()
 
-        return redirect(reverse('payment:payments_summary'))
+            return redirect(reverse('payment:payments_summary'))
+        except Exception as err:
+            logger.error(err)
 
 
 class PaymentListView(StaffOnlyPerm, ListView, ):
@@ -1319,38 +1327,7 @@ def merchant_test_webhook(request, *args, **kwargs):
         data['help'] = "It's test webhook!"
         send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data,
                                     dump_data=withdraw.merchant.dump_webhook_data)
-
-    return JsonResponse(json.dumps(data), safe=False)
-
-
-# @login_required()
-# def export_payments(request, *args, **kwargs):
-#     response = HttpResponse(content_type='application/ms-excel')
-#     response['Content-Disposition'] = 'attachment; filename="payments.xlsx"'
-#     wb = Workbook()
-#     ws = wb.active
-#     ws.title = "Payments"
-#     headers = ["Id", "order_id", "pay_type", "create_at", 'merchant', "amount", "comission", "confirmed_amount", "status", "user_login", "owner_name", "bank", "mask", "referrer", "confirmed_time", "response_status_code", "comment"]
-#     ws.append(headers)
-#     if request.user.is_staff:
-#         products = Payment.objects.all()
-#     else:
-#         products = Payment.objects.filter(merchant__owner=request.user)
-#     for payment in products:
-#         row = []
-#         for field in headers:
-#             value = getattr(payment, field)
-#             if not value:
-#                 value = ''
-#             if field in ('id', 'order_id', 'merchant', 'create_at', 'confirmed_time'):
-#                 row.append(str(value))
-#             else:
-#                 row.append(value)
-#         ws.append(row)
-#
-#     # Save the workbook to the HttpResponse
-#     wb.save(response)
-#     return response
+    return JsonResponse(data, safe=False)
 
 
 class MerchStatView(DetailView, ):
@@ -1359,10 +1336,6 @@ class MerchStatView(DetailView, ):
     context_object_name = 'merch_user'
     filter = PaymentMerchStatFilter
 
-
-    # def get_queryset(self):
-    #     return Payment.objects.all()
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.object
@@ -1370,7 +1343,6 @@ class MerchStatView(DetailView, ):
         p1 = payments.first()
         t1 = p1.create_at
         t2 = p1.confirmed_time
-        print(t2-t1)
         filter = PaymentMerchStatFilter(self.request.GET, queryset=payments)
         context['filter'] = filter
         filtered_payments = filter.qs
