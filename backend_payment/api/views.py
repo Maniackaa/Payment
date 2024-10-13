@@ -153,6 +153,16 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
                                    response_only=False,
                                ),
                                OpenApiExample(
+                                   "Good example m10_to_m10",
+                                   value={"status": "success",
+                                          "id": "4caed007-2d31-489c-9f3d-a2af6ccf07e4",
+                                          "m10_phone": "+994513467642",
+                                          "m10_link": "https://link.api.m10.az/arrHkAGFAnC3efBp8"
+                                          },
+                                   status_codes=[201],
+                                   response_only=False,
+                               ),
+                               OpenApiExample(
                                    "Good example card-to-card",
                                    value={"status": "success", "id": "4caed007-2d31-489c-9f3d-a2af6ccf07e4",
                                           "pay_data": {
@@ -197,6 +207,15 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
                                  },
                                 status=status.HTTP_201_CREATED,
                                 headers=headers)
+            elif serializer.data['pay_type'] == 'm10_to_m10':
+                payment: Payment = serializer.instance
+                return Response(data={
+                    'status': 'success',
+                    'id': serializer.data['id'],
+                    'm10_phone': payment.pay_requisite.info,
+                    'm10_link': payment.pay_requisite.info2,
+                }, status=status.HTTP_201_CREATED)
+
             return Response({'status': 'success', 'id': serializer.data['id']},
                             status=status.HTTP_201_CREATED,
                             headers=headers)
@@ -297,8 +316,9 @@ signature = hash('sha256', $string)""",
                            OpenApiExample(
                                "example1",
                                value={
-                                   "m10_phone": "+994513467642",
-                                   "m10_link": "https://link.api.m10.az/arrHkAGFAnC3efBp8"
+                                   "phone": "+994555001122",
+                                   "m10_phone": "+994 51 55 55 55",
+                                   "m10_link": "https://link.api.m10.az/US7bLKooe8AE3Pxr5"
                                },
                                status_codes=[200],
                                response_only=False,
@@ -334,12 +354,13 @@ signature = hash('sha256', $string)""",
             payment.phone = phone
             payment.status = 3
             payment.save()
-            return Response(data={
-                'm10_phone': payment.pay_requisite.info,
-                'm10_link': payment.pay_requisite.info2,
-            }, status=status.HTTP_200_OK)
+            data = serializer.data
+            data.update({'m10_phone': payment.pay_requisite.info,
+                         'm10_link': payment.pay_requisite.info2
+                         })
+            print(data)
+            return Response(data=data, status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
     @extend_schema(tags=['API Payment process'],
                    request=PaymentInputSmsCodeSerializer,

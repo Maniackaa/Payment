@@ -98,7 +98,7 @@ def pre_save_incoming(sender, instance: Incoming, raw, using, update_fields, *ar
 
 @receiver(post_save, sender=Incoming)
 def post_save_incoming(sender, instance: Incoming, created, raw, using, update_fields, *args, **kwargs):
-    print(f'post_save_incoming: {instance}. created: {created}')
+    logger.debug(f'post_save_incoming: {instance}. created: {created}')
     if created:
         threshold = datetime.datetime.now(tz=TZ) - datetime.timedelta(minutes=10)
         logger.debug(f'Проверим заявки m10_to_m10. threshold: {threshold}')

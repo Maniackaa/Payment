@@ -505,7 +505,8 @@ class Bank(models.Model):
     bins = ArrayField(base_field=models.IntegerField(), default=list, blank=True)
     script = models.ForeignKey('PhoneScript', on_delete=models.CASCADE)
     instruction = models.CharField('Инструкция', null=True, blank=True)
-    image = models.ImageField('Иконка банка', upload_to='bank_icons', null=True, blank=True)
+    image = models.ImageField('Иконка банка', upload_to='bank_icons', null=True, blank=True,
+                              default='bank_icons/default.jpg')
 
     def __str__(self):
         return f'{self.name}'

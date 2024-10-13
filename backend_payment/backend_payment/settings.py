@@ -230,7 +230,7 @@ SIMPLE_JWT = {
 SPECTACULAR_SETTINGS = {
     'TITLE': 'API Documentation',
     'DESCRIPTION': f'Integration with asu-payme.com {instruction}',
-    'VERSION': '1.1.5',
+    'VERSION': '1.2.1',
     'SERVE_INCLUDE_SCHEMA': True,
     # OTHER SETTINGS
     'PREPROCESSING_HOOKS': ["backend_payment.excluded_path.custom_preprocessing_hook"],
