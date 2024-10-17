@@ -1054,6 +1054,9 @@ class MerchOwnerList(SuperuserOnlyPerm, ListView):
                 username = user['username']
                 old_value = result['day_1'].get(username, 0)
                 result['day_1'][username] = old_value + user['day_1']
+        total_balance = User.objects.all().aggregate(balance=Sum('balance'))
+        print('total_balance', total_balance)
+        context['total_balance'] = total_balance['balance']
         context['result'] = result
         return context
 
