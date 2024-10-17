@@ -572,7 +572,8 @@ def pay_to_m10_sms_input(request, *args, **kwargs):
         sms_code = form.cleaned_data.get('sms_code')
         card_data['sms_code'] = sms_code
         payment.card_data = json.dumps(card_data, ensure_ascii=False)
-        if not phone_script.step_2_required:
+        if phone_script.step_2_required:
+            # Если ввел смс, ставим статус 6. Если лео пропускаем
             payment.status = 6
         payment.save()
         return redirect(reverse('payment:pay_result', kwargs={'pk': payment.id}))
