@@ -1397,7 +1397,7 @@ class WebhookReceive(APIView):
         return JsonResponse({'status': 'success', 'data': data})
 
 
-class WebhookRepeat(StaffOnlyPerm, UpdateView, ):
+class PaymentWebhookRepeat(StaffOnlyPerm, UpdateView, ):
     model = Payment
     success_url = reverse_lazy('payment:payment_list')
 
@@ -1407,6 +1407,19 @@ class WebhookRepeat(StaffOnlyPerm, UpdateView, ):
         logger.debug(f'Отправка повторного вэбхук {payment.id}: {data}')
         result = send_payment_webhook.delay(url=payment.merchant.host, data=data,
                                                 dump_data=payment.merchant.dump_webhook_data)
+        return HttpResponse(f'Вэбхук отправлен:<br>{data}')
+
+
+class WithdrawWebhookRepeat(StaffOnlyPerm, UpdateView, ):
+    model = Withdraw
+    success_url = reverse_lazy('payment:withdraw_list')
+
+    def post(self, request, *args, **kwargs):
+        withdraw = self.get_object()
+        data = withdraw.webhook_data()
+        logger.debug(f'Отправка повторного вэбхук withdraw {withdraw.id}: {data}')
+        result = send_withdraw_webhook.delay(url=withdraw.merchant.host, data=data,
+                                                dump_data=withdraw.merchant.dump_webhook_data)
         return HttpResponse(f'Вэбхук отправлен:<br>{data}')
 
 

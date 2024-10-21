@@ -85,8 +85,15 @@
         </div>
     </div>
 {#       {% endif %}#}
-
+  <br><hr>
+    <div class="col-6">
+            <form method="POST" action="{%  url 'payment:withdraw_repeat_webhook' withdraw.id %}">
+            {% csrf_token %}
+            <input type="submit" value="Повторно отправить Вэбхук">
+            </form>
+    </div>
   </div>
+
 
 
 {% endblock %}

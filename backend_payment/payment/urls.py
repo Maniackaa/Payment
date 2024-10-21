@@ -49,7 +49,8 @@ urlpatterns = [
     path('balance/', views.BalanceListView.as_view(), name='balance_list'),
 
     path('receive_webhook/', views.WebhookReceive.as_view(), name='receive_webhook'),
-    path('repeat_webhook/<str:pk>', views.WebhookRepeat.as_view(), name='repeat_webhook'),
+    path('repeat_webhook/<str:pk>', views.PaymentWebhookRepeat.as_view(), name='repeat_webhook'),
+    path('withdraw_repeat_webhook/<str:pk>', views.WithdrawWebhookRepeat.as_view(), name='withdraw_repeat_webhook'),
     ]
 
 if settings.DEBUG:
