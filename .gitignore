@@ -6,7 +6,7 @@ credentials.json
 # C extensions
 *.so
 .idea
-
+backend_payment/bashtest.sh
 # Distribution / packaging
 .Python
 build/
