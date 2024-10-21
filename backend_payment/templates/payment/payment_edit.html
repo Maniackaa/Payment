@@ -18,7 +18,9 @@
 
             <tr>
                 <td>id</td>
-                <td>{{ payment.id }}</td>
+                <td><a href="{%  url 'payment:show_log' payment.id %}">{{ payment.id }}</a>
+
+                </td>
             </tr>
             <tr>
                 <td>Поступил</td>

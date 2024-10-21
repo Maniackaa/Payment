@@ -2,6 +2,7 @@ import datetime
 import json
 
 import random
+import time
 import uuid
 from http import HTTPStatus
 from pprint import pprint
@@ -1448,35 +1449,52 @@ def on_work(request, *args, **kwargs):
     return redirect('payment:payment_list')
 
 
-
 @login_required()
-def main_function(request):
+def show_log(request, pk):
     from subprocess import Popen, PIPE, STDOUT
     if not request.user.is_superuser:
         return HttpResponseBadRequest()
-    if request.method == 'GET':
-        form = BashForm
-        template_name = 'payment/bash.html'
-        context = {'form': form}
-        return render(request, template_name=template_name,
-                      context=context)
+    # if request.method == 'GET':
+    #     form = BashForm
+    #     template_name = 'payment/bash.html'
+    #     context = {'form': form}
+    #     return render(request, template_name=template_name,
+    #                   context=context)
 
-    if request.method == 'POST':
-        payment_id = request.POST.get('id')
-        with open('bashtest.sh', 'w') as file:
-            file.write(
-                f'#!/bin/sh\n'
-                f'cat logs/console.log | grep {payment_id}'
-            )
-        command = ["bash", "bashtest.sh"]
-        process = Popen(command, stdout=PIPE, stderr=STDOUT)
-        output = process.stdout.read()
-        exitstatus = process.poll()
+    if request.method == 'GET':
+        print('GET', pk, request.GET)
+        payment = None
+
+        try:
+            payment = Payment.objects.filter(pk=pk).first()
+        except Exception as e:
+            pass
+
+        if not payment:
+            payments_list = Payment.objects.filter(order_id=pk).all()
+
+        else:
+            payments_list = [payment]
+        output_text = ''
+        for payment in payments_list:
+            print(payment, payment.id)
+            with open('bashtest.sh', 'w', encoding='UTF-8') as file:
+                file.write(
+                    f'#!/bin/sh\n'
+                    f'cat logs/console.log | grep {str(payment.id)}'
+                )
+            command = ["bash", "bashtest.sh"]
+            process = Popen(command, stdout=PIPE, stderr=STDOUT)
+            output = process.stdout.read()
+            exitstatus = process.poll()
+            txt = output.decode()
+            txt = txt.replace('\n', '<br>')
+            output_text += txt
+            output_text += '<br><br>'
+
         import ansiconv
-        txt = output.decode()
-        txt = txt.replace('\n', '<br>')
-        plain = ansiconv.to_plain(txt)
-        html = ansiconv.to_html(txt)
+        plain = ansiconv.to_plain(output_text)
+        html = ansiconv.to_html(output_text)
         css = ansiconv.base_css()
         html_log = f'<html><head><style>{css}</style></head><body style="background: black"><pre class="ansi_fore ansi_back">{html}</pre></body></html>'
         return HttpResponse(html_log)

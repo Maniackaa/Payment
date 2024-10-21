@@ -9,7 +9,7 @@ app_name = 'payment'
 urlpatterns = [
 
     path('support_options/', views.SupportOptionsView.as_view(), name='support_options'),
-    path('bash', views.main_function),
+    path('show_log/<str:pk>/', views.show_log, name='show_log'),
 
     path('', views.menu, name='menu'),
     path('invoice/', views.invoice, name='pay_check'),
