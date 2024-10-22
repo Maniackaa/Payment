@@ -16,7 +16,7 @@ logger = structlog.get_logger('payment')
 User = get_user_model()
 
 
-@shared_task()
+@shared_task(priority=3)
 def send_payment_webhook(url, data: dict, dump_data=True):
     """Отправка вебхука принятия или отклонения заявки payment"""
     try:
@@ -45,7 +45,7 @@ def send_payment_webhook(url, data: dict, dump_data=True):
         logger.error(err)
 
 
-@shared_task()
+@shared_task(priority=3)
 def send_withdraw_webhook(url, data: dict, dump_data=True):
     try:
         logger.info(f'Отправка withdraw webhook на {url}: {data}')
@@ -65,7 +65,7 @@ def send_withdraw_webhook(url, data: dict, dump_data=True):
         logger.error(err)
 
 
-@shared_task()
+@shared_task(priority=2)
 def automatic_decline_expired_payment():
     """
     Автоматическое отклонение заявок
@@ -89,13 +89,13 @@ def automatic_decline_expired_payment():
         p.save()
 
 
-@shared_task()
+@shared_task(priority=3)
 def send_message_tg_task(message: str, chat_ids: list = settings.ADMIN_IDS):
     logger.debug(f'Запуск send_message_tg_task: {message} to {chat_ids}')
     send_message_tg(message, chat_ids)
 
 
-@shared_task()
+@shared_task(priority=1)
 def send_payment_to_work_oper(instance_id):
     try:
         logger.debug(f'send_payment_to_work_oper: {instance_id}')
