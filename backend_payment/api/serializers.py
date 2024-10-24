@@ -36,9 +36,9 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         pay_type = data.get('pay_type')
         amount = data.get('amount')
         print('check_limit')
-        print(user.payment_limit_per_minute)
-        print(user.limit_check())
-        if user.payment_limit_per_minute and not user.limit_check():
+        print(user.profile.payment_limit_per_minute)
+        print(user.profile.limit_check())
+        if user.profile.payment_limit_per_minute and not user.profile.limit_check():
             raise ValidationError({'warning': 'exceeded the limit'})
 
         all_pay_requisite = PayRequisite.objects.filter(pay_type=pay_type).first()

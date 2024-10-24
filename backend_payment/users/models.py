@@ -81,20 +81,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f'{self.id}. {self.username}'
 
-    @property
-    def payment_limit_per_minute(self):
-        return self.profile.payment_limit_per_minute
-
-    def limit_check(self) -> bool:
-        Payment = apps.get_model('payment', 'Payment')
-        limit = self.profile.payment_limit_per_minute
-        threshold = timezone.now() - datetime.timedelta(seconds=60)
-        if limit:
-            payments_count = Payment.objects.filter(merchant__owner__id=self.id, create_at__gte=threshold).count()
-            if payments_count >= limit:
-                return False
-        return True
-
     def get_short_name(self):
         return self.email
 
@@ -172,6 +158,15 @@ class Profile(models.Model):
         verbose_name = "Профиль пользователя"
         verbose_name_plural = "Профили пользователей"
 
+    def limit_check(self) -> bool:
+        Payment = apps.get_model('payment', 'Payment')
+        limit = self.payment_limit_per_minute
+        threshold = timezone.now() - datetime.timedelta(seconds=60)
+        if limit:
+            payments_count = Payment.objects.filter(merchant__owner__id=self.id, create_at__gte=threshold).count()
+            if payments_count >= limit:
+                return False
+        return True
 
 class SingletonModel(models.Model):
     class Meta:
