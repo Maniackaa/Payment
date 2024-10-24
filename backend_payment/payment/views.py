@@ -335,6 +335,18 @@ def invoice(request, *args, **kwargs):
             return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='This pay_type not worked',
                                           content='This pay_type not worked')
 
+        form = forms.PaymentCreateForm(data={
+            'merchant': merch,
+            'order_id': order_id,
+            'user_login': user_login,
+            'amount': amount,
+            'owner_name': owner_name,
+            'pay_type': pay_type,
+        })
+        if not form.is_valid():
+            return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='order_id not unique',
+                                          content='order_id not unique'
+                                          )
         try:
             payment, status = Payment.objects.get_or_create(
                 merchant_id=merchant_id,
@@ -1154,7 +1166,7 @@ def invoice_test(request, *args, **kwargs):
     print(response.status)
     print(http_host)
     new_uid = uuid.uuid4()
-    form = InvoiceTestForm(initial={'order_id': new_uid})
+    form = InvoiceTestForm(initial={'order_id': 'new_uid'})
     user = get_current_user()
     print(user)
     print(user == 'AnonymousUser')

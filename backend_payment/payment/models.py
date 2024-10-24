@@ -14,7 +14,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
-from django.db.models import F, Sum, Model
+from django.db.models import F, Sum, Model, Q
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -274,6 +274,9 @@ class Payment(models.Model):
     comment = models.CharField('Комментарий', max_length=1000, null=True, blank=True)
     response_status_code = models.IntegerField(null=True, blank=True)
     source = models.CharField(max_length=5, default='form', null=True, blank=True)
+
+    class Meta:
+        unique_together = [('merchant', 'order_id',)]
 
     def __str__(self):
         string = f'{self.__class__.__name__} {self.id}'

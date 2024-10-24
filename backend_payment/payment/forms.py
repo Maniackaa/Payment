@@ -218,6 +218,21 @@ class PaymentForm(forms.ModelForm):
         fields = ('confirmed_amount', 'comment', 'status')
 
 
+class PaymentCreateForm(forms.ModelForm):
+
+    class Meta:
+        model = Payment
+        fields = ('merchant', 'order_id', 'user_login', 'amount', 'owner_name', 'pay_type',)
+
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        count = Payment.objects.filter(merchant=cleaned_data['merchant'],
+                                           order_id=cleaned_data['order_id']).count()
+        if count:
+            raise ValidationError('order_id not unique')
+        return cleaned_data
+
+
 class WithdrawForm(forms.ModelForm):
     comment = forms.CharField(widget=forms.Textarea, required=False)
 

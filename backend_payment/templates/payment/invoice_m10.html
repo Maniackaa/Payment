@@ -146,7 +146,8 @@
                             </div>
                         </div>
 
-
+                        {% load l10n %}
+                        {% localize off %}
                         <div class="row">
                             {% if not payment.amount %}
                             <label class="pay">Məbləğ girin</label>
@@ -164,7 +165,7 @@
                             </div>
                         </div>
 
-
+                         {% endlocalize %}
 
 
                         <input class="icon_owner" style="text-indent: 35px" type="text" hidden name="owner_name" value="{{ payment.owner_name|default_if_none:"" }}" placeholder="John Smith">
