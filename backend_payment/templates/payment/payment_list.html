@@ -57,6 +57,7 @@
            <th>Merchant</th>
            <th>Type</th>
            <th>Bank</th>
+           <th>Mask</th>
            <th>O</th>
            <th>User</th>
            <th>Owner</th>
@@ -82,6 +83,9 @@
                 {% if payment.comment %}
                   *
                 {% endif %}
+                {% if payment.wrong_webhook %}
+                  <br><span>🚷</span>
+                {% endif %}
 
             </td>
             <td>{{ payment.create_at|date:"d.m H:i" }}</td>
@@ -96,7 +100,8 @@
                     ❓
                 {% endif %}
 
-            <td>{{ payment.work_operator|default_if_none:""}} {% if payment.work_operator.profile.is_bot == True %}🤖{% endif %}</td>
+             <td>{{ payment.mask|default_if_none:"" }}</td>
+             <td>{{ payment.work_operator|default_if_none:""}} {% if payment.work_operator.profile.is_bot == True %}🤖{% endif %}</td>
              <td>{{ payment.user_login|default_if_none:""}}</td>
             <td>{{ payment.owner_name|default_if_none:""}}</td>
             {% if payment.screenshot %}

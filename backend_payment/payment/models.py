@@ -279,6 +279,12 @@ class Payment(models.Model):
         string = f'{self.__class__.__name__} {self.id}'
         return string
 
+    @property
+    def wrong_webhook(self):
+        if (self.status == -1 or self.status == 9) and self.response_status_code != 200:
+            return True
+        return False
+
     def status_bot_str(self):
         # 4 -> 8 -> 5 -> 6
         color = 'yellow'
@@ -642,7 +648,7 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         # Сохраним маску
         card_number = instance.card_number()
         if card_number:
-            instance.mask = f'{card_number[:4]}**{card_number[-4:]}'
+            instance.mask = f'{card_number[:6]}**{card_number[-4:]}'
         # Осободим реквизиты
         instance.pay_requisite = None
         if not instance.confirmed_user:
