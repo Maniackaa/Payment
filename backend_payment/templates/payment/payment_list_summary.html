@@ -46,7 +46,7 @@
              ;">
             <div class="col">
                  № {{ payment.counter }}<br>
-                Статус: {{ payment.status }}
+                Статус: {{ payment.status_bot_str|safe }}
 
                  <button name="reset_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-warning btn-sm">R</button>
                  <button name="my_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-warning btn-sm">My</button>

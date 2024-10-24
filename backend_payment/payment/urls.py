@@ -51,6 +51,9 @@ urlpatterns = [
     path('receive_webhook/', views.WebhookReceive.as_view(), name='receive_webhook'),
     path('repeat_webhook/<str:pk>', views.PaymentWebhookRepeat.as_view(), name='repeat_webhook'),
     path('withdraw_repeat_webhook/<str:pk>', views.WithdrawWebhookRepeat.as_view(), name='withdraw_repeat_webhook'),
+
+    path('test_celery/', views.TestCelery.as_view(), name='test_celery'),
+
     ]
 
 if settings.DEBUG:

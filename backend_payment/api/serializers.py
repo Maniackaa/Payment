@@ -29,13 +29,18 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
     create_at = serializers.DateTimeField(read_only=True)
 
     def validate(self, data):
-        merchant = data.get('merchant')
+        merchant = data.get('merchant')  # Номер магазина
         user = self.context['request'].user
         if merchant.owner != user:
             raise ValidationError('Is not your merchant')
-
         pay_type = data.get('pay_type')
         amount = data.get('amount')
+        print('check_limit')
+        print(user.payment_limit_per_minute)
+        print(user.limit_check())
+        if user.payment_limit_per_minute and not user.limit_check():
+            raise ValidationError({'warning': 'exceeded the limit'})
+
         all_pay_requisite = PayRequisite.objects.filter(pay_type=pay_type).first()
         if not all_pay_requisite:
             raise ValidationError(f'Sorry, service not available in this moment.')

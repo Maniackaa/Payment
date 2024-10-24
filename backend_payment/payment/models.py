@@ -1,3 +1,4 @@
+import datetime
 import json
 import threading
 import uuid
@@ -277,6 +278,43 @@ class Payment(models.Model):
     def __str__(self):
         string = f'{self.__class__.__name__} {self.id}'
         return string
+
+    def status_bot_str(self):
+        # 4 -> 8 -> 5 -> 6
+        color = 'yellow'
+        if self.status == 4:
+            result = (
+                f'<span style="background: {color}">'
+                f'4'
+                f'</span>'
+                f'>8>5>6'
+            )
+        elif self.status == 8:
+            result = (
+                f'4>'
+                f'<span style="background: {color}">'
+                f'8'
+                f'</span>'
+                f'>5>6'
+            )
+        elif self.status == 5:
+            result = (
+                f'4>8>'
+                f'<span style="background: {color}">'
+                f'5'
+                f'</span>'
+                f'>6'
+            )
+        elif self.status == 6:
+            result = (
+                f'4>8>5>'
+                f'<span style="background: {color}">'
+                f'6'
+                f'</span>'
+            )
+        else:
+            result = self.status
+        return result
 
     def get_tax(self):
         if self.pay_type == 'card_2':
@@ -715,5 +753,5 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
 
     if instance.pay_type == 'card_2' and instance.status == 3 and not instance.work_operator:
         logger.debug(f'send_payment_to_work_oper')
-        send_payment_to_work_oper.delay(instance.id)
-        # send_payment_to_work_oper(instance.id)
+        # send_payment_to_work_oper.delay(instance.id)
+        send_payment_to_work_oper(instance.id)

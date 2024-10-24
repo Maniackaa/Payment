@@ -48,7 +48,7 @@ from payment.func import work_calc
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange, Work
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm, SuperuserOnlyPerm, \
     SupportOrSuperuserPerm, MerchantOrViewPerm
-from payment.task import send_payment_webhook, send_withdraw_webhook
+from payment.task import send_payment_webhook, send_withdraw_webhook, low_priority_task
 from users.models import SupportOptions, Profile
 
 logger = structlog.get_logger(__name__)
@@ -1498,3 +1498,19 @@ def show_log(request, pk):
         css = ansiconv.base_css()
         html_log = f'<html><head><style>{css}</style></head><body style="background: black"><pre class="ansi_fore ansi_back">{html}</pre></body></html>'
         return HttpResponse(html_log)
+
+
+class TestCelery(LoginRequiredMixin, StaffOnlyPerm, DetailView):
+
+    def get(self, request, *args, **kwargs):
+        x = low_priority_task.apply_async(kwargs={}, queue='high')
+        print(x, type(x))
+
+        merch_owner_id = 2
+        threshold = timezone.now() - datetime.timedelta(hours=5)
+        print(threshold)
+        payments_count = Payment.objects.filter(merchant__owner__id=merch_owner_id,  create_at__gte=threshold).count()
+        print(payments_count)
+
+        return HttpResponse('<span style="color: red">Ok</span>notok')
+

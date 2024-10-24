@@ -1,3 +1,6 @@
+import datetime
+
+from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
 from django.core.mail import send_mail
@@ -7,6 +10,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from users.managers import UserManager
 
@@ -77,6 +81,20 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f'{self.id}. {self.username}'
 
+    @property
+    def payment_limit_per_minute(self):
+        return self.profile.payment_limit_per_minute
+
+    def limit_check(self) -> bool:
+        Payment = apps.get_model('payment', 'Payment')
+        limit = self.profile.payment_limit_per_minute
+        threshold = timezone.now() - datetime.timedelta(seconds=60)
+        if limit:
+            payments_count = Payment.objects.filter(merchant__owner__id=self.id, create_at__gte=threshold).count()
+            if payments_count >= limit:
+                return False
+        return True
+
     def get_short_name(self):
         return self.email
 
@@ -145,6 +163,7 @@ class Profile(models.Model):
     last_id = models.IntegerField(default=0)
     is_bot = models.BooleanField(default=False)
     banks = models.ManyToManyField(to='payment.Bank', blank=True)
+    payment_limit_per_minute = models.IntegerField(default=0)
 
     def __str__(self):
         return f'{self.user.username}'

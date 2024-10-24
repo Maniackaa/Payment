@@ -85,6 +85,19 @@ services:
         condition: service_started
         restart: false
 
+  celery_high:
+    container_name: celery_payment2
+    build: ./backend_payment
+    restart: always
+    command: celery -A backend_payment worker -l warning  -n myworker -Q high --concurrency=4 --logfile=logs/celery.log
+    volumes:
+      - media:/app/media/
+      - ./logs:/app/logs
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_started
+        restart: false
 
   celery-beat:
     build: ./backend_payment
@@ -116,3 +129,16 @@ services:
     volumes:
       - ./certbot/www/:/var/www/certbot/:rw
       - ./certbot/conf/:/etc/letsencrypt/:rw
+
+  flower:
+    container_name: flower
+    image: mher/flower
+    build: ./backend_payment
+    command: celery -A backend_payment.celery flower --port=5555 --basic-auth=Maniac:password1
+    ports:
+      - 5556:5555
+    env_file: .env
+    depends_on:
+      - backend
+      - redis
+      - celery

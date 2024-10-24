@@ -1,7 +1,10 @@
+import asyncio
 import datetime
 import json
+import time
 
 import structlog
+from asgiref.sync import async_to_sync
 from celery import shared_task
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -20,6 +23,7 @@ User = get_user_model()
 def send_payment_webhook(url, data: dict, dump_data=True):
     """Отправка вебхука принятия или отклонения заявки payment"""
     try:
+        start = time.perf_counter()
         logger.info(f'Отправка payment webhook на {url}: {data}.')
         headers = {"Content-Type": "application/json"}
         if dump_data:
@@ -33,12 +37,12 @@ def send_payment_webhook(url, data: dict, dump_data=True):
             payment.response_status_code = response.status_code
             payment.save()
         logger.debug(
-            f'Полный лог {payment_id} {data};'
-            f'{url}'
-            f'status_code: {response.status_code};'
-            f'reason: {response.reason};'
-            f'text: {response.text};'
-            f'url: {response.url}'
+            f'Полный лог {payment_id} {url} {data}; '
+            f'status_code: {response.status_code}; '
+            f'reason: {response.reason}; '
+            f'text: {response.text}; '
+            f'url: {response.url}; '
+            f'time: {round(time.perf_counter() - start, 2)}; '
         )
         return response.status_code
     except Exception as err:
@@ -48,6 +52,7 @@ def send_payment_webhook(url, data: dict, dump_data=True):
 @shared_task(priority=3)
 def send_withdraw_webhook(url, data: dict, dump_data=True):
     try:
+        start = time.perf_counter()
         logger.info(f'Отправка withdraw webhook на {url}: {data}')
         headers = {"Content-Type": "application/json"}
         if dump_data:
@@ -60,6 +65,7 @@ def send_withdraw_webhook(url, data: dict, dump_data=True):
         if withdraw:
             withdraw.response_status_code = response.status_code
             withdraw.save()
+        logger.debug(f'time withdraw webhook: {round(time.perf_counter() - start, 2)}; ')
         return response.status_code
     except Exception as err:
         logger.error(err)
@@ -97,21 +103,22 @@ def send_message_tg_task(message: str, chat_ids: list = settings.ADMIN_IDS):
 
 @shared_task(priority=1)
 def send_payment_to_work_oper(instance_id):
+    log = logger.bind(payment_id=instance_id)
     try:
-        logger.debug(f'send_payment_to_work_oper: {instance_id}')
+        log.debug(f'send_payment_to_work_oper: {instance_id}')
         instance = models.Payment.objects.get(pk=instance_id)
-        logger.debug(instance)
+        log.debug(instance)
 
         # Свободные боты на смене
         free_bots = User.objects.filter(profile__is_bot=True, profile__on_work=True)
-        logger.debug(f'free_bots: {free_bots}')
+        log.debug(f'free_bots: {free_bots}')
 
         bank_bots = User.objects.prefetch_related('profile').filter(
             profile__is_bot=True,
             profile__on_work=True,
             profile__banks__in=[instance.bank],
         )
-        logger.debug(f'bank_bots: {bank_bots}')
+        log.debug(f'bank_bots: {bank_bots}')
         for bot in bank_bots:
             bot_limit = bot.profile.limit_to_work
             bot_payments = bot.oper_payments.exclude(status__in=[-1, 9]).count()
@@ -120,22 +127,22 @@ def send_payment_to_work_oper(instance_id):
                 instance.work_operator = bot
                 instance.status = 4
                 instance.save()
-                logger.debug(f' {instance} work_operator bot: {bot}')
+                log.debug(f' {instance} work_operator bot: {bot}')
                 return
 
         operators_on_work: list = SupportOptions.load().operators_on_work
-        logger.debug(f'start operators_on_work: {operators_on_work}')
+        log.debug(f'start operators_on_work: {operators_on_work}')
         operators_to_remove = []
         for oper_id in operators_on_work:
             oper: User = User.objects.get(pk=oper_id)
-            logger.debug(f'{oper} on_work: {oper.profile.on_work}')
+            log.debug(f'{oper} on_work: {oper.profile.on_work}')
             if oper and not oper.profile.on_work or oper.profile.is_bot:
-                logger.debug(f'Опер {oper} не на смене или бот - удаляем из распределения')
+                log.debug(f'Опер {oper} не на смене или бот - удаляем из распределения')
                 operators_to_remove.append(oper_id)
 
         operators_on_work = list(set(operators_on_work) ^ set(operators_to_remove))
         operators_on_work.sort()
-        logger.debug(f'operators_on_work: {operators_on_work}')
+        log.debug(f'operators_on_work: {operators_on_work}')
 
         if operators_on_work:
             order_num = instance.counter % len(operators_on_work)
@@ -143,7 +150,25 @@ def send_payment_to_work_oper(instance_id):
             instance.work_operator = work_operator
             instance.status = 4
             instance.save()
-            logger.debug(f'on_work: {operators_on_work}. order_num: {order_num}. work_operator: {work_operator}')
+            log.debug(f'on_work: {operators_on_work}. order_num: {order_num}. work_operator: {work_operator}')
     except Exception as err:
-        logger.error(err)
+        log.error(err)
         raise err
+
+
+def test_job(value):
+    start = time.perf_counter()
+    logger.info(f'Началось выполнение {value}')
+    time.sleep(5)
+    delta = round(time.perf_counter() - start, 2)
+    logger.info(f'Закончилось выполнение {value} за {delta} с')
+
+
+@shared_task()
+def low_priority_task():
+    test_job(str(timezone.now()))
+
+
+@shared_task()
+def high_priority_task():
+    logger.info(f'!!!!!!!!!!!!!!!!!ШТЫКОВАЯ ЗАДАЧА!!!!!!!!!!!!!!!!')
