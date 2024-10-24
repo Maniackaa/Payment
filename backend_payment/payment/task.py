@@ -27,9 +27,9 @@ def send_payment_webhook(url, data: dict, dump_data=True):
         logger.info(f'Отправка payment webhook на {url}: {data}.')
         headers = {"Content-Type": "application/json"}
         if dump_data:
-            response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=5)
+            response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=10)
         else:
-            response = request(url=url, method='POST', json=data, headers=headers, timeout=5)
+            response = request(url=url, method='POST', json=data, headers=headers, timeout=10)
         logger.info(f'status_code {url}: {response.status_code}')
         payment_id = data['id']
         payment = models.Payment.objects.filter(pk=payment_id).first()
