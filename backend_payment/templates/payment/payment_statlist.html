@@ -34,26 +34,36 @@
 
 
     <div class="container">
-    <div class="row">
-        <div class="col-md-auto">
+        <div class="row">
+            <div class="col-md-auto">
 
-     <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">
-     <thead class="">
-     <tr class="" style="text-align: center">
-           <th>Параметр</th>
-           <th>Значение</th>
-     </tr>
-     </thead>
-          <tbody style="text-align: end" >
-         {% for key, val in filter_stat.items %}
-          <tr>
-            <td>{{ key }}            </td>
-             <td> {{ val }}           </td>
-        </tr>
-         {% endfor %}
-     </table>
-    </div>
-    </div>
+                 <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">
+                 <thead class="">
+                 <tr class="" style="text-align: center">
+                       <th>Параметр</th>
+                       <th>Значение</th>
+                 </tr>
+                 </thead>
+                      <tbody style="text-align: end" >
+                     {% for key, val in filter_stat.items %}
+                      <tr>
+                        <td>{{ key }}            </td>
+                         <td> {{ val }}           </td>
+                    </tr>
+                     {% endfor %}
+                 </table>
+            </div>
+            <div class="col-3">
+                <a href="{% url 'payment:stat_last_hour'%}">Час</a>
+
+            </div>
+            <div class="col-md-auto">
+
+            {% for val in filter_info %}
+                      {{ val }}<br>
+                     {% endfor %}
+            </div>
+        </div>
     </div>
 
 
@@ -76,8 +86,6 @@
            <th>Подтв.<br>Сумм</th>
            <th>T подтв</th>
            <th>T изм</th>
-           <th>Подтв. Сумм</th>
-         <th>id платежа</th>
        </tr>
      </thead>
      <tbody style="text-align: end" >

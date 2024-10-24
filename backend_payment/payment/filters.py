@@ -107,7 +107,6 @@ class MyTimeInput(forms.DateInput):
     input_type = 'datetime-local'
 
 
-
 class PaymentStatFilter(django_filters.FilterSet):
     # Фильтр для статы
 
@@ -128,10 +127,7 @@ class PaymentStatFilter(django_filters.FilterSet):
         month = month % 12
         year += 1
     to_initial = datetime.datetime(year, month, 1, 0, 0).isoformat()[:16]
-    id = django_filters.CharFilter(lookup_expr='icontains')
-    order_id = django_filters.CharFilter(lookup_expr='icontains')
-    status = django_filters.MultipleChoiceFilter(choices=Payment.PAYMENT_STATUS)
-    # create_at = django_filters.DateTimeFilter(widget=MyTimeInput({'class': 'form-control'}), lookup_expr='contains')
+
     create_at_from = django_filters.DateTimeFilter(
         label='От',
         field_name='create_at',
@@ -147,20 +143,12 @@ class PaymentStatFilter(django_filters.FilterSet):
 
     class Meta:
         model = Payment
-        fields = ['id', 'order_id', 'status', 'pay_type', 'amount', 'merchant', 'merchant__owner', 'bank',]
+        fields = ['pay_type', 'merchant', 'merchant__owner', 'bank']
 
     @property
     def qs(self):
         parent = super(PaymentStatFilter, self).qs
         return parent.filter()
-
-    def my_custom_filter(self, queryset, name, value):
-        print(name)
-        print(value)
-        print(value.start)
-        print(value.stop)
-        print(queryset.filter(create_at__gte=value.start).count())
-        return queryset.filter(status=9)
 
 
 class PaymentFilter(django_filters.FilterSet):

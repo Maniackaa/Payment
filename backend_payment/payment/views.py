@@ -876,22 +876,34 @@ class PaymentStatListView(StaffOnlyPerm, ListView, ):
         context['stat'] = filter.qs.aggregate(sum=Sum('amount'), count=Count('amount'))
         qs = filter.qs
         total_count = qs.count()
-        confirmed = qs.filter(status=9).count()
-        declined = qs.filter(status=-1).count()
+        confirmed = qs.filter(status=9)
+        declined = qs.filter(status=-1)
 
+        confirmed_count = confirmed.filter(status=9).count()
+        declined_count = declined.filter(status=-1).count()
 
-        filter_stat = {}
-        filter_stat['Всего'] = total_count
-        filter_stat['approve count'] = confirmed
-        filter_stat['decline count'] = declined
+        confirmed_sum = confirmed.aggregate(sum=Sum('confirmed_amount'))['sum']
+        declined_sum = declined.aggregate(sum=Sum('amount'))['sum']
+
+        filter_stat = {'Всего': total_count, 'approve count': confirmed_count, 'decline count': declined_count,
+                       'confirmed_sum': confirmed_sum, 'declined_sum': declined_sum}
         if total_count != 0:
-            conversion = round(confirmed / total_count, 2)
+            conversion = round(confirmed_count / total_count, 2)
         else:
             conversion = '-'
         filter_stat['Конверсия'] = conversion
 
+        filter_info = []
+        for key, val in filter.form.data.items():
+            if val:
+                print(key, val)
+                filter_info.append(f'{key}: {val}')
+        context['filter_info'] = filter_info
 
         context['filter_stat'] = filter_stat
+        # print(filter.form.data)
+        # x = filter.form.data['create_at_from'] = '2021-11-01T00:00'
+        # print(filter.form.data)
         return context
 
 
@@ -1564,3 +1576,13 @@ class TestCelery(LoginRequiredMixin, StaffOnlyPerm, DetailView):
 
         return HttpResponse('<span style="color: red">Ok</span>notok')
 
+
+def stat_last_hour(request, *args, **kwargs):
+
+    print(request)
+    print(request.GET)
+    print(request.POST)
+    print(args)
+    print(kwargs)
+
+    return redirect('payment:payments_stats')
