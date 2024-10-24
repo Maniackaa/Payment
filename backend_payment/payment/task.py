@@ -22,6 +22,7 @@ User = get_user_model()
 @shared_task(priority=3)
 def send_payment_webhook(url, data: dict, dump_data=True):
     """Отправка вебхука принятия или отклонения заявки payment"""
+    log = logger.bind(payment_id=data['id'])
     try:
         start = time.perf_counter()
         logger.info(f'Отправка payment webhook на {url}: {data}.')
@@ -30,13 +31,13 @@ def send_payment_webhook(url, data: dict, dump_data=True):
             response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=10)
         else:
             response = request(url=url, method='POST', json=data, headers=headers, timeout=10)
-        logger.info(f'status_code {url}: {response.status_code}')
+        log.info(f'status_code {url}: {response.status_code}')
         payment_id = data['id']
         payment = models.Payment.objects.filter(pk=payment_id).first()
         if payment:
             payment.response_status_code = response.status_code
             payment.save()
-        logger.debug(
+        log.debug(
             f'Полный лог {payment_id} {url} {data}; '
             f'status_code: {response.status_code}; '
             f'reason: {response.reason}; '
@@ -47,28 +48,31 @@ def send_payment_webhook(url, data: dict, dump_data=True):
         return response.status_code
     except Exception as err:
         logger.error(err)
+        return str(err)
 
 
 @shared_task(priority=3)
 def send_withdraw_webhook(url, data: dict, dump_data=True):
+    log = logger.bind(payment_id=data['id'])
     try:
         start = time.perf_counter()
+
         logger.info(f'Отправка withdraw webhook на {url}: {data}')
         headers = {"Content-Type": "application/json"}
         if dump_data:
             response = request(url=url, method='POST', json=json.dumps(data), headers=headers, timeout=10)
         else:
             response = request(url=url, method='POST', json=data, headers=headers, timeout=10)
-        logger.info(response.status_code)
+        log.info(response.status_code)
         withdraw_id = data['id']
         withdraw = models.Withdraw.objects.get(pk=withdraw_id)
         if withdraw:
             withdraw.response_status_code = response.status_code
             withdraw.save()
-        logger.debug(f'time withdraw webhook: {round(time.perf_counter() - start, 2)}; ')
+        log.debug(f'time withdraw webhook: {round(time.perf_counter() - start, 2)}; ')
         return response.status_code
     except Exception as err:
-        logger.error(err)
+        log.error(err)
 
 
 @shared_task(priority=2)
