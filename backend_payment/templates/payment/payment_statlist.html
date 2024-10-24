@@ -1,0 +1,167 @@
+
+{% extends 'base.html' %}
+{% block title %}Список заявок{% endblock %}
+{% load static %}
+
+{% block content %}
+<style>
+
+    .new_count {
+        background-color: #e44d26;
+    }
+
+</style>
+{% include 'includes/operator_menu.html' %}
+<div class="container-fluid">
+
+  <div class="container">
+      <form method="get">
+        <div class="row">
+
+            {% for field in form  %}
+                <div class="col-auto">
+                <b>{{ field.label_tag }}</b><br>{{ field }}
+                </div>
+            {% endfor %}
+            <div class="row">
+
+            <button class="btn btn-info btn-light" type="submit">Фильтровать {{stat}}</button>
+            </div>
+        </div>
+    </form>
+  </div>
+
+
+
+    <div class="container">
+    <div class="row">
+        <div class="col-md-auto">
+
+     <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">
+     <thead class="">
+     <tr class="" style="text-align: center">
+           <th>Параметр</th>
+           <th>Значение</th>
+     </tr>
+     </thead>
+          <tbody style="text-align: end" >
+         {% for key, val in filter_stat.items %}
+          <tr>
+            <td>{{ key }}            </td>
+             <td> {{ val }}           </td>
+        </tr>
+         {% endfor %}
+     </table>
+    </div>
+    </div>
+    </div>
+
+
+     {% include 'includes/paginator.html' %}
+     <div class="container-fluid ">
+     <table id="table" class="table table-bordered table-hover table-sm" style="font-size: 14px; line-height: 100%; padding: .1rem .1rem .1rem .1rem">
+     <thead class="">
+     <tr class="" style="text-align: center">
+           <th>id</th>
+           <th>create time</th>
+           <th>Merchant</th>
+           <th>Type</th>
+           <th>Bank</th>
+           <th>Mask</th>
+           <th>O</th>
+           <th>User</th>
+           <th>Owner</th>
+           <th>Сумм</th>
+           <th>Статус</th>
+           <th>Подтв.<br>Сумм</th>
+           <th>T подтв</th>
+           <th>T изм</th>
+           <th>Подтв. Сумм</th>
+         <th>id платежа</th>
+       </tr>
+     </thead>
+     <tbody style="text-align: end" >
+         {% for payment in page_obj %}
+         <tr id="payment{{ payment.short_id }}"
+                 {% if payment.status == -1 %}
+                    class="table-secondary"
+                 {% elif payment.confirmed_time%}
+                     class="table-success"
+                 {% endif %}>
+
+            <td><a class="changelink" href="{% url 'payment:payment_edit' payment.id %}">{{ payment.short_id }}</a>
+                {% if payment.comment %}
+                  *
+                {% endif %}
+                {% if payment.wrong_webhook %}
+                  <br><span>🚷</span>
+                {% endif %}
+
+            </td>
+            <td>{{ payment.create_at|date:"d.m H:i" }}</td>
+            <td>{{ payment.merchant.name}}{% if payment.merchant.is_new %}🍼{% endif %}</td>
+            <td>{{ payment.pay_type}} ({{ payment.counter|default_if_none:"" }})</td>
+            <td>{{ payment.bank_name|default_if_none:""}}
+                {% if payment.card_number is None or payment.card_number == '' %}
+                    -
+                    {% elif payment.luna_check == True %}
+                    ✅
+                    {% else %}
+                    ❓
+                {% endif %}
+
+             <td>{{ payment.mask|default_if_none:"" }}</td>
+             <td>{{ payment.work_operator|default_if_none:""}} {% if payment.work_operator.profile.is_bot == True %}🤖{% endif %}</td>
+             <td>{{ payment.user_login|default_if_none:""}}</td>
+            <td>{{ payment.owner_name|default_if_none:""}}</td>
+            {% if payment.screenshot %}
+              <td><a target="_blank" href="/media/{{ payment.screenshot }}">{{ payment.amount }}</a></td>
+            {% else %}
+              <td>{{ payment.amount }}</td>
+            {% endif %}
+            <form method="post" action=''>
+            {% csrf_token %}
+              <td style="white-space: nowrap">{{ payment.status }}
+
+              {% if  payment.status == 3 or payment.status == 6 and payment.pay_type == 'card_2' %}
+                  {% if payment.pay_type == 'card_2' %}<a href="http://localhost:3000/?payment_id={{payment.id}}&amount={{ payment.amount }}&{{ payment.card_data_url }}&{{ payment.phone_script_data_url }}" target="_blank">🚀</a>{% endif %}
+                  {% if payment.card_data %}
+                    <a href="{% url 'payment:payment_input' payment.id %}" target="_blank" id="card_number{{payment.id}}">{{ payment.card_number }}<img onclick="CopyToClipboard('card_number{{payment.id}}')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"></a>
+                    <br>{{payment.bank_name}} {{ payment.expired_month }}/{{payment.expired_year}} {{ payment.cvv}}
+                    <span id="sms_code{{payment.id}}"
+                    {% if payment.sms_code %} style="background-color: #11e834" {% endif %}>
+                    {{ payment.sms_code|default_if_none:'----'}}<img onclick="CopyToClipboard('sms_code{{payment.id}}')" style="opacity: 0.5;"class="img-thumbnail" width="25" height="25" src="{% static '/img/copy.png' %}"></span>
+                  {% endif %}
+              {% endif %}
+
+              </td>
+
+
+            <td>{{ payment.confirmed_amount|default_if_none:""  }}</td>
+
+             <td>{% if payment.confirmed_time %}
+                 {{ payment.confirmed_time|date:"H:i"|default_if_none:""  }}
+                 {% elif payment.status != -1 %}
+                     <button name="cancel_payment" value="{{ payment.id }}" style="margin-bottom: -10px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-danger btn-sm">X</button>
+                 {% endif %}
+             </td>
+            </form>
+             <td>{{ payment.change_time|date:"H:i" }}</td>
+
+            {% load l10n %}
+            {% localize off %}
+
+            {% endlocalize %}
+
+
+         </tr>
+         {% endfor %}
+
+     </tbody>
+   </table>
+   </div>
+   {% include 'includes/paginator.html' %}
+
+
+{% endblock %}
+

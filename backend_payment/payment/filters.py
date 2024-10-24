@@ -1,8 +1,12 @@
+import datetime
+
 import django_filters
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import F, Value
 from django.db.models.functions import Extract
+from django.forms import DateTimeInput
+from django.utils import timezone
 from django_currentuser.middleware import get_current_authenticated_user
 
 from payment.models import Payment, Withdraw, BalanceChange, Bank
@@ -99,6 +103,66 @@ class MerchPaymentFilter(django_filters.FilterSet):
         return parent.filter()
 
 
+class MyTimeInput(forms.DateInput):
+    input_type = 'datetime-local'
+
+
+
+class PaymentStatFilter(django_filters.FilterSet):
+    # Фильтр для статы
+
+    def __init__(self, data=None, *args, **kwargs):
+        if data is not None:
+            data = data.copy()
+            for name, f in self.base_filters.items():
+                initial = f.extra.get('initial')
+                if not data.get(name) and initial:
+                    data[name] = initial
+        super().__init__(data, *args, **kwargs)
+    from_initial = '2024-10-01T00:00'
+
+    now = timezone.now()
+    year = now.year
+    month = (now.month + 1)
+    if month > 12:
+        month = month % 12
+        year += 1
+    to_initial = datetime.datetime(year, month, 1, 0, 0).isoformat()[:16]
+    id = django_filters.CharFilter(lookup_expr='icontains')
+    order_id = django_filters.CharFilter(lookup_expr='icontains')
+    status = django_filters.MultipleChoiceFilter(choices=Payment.PAYMENT_STATUS)
+    # create_at = django_filters.DateTimeFilter(widget=MyTimeInput({'class': 'form-control'}), lookup_expr='contains')
+    create_at_from = django_filters.DateTimeFilter(
+        label='От',
+        field_name='create_at',
+        lookup_expr='gte',
+        widget=MyTimeInput({'class': 'form-control', 'value': from_initial})
+    )
+    create_at_to = django_filters.DateTimeFilter(
+        label='до',
+        field_name='create_at',
+        lookup_expr='lt',
+        widget=MyTimeInput({'class': 'form-control', 'value': to_initial})
+                                                 )
+
+    class Meta:
+        model = Payment
+        fields = ['id', 'order_id', 'status', 'pay_type', 'amount', 'merchant', 'merchant__owner', 'bank',]
+
+    @property
+    def qs(self):
+        parent = super(PaymentStatFilter, self).qs
+        return parent.filter()
+
+    def my_custom_filter(self, queryset, name, value):
+        print(name)
+        print(value)
+        print(value.start)
+        print(value.stop)
+        print(queryset.filter(create_at__gte=value.start).count())
+        return queryset.filter(status=9)
+
+
 class PaymentFilter(django_filters.FilterSet):
     # Фильтр где весь список заявок для оперов
 
@@ -120,7 +184,9 @@ class PaymentFilter(django_filters.FilterSet):
     # oper2 = django_filters.NumberFilter(label='из', method='my_custom_filter2', initial=1)
     create_at = django_filters.DateFilter(field_name='create_at', lookup_expr='contains',
                                           widget=MyDateInput({'class': 'form-control'}))
-    on_work = django_filters.BooleanFilter(method='operators_filter', widget=forms.CheckboxInput(attrs={'disabled': False}), label='Только твои',)
+    on_work = django_filters.BooleanFilter(method='operators_filter',
+                                           widget=forms.CheckboxInput(attrs={'disabled': False}),
+                                           label='Только твои', )
 
     class Meta:
         model = Payment
@@ -130,6 +196,7 @@ class PaymentFilter(django_filters.FilterSet):
     def qs(self):
         parent = super(PaymentFilter, self).qs
         return parent.filter()
+
 
     # def my_custom_filter(self, queryset, name, value):
     #     y = int(self.form['oper2'].value())

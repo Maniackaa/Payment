@@ -20,6 +20,7 @@ urlpatterns = [
     path('m10_to_m10_create/', views.m10_to_m10_create, name='m10_to_m10_create'),  # m10_to_m10
     path('pay_result/<str:pk>/', views.PayResultView.as_view(), name='pay_result'),
     path('payments/', views.PaymentListView.as_view(), name='payment_list'),
+    path('payments_stats/', views.PaymentStatListView.as_view(), name='payments_stats'),
     path('payments_summary/', views.PaymentListSummaryView.as_view(), name='payments_summary'),
     path('payments_count/', views.PaymentListCount.as_view(), name='payment_count'),
     path('payments/<str:pk>/', views.PaymentEdit.as_view(), name='payment_edit'),

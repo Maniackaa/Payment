@@ -41,7 +41,7 @@ from deposit.models import Incoming
 from deposit.text_response_func import tz
 from payment import forms
 from payment.filters import PaymentFilter, WithdrawFilter, BalanceChangeFilter, PaymentMerchStatFilter, \
-    MerchPaymentFilter, BalanceFilter, BalanceStaffFilter
+    MerchPaymentFilter, BalanceFilter, BalanceStaffFilter, PaymentStatFilter
 from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, InvoiceM10Form, InvoiceTestForm, \
     MerchantForm, WithdrawForm, DateFilterForm, InvoiceM10SmsForm, MerchBalanceChangeForm, SupportOptionsForm, BashForm
 from payment.func import work_calc
@@ -855,6 +855,44 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
             return HttpResponseBadRequest(str(form.errors))
         filter_url = urlencode(self.request.GET, doseq=True)
         return redirect(reverse('payment:payment_list') + '?' + filter_url)
+
+
+class PaymentStatListView(StaffOnlyPerm, ListView, ):
+    """Спиcок payments_stats"""
+    template_name = 'payment/payment_statlist.html'
+    model = Payment
+    filter = PaymentStatFilter
+    raise_exception = False
+    paginate_by = settings.PAGINATE
+
+    def get_queryset(self):
+        return PaymentStatFilter(self.request.GET, queryset=Payment.objects.prefetch_related(
+            'merchant', 'pay_requisite', 'bank', 'work_operator', 'confirmed_incoming', 'confirmed_user', 'merchant__owner')).qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        filter = PaymentStatFilter(self.request.GET, queryset=self.get_queryset())
+        context['form'] = filter.form
+        context['stat'] = filter.qs.aggregate(sum=Sum('amount'), count=Count('amount'))
+        qs = filter.qs
+        total_count = qs.count()
+        confirmed = qs.filter(status=9).count()
+        declined = qs.filter(status=-1).count()
+
+
+        filter_stat = {}
+        filter_stat['Всего'] = total_count
+        filter_stat['approve count'] = confirmed
+        filter_stat['decline count'] = declined
+        if total_count != 0:
+            conversion = round(confirmed / total_count, 2)
+        else:
+            conversion = '-'
+        filter_stat['Конверсия'] = conversion
+
+
+        context['filter_stat'] = filter_stat
+        return context
 
 
 class PaymentEdit(StaffOnlyPerm, UpdateView, ):
