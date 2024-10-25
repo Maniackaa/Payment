@@ -178,7 +178,8 @@ class PaymentFilter(django_filters.FilterSet):
 
     class Meta:
         model = Payment
-        fields = ['id', 'order_id', 'status', 'pay_type', 'amount', 'merchant', 'merchant__owner', 'bank']
+        fields = ['id', 'order_id', 'status', 'pay_type', 'amount', 'merchant', 'merchant__owner', 'bank', 'mask',
+                  'work_operator']
 
     @property
     def qs(self):
