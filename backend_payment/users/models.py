@@ -25,6 +25,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USER = "user"
     STAFF = "staff"
+    STAFF_PLUS = "staff+"
     ADMIN = "admin"
     MODERATOR = "editor"
     MERCHANT = "merchant"
@@ -33,6 +34,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         (USER, "Пользователь"),
         (ADMIN, "Администратор"),
         (STAFF, "Оператор"),
+        (STAFF_PLUS, "Оператор+"),
         (MODERATOR, "Корректировщик"),
         (MERCHANT, "Мерчант"),
         (MERCHVIEWER, "Помощник мерча")

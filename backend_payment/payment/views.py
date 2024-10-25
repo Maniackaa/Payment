@@ -47,7 +47,7 @@ from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, Invo
 from payment.func import work_calc
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange, Work
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm, SuperuserOnlyPerm, \
-    SupportOrSuperuserPerm, MerchantOrViewPerm
+    SupportOrSuperuserPerm, MerchantOrViewPerm, SuperuserOrStaffPlusPerm
 from payment.task import send_payment_webhook, send_withdraw_webhook, low_priority_task
 from users.models import SupportOptions, Profile
 
@@ -1097,7 +1097,7 @@ class BalanceListView(LoginRequiredMixin, ListView):
         return context
 
 
-class MerchOwnerList(SuperuserOnlyPerm, ListView):
+class MerchOwnerList(SuperuserOrStaffPlusPerm, ListView):
     """Список мерчей"""
     template_name = 'payment/merch_owner_list.html'
     model = User
@@ -1133,7 +1133,7 @@ class MerchOwnerList(SuperuserOnlyPerm, ListView):
         return context
 
 
-class MerchOwnerDetail(SuperuserOnlyPerm, FormView, UpdateView):
+class MerchOwnerDetail(SuperuserOrStaffPlusPerm, FormView, UpdateView):
     template_name = 'payment/merch_owner_detail.html'
     model = User
     form_class = MerchBalanceChangeForm

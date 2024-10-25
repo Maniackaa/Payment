@@ -10,9 +10,10 @@
             <div class="col-4">
             Баланс: {{ request.user.balance }} ₼
             </div>
-            {% if user.is_superuser %}
+            {% if user.is_superuser or user.role == 'staff+' %}
             <a class="" href="{% url 'payment:merch_owner_list' %}">Список мерчей</a>
             <a class="" href="{% url 'payment:balance_history_list' %}">Изменения баланса мерчей</a><br>
+            <a class="" href="{% url 'payment:payments_stats' %}">Статистика</a>
             {% endif %}
            {% if user.is_staff %}
                <a class="" href="{% url 'payment:support_options' %}">Операторы на смене</a>

@@ -27,6 +27,19 @@ class SuperuserOnlyPerm(AccessMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
+class SuperuserOrStaffPlusPerm(AccessMixin):
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        if not user.is_authenticated:
+            return redirect('payment:menu')
+        else:
+            if user.is_superuser or user.role == 'staff+':
+                # return self.handle_no_permission()
+                return super().dispatch(request, *args, **kwargs)
+        return redirect('payment:menu')
+
+
+
 class StaffOnlyPerm(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
