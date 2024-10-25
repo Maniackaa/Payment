@@ -72,10 +72,10 @@ class MerchantOrViewPerm(AccessMixin):
         return redirect('payment:menu')
 
 
-class SupportOrSuperuserPerm(AccessMixin):
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.role == 'support' or request.user.is_superuser:
-            return super().dispatch(request, *args, **kwargs)
-        else:
-            return redirect('payment:menu')
+# class SupportOrSuperuserPerm(AccessMixin):
+#     def dispatch(self, request, *args, **kwargs):
+#         if request.user.role == 'support' or request.user.is_superuser:
+#             return super().dispatch(request, *args, **kwargs)
+#         else:
+#             return redirect('payment:menu')
 

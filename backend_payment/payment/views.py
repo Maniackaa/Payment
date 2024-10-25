@@ -47,7 +47,7 @@ from payment.forms import InvoiceForm, PaymentListConfirmForm, PaymentForm, Invo
 from payment.func import work_calc
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange, Work
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm, SuperuserOnlyPerm, \
-    SupportOrSuperuserPerm, MerchantOrViewPerm, SuperuserOrStaffPlusPerm
+    MerchantOrViewPerm, SuperuserOrStaffPlusPerm
 from payment.task import send_payment_webhook, send_withdraw_webhook, low_priority_task
 from users.models import SupportOptions, Profile
 
@@ -72,7 +72,7 @@ def menu(request, *args, **kwargs):
     return render(request, template_name=template, context=context)
 
 
-class SupportOptionsView(SupportOrSuperuserPerm, FormView, UpdateView,):
+class SupportOptionsView(SuperuserOrStaffPlusPerm, FormView, UpdateView,):
     form_class = SupportOptionsForm
     template_name = 'options.html'
     model = SupportOptions
