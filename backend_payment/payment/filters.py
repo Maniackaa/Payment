@@ -165,21 +165,21 @@ class PaymentFilter(django_filters.FilterSet):
         # data['on_work'] = profile.on_work
         super().__init__(data, *args, **kwargs)
 
-    id = django_filters.CharFilter(lookup_expr='icontains')
-    order_id = django_filters.CharFilter(lookup_expr='icontains')
+    id = django_filters.CharFilter(label='Наш id', lookup_expr='icontains')
+    order_id = django_filters.CharFilter(label='Их order_id', lookup_expr='icontains')
     status = django_filters.MultipleChoiceFilter(choices=Payment.PAYMENT_STATUS)
     # oper1 = django_filters.NumberFilter(label='Оператор №', method='my_custom_filter', initial=1)
     # oper2 = django_filters.NumberFilter(label='из', method='my_custom_filter2', initial=1)
-    create_at = django_filters.DateFilter(field_name='create_at', lookup_expr='contains',
+    create_at = django_filters.DateFilter(label='Дата создания', field_name='create_at', lookup_expr='contains',
                                           widget=MyDateInput({'class': 'form-control'}))
     on_work = django_filters.BooleanFilter(method='operators_filter',
                                            widget=forms.CheckboxInput(attrs={'disabled': False}),
                                            label='Только твои', )
+    mask = django_filters.CharFilter(label='Маска', lookup_expr='icontains')
 
     class Meta:
         model = Payment
-        fields = ['id', 'order_id', 'status', 'pay_type', 'amount', 'merchant', 'merchant__owner', 'bank', 'mask',
-                  'work_operator']
+        fields = ['pay_type', 'amount', 'merchant', 'merchant__owner', 'bank',]
 
     @property
     def qs(self):
