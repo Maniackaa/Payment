@@ -857,7 +857,7 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
         return redirect(reverse('payment:payment_list') + '?' + filter_url)
 
 
-class PaymentStatListView(StaffOnlyPerm, ListView, ):
+class PaymentStatListView(StaffOnlyPerm, ListView,):
     """Спиcок payments_stats"""
     template_name = 'payment/payment_statlist.html'
     model = Payment
@@ -892,18 +892,27 @@ class PaymentStatListView(StaffOnlyPerm, ListView, ):
         else:
             conversion = '-'
         filter_stat['Конверсия'] = conversion
-
         filter_info = []
         for key, val in filter.form.data.items():
             if val:
-                print(key, val)
                 filter_info.append(f'{key}: {val}')
         context['filter_info'] = filter_info
-
         context['filter_stat'] = filter_stat
-        # print(filter.form.data)
-        # x = filter.form.data['create_at_from'] = '2021-11-01T00:00'
-        # print(filter.form.data)
+        data_dict = self.request.GET.dict()
+        fix_date = data_dict.get('fix_date')
+        if fix_date:
+            create_at_from = None
+            now = tz.localize(datetime.datetime.now())
+            create_at_to = now.isoformat()[:16]
+            if fix_date == 'last_hour':
+                create_at_from = (now - datetime.timedelta(hours=1)).isoformat()[:16]
+            elif fix_date == 'last_day':
+                create_at_from = (now - datetime.timedelta(hours=24)).isoformat()[:16]
+            elif fix_date == 'last_week':
+                create_at_from = (now - datetime.timedelta(days=7)).isoformat()[:16]
+            if create_at_from:
+                filter.form.data['create_at_from'] = create_at_from
+            filter.form.data['create_at_to'] = create_at_to
         return context
 
 
@@ -1575,14 +1584,3 @@ class TestCelery(LoginRequiredMixin, StaffOnlyPerm, DetailView):
         print(payments_count)
 
         return HttpResponse('<span style="color: red">Ok</span>notok')
-
-
-def stat_last_hour(request, *args, **kwargs):
-
-    print(request)
-    print(request.GET)
-    print(request.POST)
-    print(args)
-    print(kwargs)
-
-    return redirect('payment:payments_stats')
