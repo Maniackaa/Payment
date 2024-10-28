@@ -279,7 +279,8 @@ LOGGING = {
     },
     "loggers": {
         "django.request": {
-            "handlers": ["null"],
+            # "handlers": ["null"],
+            "handlers": ["console", "root_handler"],
             "propagate": False,
         },
         "payment": {
@@ -298,8 +299,13 @@ LOGGING = {
             "propagate": False,
         },
         "root": {
-            "handlers": [],
+            "handlers": ["root_handler"],
             "level": "DEBUG",
+            "propagate": False,
+        },
+        "django": {
+            "handlers": ["root_handler"],
+            "level": "WARNING",
             "propagate": False,
         },
 

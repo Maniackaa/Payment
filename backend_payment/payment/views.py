@@ -15,6 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import PermissionRequiredMixin, AccessMixin, LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import F, Avg, Sum, Count, Window, Q
@@ -36,6 +37,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from urllib3 import Retry, PoolManager
 
+from core import global_func
 from core.global_func import hash_gen, TZ, export_payments_func
 from deposit.models import Incoming
 from deposit.text_response_func import tz
@@ -1381,7 +1383,7 @@ def merchant_test_webhook(request, *args, **kwargs):
         payment.status = -1
         data = payment.webhook_data()
         data['help'] = "It's test webhook!"
-        send_payment_webhook.delay(merchant.host, data,
+        result = send_payment_webhook(merchant.host, data,
                                    dump_data=payment.merchant.dump_webhook_data)
     elif 'payment_accept' in request.POST:
         payment.confirmed_amount = random.randrange(10, 3000)
@@ -1389,21 +1391,29 @@ def merchant_test_webhook(request, *args, **kwargs):
         payment.confirmed_time = timezone.now()
         data = payment.webhook_data()
         data['help'] = "It's test webhook!"
-        send_payment_webhook.delay(merchant.host, data, payment.merchant.dump_webhook_data)
+        result = send_payment_webhook(merchant.host, data, payment.merchant.dump_webhook_data)
     elif 'withdraw_accept' in request.POST:
         withdraw.status = 9
         withdraw.confirmed_time = timezone.now()
         data = withdraw.webhook_data()
         data['help'] = "It's test webhook!"
-        send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data,
+        result = send_withdraw_webhook(merchant.host_withdraw or merchant.host, data,
                                     dump_data=withdraw.merchant.dump_webhook_data)
     else:
         withdraw.status = -1
         data = withdraw.webhook_data()
         data['help'] = "It's test webhook!"
-        send_withdraw_webhook.delay(merchant.host_withdraw or merchant.host, data,
+        result = send_withdraw_webhook(merchant.host_withdraw or merchant.host, data,
                                     dump_data=withdraw.merchant.dump_webhook_data)
-    return JsonResponse(data, safe=False)
+    logger.info(f'Результат отправки webhook: {result}')
+
+    return HttpResponse(f'<b>Отправлено:</b><br>'
+                        f'{data}<br><br>'
+                        f'<b>Получено</b>:<br>'
+                        f'{result}<br>'
+                        f'{result.content.decode()}',
+                        charset='utf-8'
+                        )
 
 
 class MerchStatView(DetailView, ):
@@ -1463,10 +1473,10 @@ class WebhookReceive(APIView):
         return HttpResponse('ok')
 
     def post(self, request, *args, **kwargs):
-        logger.info('WebhookReceive')
+
         data = request.data
-        logger.info(data)
-        return JsonResponse({'status': 'success', 'data': data})
+        logger.info(f'WebhookReceive data: {data}')
+        return HttpResponse(status=200, content=json.dumps(data))
 
 
 class PaymentWebhookRepeat(StaffOnlyPerm, UpdateView, ):
@@ -1571,16 +1581,13 @@ def show_log(request, pk):
         return HttpResponse(html_log)
 
 
-class TestCelery(LoginRequiredMixin, StaffOnlyPerm, DetailView):
+class Test(LoginRequiredMixin, StaffOnlyPerm, DetailView):
 
     def get(self, request, *args, **kwargs):
-        x = low_priority_task.apply_async(kwargs={}, queue='high')
-        print(x, type(x))
-
-        merch_owner_id = 2
-        threshold = timezone.now() - datetime.timedelta(hours=5)
-        print(threshold)
-        payments_count = Payment.objects.filter(merchant__owner__id=merch_owner_id,  create_at__gte=threshold).count()
-        print(payments_count)
-
-        return HttpResponse('<span style="color: red">Ok</span>notok')
+        try:
+            msg = EmailMessage('Request Callback',
+                               'Here is the message.', to=['maniac_kaa@mail.ru'])
+            msg.send()
+        except RuntimeError as err:
+            logger.error(err)
+        return HttpResponseRedirect('/')

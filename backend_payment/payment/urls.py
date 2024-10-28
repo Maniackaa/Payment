@@ -53,7 +53,7 @@ urlpatterns = [
     path('repeat_webhook/<str:pk>', views.PaymentWebhookRepeat.as_view(), name='repeat_webhook'),
     path('withdraw_repeat_webhook/<str:pk>', views.WithdrawWebhookRepeat.as_view(), name='withdraw_repeat_webhook'),
 
-    path('test_celery/', views.TestCelery.as_view(), name='test_celery'),
+    path('test/', views.Test.as_view(), name='test'),
 
     ]
 

@@ -639,6 +639,10 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         instance.bank = instance.get_bank()
         if instance.bank:
             instance.bank_str = instance.bank.name
+        # Сохраним маску
+        card_number = instance.card_number()
+        if card_number:
+            instance.mask = f'{card_number[:6]}**{card_number[-4:]}'
 
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
@@ -648,10 +652,6 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         if not instance.confirmed_amount:
             instance.confirmed_amount = instance.amount
         instance.comission = Decimal(round(instance.confirmed_amount * instance.get_tax() / 100, 2))
-        # Сохраним маску
-        card_number = instance.card_number()
-        if card_number:
-            instance.mask = f'{card_number[:6]}**{card_number[-4:]}'
         # Осободим реквизиты
         instance.pay_requisite = None
         if not instance.confirmed_user:

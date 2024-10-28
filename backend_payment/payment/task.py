@@ -8,6 +8,7 @@ from asgiref.sync import async_to_sync
 from celery import shared_task
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from requests import request
 
@@ -20,7 +21,7 @@ User = get_user_model()
 
 
 @shared_task(priority=3)
-def send_payment_webhook(url, data: dict, dump_data=True):
+def send_payment_webhook(url, data: dict, dump_data=True) -> HttpResponse:
     """Отправка вебхука принятия или отклонения заявки payment"""
     log = logger.bind(payment_id=data['id'])
     try:
@@ -45,14 +46,21 @@ def send_payment_webhook(url, data: dict, dump_data=True):
             f'url: {response.url}; '
             f'time: {round(time.perf_counter() - start, 2)}; '
         )
-        return response.status_code
+        content = (
+            f'status_code: {response.status_code}; <br>'
+            f'reason: {response.reason}; <br>'
+            f'text: {response.text}; <br>'
+            f'url: {response.url}; <br>'
+            f'time: {round(time.perf_counter() - start, 2)}; '
+        )
+        return HttpResponse(status=200, content_type='text/plain', content=content, charset='utf-8')
     except Exception as err:
         logger.error(err)
         return str(err)
 
 
 @shared_task(priority=3)
-def send_withdraw_webhook(url, data: dict, dump_data=True):
+def send_withdraw_webhook(url, data: dict, dump_data=True) -> HttpResponse:
     log = logger.bind(payment_id=data['id'])
     try:
         start = time.perf_counter()
@@ -65,12 +73,20 @@ def send_withdraw_webhook(url, data: dict, dump_data=True):
             response = request(url=url, method='POST', json=data, headers=headers, timeout=10)
         log.info(response.status_code)
         withdraw_id = data['id']
-        withdraw = models.Withdraw.objects.get(pk=withdraw_id)
+        withdraw = models.Withdraw.objects.filter(pk=withdraw_id).first()
         if withdraw:
             withdraw.response_status_code = response.status_code
             withdraw.save()
+
+        content = (
+            f'status_code: {response.status_code}; <br>'
+            f'reason: {response.reason}; <br>'
+            f'text: {response.text}; <br>'
+            f'url: {response.url}; <br>'
+            f'time: {round(time.perf_counter() - start, 2)}; '
+        )
         log.debug(f'time withdraw webhook: {round(time.perf_counter() - start, 2)}; ')
-        return response.status_code
+        return HttpResponse(status=200, content_type='text/plain', content=content, charset='utf-8')
     except Exception as err:
         log.error(err)
 
