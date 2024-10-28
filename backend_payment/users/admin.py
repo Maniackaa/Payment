@@ -70,6 +70,11 @@ class ProfileInline(admin.StackedInline):
     can_delete = False
 
 
+@admin.action(description="Сбросить пароль на стандартный")
+def reset_password_to_default(modeladmin, request, queryset):
+    queryset.update(password='pbkdf2_sha256$600000$5eA8wb8RXS1Npa9CSoKv3P$ysTT44qdDLChUwyakXHx5xfqqkPVfUuZ9ll2ctGP3Lo=')
+
+
 class UserAdmin(BaseUserAdmin):
     # The forms to add and change user instances
     form = UserChangeForm
@@ -99,6 +104,7 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = ()
     list_display_links = ('id', 'username')
     inlines = [ProfileInline]
+    actions = [reset_password_to_default]
 
 
 class ProfileAdmin(admin.ModelAdmin):

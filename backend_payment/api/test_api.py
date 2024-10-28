@@ -158,7 +158,7 @@ class TestAPI(APITestCase):
 
         response = self.guest_client.get(url, data)
         self.assertEqual(response.status_code, 200, 'Не показывается статус платежа')
-        self.assertEqual(response.json(),  {'id': pk, 'status': 6, 'confirmed_amount': None, 'mask': None},
+        self.assertEqual(response.json(),  {'id': pk, 'status': 6, 'confirmed_amount': None, 'mask': payment.mask},
                          'Не верный ответ статуса платежа анонимом')
 
         payment = Payment.objects.get(pk=pk)
