@@ -90,7 +90,7 @@ services:
     container_name: celery_payment2
     build: ./backend_payment
     restart: always
-    command: celery -A backend_payment worker -l warning  -n myworker -Q high --concurrency=4 --logfile=logs/celery.log
+    command: celery -A backend_payment worker  -l warning  -n myworker -Q high --concurrency=4 --logfile=logs/celery.log
     volumes:
       - media:/app/media/
       - ./logs:/app/logs

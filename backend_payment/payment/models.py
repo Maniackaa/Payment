@@ -225,6 +225,14 @@ class Payment(models.Model):
         (8, '8. AutoBot in work'),
         (9, '9. Confirmed'),
     )
+    """
+    Заявка создана - 0.
+    Переданы данные карты - 3
+    Назначена оператору - 4
+    Бот взял в работу - 8
+    Бот ввел данные карты в М10 - 5
+    Мерч передал смс - 6.
+    """
 
     def __init__(self, *args, **kwargs) -> None:
         # logger.debug(f'__init__ Payment {args} {kwargs}')
@@ -642,7 +650,7 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         # Сохраним маску
         card_number = instance.card_number()
         if card_number:
-            instance.mask = f'{card_number[:6]}**{card_number[-4:]}'
+            instance.mask = f'{card_number[:6]}******{card_number[-4:]}'
 
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:

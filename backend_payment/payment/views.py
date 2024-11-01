@@ -900,6 +900,8 @@ class PaymentStatListView(StaffOnlyPerm, ListView,):
                 filter_info.append(f'{key}: {val}')
         context['filter_info'] = filter_info
         context['filter_stat'] = filter_stat
+
+        # Включение фиксированных дат для фильтра
         data_dict = self.request.GET.dict()
         fix_date = data_dict.get('fix_date')
         if fix_date:
@@ -915,6 +917,33 @@ class PaymentStatListView(StaffOnlyPerm, ListView,):
             if create_at_from:
                 filter.form.data['create_at_from'] = create_at_from
             filter.form.data['create_at_to'] = create_at_to
+
+        # Расчет статистики
+        # df = pd.DataFrame(data=filter.qs.values())
+        # df = df[['create_at']]
+        # df['hour'] = df['create_at'].apply(lambda x: x.hour)
+        # df['day'] = df['create_at'].apply(lambda x: x.weekday())
+        # print(df)
+        # hour_stat = df.groupby('hour').agg({'create_at': 'count'})
+        #
+        # import matplotlib.pyplot as plt
+        # fig, axes = plt.subplots(2, 1, figsize=(12, 12))
+        # axes[0].set_title("Количество платежей")
+        # sns.barplot(x='date', y=('pay', 'count'), data=day_stat, ax=axes[0])
+        # sns.barplot(x='date', y=('pay', 'sum'), data=day_stat, ax=axes[1])
+        # axes[1].set_title("Сумма платежей")
+        # axes[0].bar_label(axes[0].containers[0])
+        # axes[1].bar_label(axes[1].containers[0])
+        # axes[0].set_xticklabels(axes[0].get_xticklabels(), rotation=90)
+        # axes[1].set_xticklabels(axes[1].get_xticklabels(), rotation=90)
+        # plt.subplots_adjust(hspace=0.5)
+        #
+        # plot_file = BytesIO()
+        # figure = fig.get_figure()
+        # figure.savefig(plot_file, format='png')
+        # encoded_file = base64.b64encode(plot_file.getvalue()).decode()
+
+
         return context
 
 

@@ -138,7 +138,17 @@ class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewset
         return Response(serializer.data)
 
     @extend_schema(tags=['API Payment process'], request=PaymentCreateSerializer, summary="Создание платежа",
-                   description='Отправка данных для создания платежа',
+                   description="""<p><strong><span style="text-decoration: underline;">Порядок очередности передачи данных:</span></strong></p>
+<p><strong>1. Создание платежа:</strong> <span class="opblock-summary-path" data-path="/api/v1/payment/"><a class="nostyle" href="https://asu-payme.com/api/v1/docs/#/API%20Payment%20process/payment_create">/api<wbr />/v1<wbr />/payment<wbr />/</a></span></p>
+<p><span class="opblock-summary-path" data-path="/api/v1/payment/">status = 0</span></p>
+<p><span class="opblock-summary-path" data-path="/api/v1/payment/"><strong>2а. Отправка данных карты</strong> (метод card_2): <a class="nostyle" href="https://asu-payme.com/api/v1/docs/#/API%20Payment%20process/payment_send_card_data_update">/api<wbr />/v1<wbr />/payment<wbr />/{id}<wbr />/send_card_data<wbr />/</a></span></p>
+<p><span class="opblock-summary-path" data-path="/api/v1/payment/">status = 3</span></p>
+<p><span class="opblock-summary-path" data-path="/api/v1/payment/">Через 20-30 секунд статус изменяется на status = 5 и отправляется вэбхук об изменении статуса на 5, что говорит о готовности принять смс-код или ожидание подтверждения транзакции в мобильном банке клиента.</span></p>
+<p><span class="opblock-summary-path" data-path="/api/v1/payment/"><strong>2b. Отправка телефона отправителя</strong> (метод m10_to_m10): <a class="nostyle" href="https://asu-payme.com/api/v1/docs/#/API%20Payment%20process/payment_send_phone_update">/api<wbr />/v1<wbr />/payment<wbr />/{id}<wbr />/send_phone<wbr />/</a></span></p>
+<p><span class="opblock-summary-path" data-path="/api/v1/payment/">status = 3</span></p>
+<p><span class="opblock-summary-path" data-path="/api/v1/payment/"><strong>3. Отправка смс-кода:</strong> <a class="nostyle" href="https://asu-payme.com/api/v1/docs/#/API%20Payment%20process/payment_send_sms_code_update">/api<wbr />/v1<wbr />/payment<wbr />/{id}<wbr />/send_sms_code<wbr />/</a></span></p>
+<div class="opblock-summary-description">&nbsp;</div>
+<div class="opblock-summary-description">После обработки платежа отправляется вэбхук со статусом -1 при отклонении или 9 при подтверждении платежа.</div>""",
 
                    responses={
                        status.HTTP_201_CREATED: OpenApiResponse(
