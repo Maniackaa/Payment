@@ -151,7 +151,8 @@ class Profile(models.Model):
     last_id = models.IntegerField(default=0)
     is_bot = models.BooleanField(default=False)
     banks = models.ManyToManyField(to='payment.Bank', blank=True)
-    payment_limit_per_minute = models.IntegerField(default=0)
+    payment_limit_per_minute = models.IntegerField('Лимит заявок в минуту. 0 - откл', default=0)
+    bot_max_amount = models.PositiveIntegerField('Максимальная сумма бота. 0 - откл', default=0)
 
     def __str__(self):
         return f'{self.user.username}'
@@ -169,6 +170,7 @@ class Profile(models.Model):
             if payments_count >= limit:
                 return False
         return True
+
 
 class SingletonModel(models.Model):
     class Meta:

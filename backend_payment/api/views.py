@@ -356,8 +356,10 @@ signature = hash('sha256', $string)""",
             ip = get_client_ip(request)
             if ip not in merchant.ip_list():
                 raise serializers.ValidationError(f'Your ip {ip} not in white list')
-        if payment.status == -1:
-            raise serializers.ValidationError({'status': 'payment Declined!'})
+        if payment.status in [-1, 9]:
+            raise serializers.ValidationError({'error': f'payment finished: {payment.status}'})
+        if payment.phone_send_counter > 3:
+            raise serializers.ValidationError({'error': f'phone change limit'})
         serializer = PaymentInputPhoneSerializer(data=request.data)
         if serializer.is_valid():
             phone = serializer.validated_data['phone']
@@ -365,10 +367,10 @@ signature = hash('sha256', $string)""",
             payment.status = 3
             payment.save()
             data = serializer.data
-            data.update({'m10_phone': payment.pay_requisite.info,
-                         'm10_link': payment.pay_requisite.info2
-                         })
-            print(data)
+            if payment.pay_requisite:
+                data.update({'m10_phone': payment.pay_requisite.info,
+                             'm10_link': payment.pay_requisite.info2
+                             })
             return Response(data=data, status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

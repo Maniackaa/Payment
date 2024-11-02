@@ -8,6 +8,7 @@ from asgiref.sync import async_to_sync
 from celery import shared_task
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from requests import request
@@ -123,6 +124,7 @@ def send_message_tg_task(message: str, chat_ids: list = settings.ADMIN_IDS):
 
 @shared_task(priority=1)
 def send_payment_to_work_oper(instance_id):
+    # Задача распределение платежа операм на смене
     log = logger.bind(payment_id=instance_id)
     try:
         log.debug(f'send_payment_to_work_oper: {instance_id}')
@@ -130,10 +132,12 @@ def send_payment_to_work_oper(instance_id):
         log.debug(instance)
 
         # Свободные боты на смене
-        free_bots = User.objects.filter(profile__is_bot=True, profile__on_work=True)
+        bots = User.objects.filter(profile__is_bot=True, profile__on_work=True)
+        free_bots = bots.filter(profile__bot_max_amount=0) | bots.filter(profile__bot_max_amount__gt=0,
+                                                                         profile__bot_max_amount__gte=instance.amount)
         log.debug(f'free_bots: {free_bots}')
 
-        bank_bots = User.objects.prefetch_related('profile').filter(
+        bank_bots = free_bots.filter(
             profile__is_bot=True,
             profile__on_work=True,
             profile__banks__in=[instance.bank],

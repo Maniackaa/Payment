@@ -8,6 +8,7 @@ from typing import Any
 import pytz
 import structlog
 from django import forms
+from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
@@ -262,6 +263,7 @@ class Payment(models.Model):
 
     # Данные отправителя
     phone = models.CharField('Телефон отправителя', max_length=20, null=True, blank=True)
+    phone_send_counter = models.PositiveIntegerField('Количество правок телефона отправителя', default=0)
     referrer = models.URLField('Ссылка для возврата', null=True, blank=True)
     card_data = models.JSONField(default=str, blank=True)
     phone_script_data = models.JSONField(default=str, blank=True)
@@ -642,15 +644,19 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
 def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **kwargs):
     logger.debug(f'pre_save_status = {instance.status} cashed: {instance.cached_status}')
     # Если статус изменился на 3 (Получена карта):
-    if instance.status == 3 and instance.cached_status != 9:
-
+    if instance.status == 3 and instance.cached_status not in [-1, 9]:
+        # Привязываем банк по карте
         instance.bank = instance.get_bank()
         if instance.bank:
             instance.bank_str = instance.bank.name
-        # Сохраним маску
-        card_number = instance.card_number()
-        if card_number:
-            instance.mask = f'{card_number[:6]}******{card_number[-4:]}'
+            # Сохраним маску
+            card_number = instance.card_number()
+            if card_number:
+                instance.mask = f'{card_number[:6]}******{card_number[-4:]}'
+
+    # Счетчик изменения ввода телефона + 1
+    if instance.status == 3 and instance.pay_type == 'm10_to_m10':
+        instance.phone_send_counter = instance.phone_send_counter + 1
 
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
@@ -701,23 +707,21 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
         instance.counter = all_pays + 1
 
 
-        # Выбор оператора для summary
-
-
 @receiver(post_save, sender=Payment)
 def after_save_pay(sender, instance: Payment, created, raw, using, update_fields, *args, **kwargs):
-    logger.debug(f'{instance.id} post_save_status = {instance.status}  cashed: {instance.cached_status}')
+    pay_logger = logger.bind(payment_id=instance.id)
+    pay_logger.debug(f'{instance.id} post_save_status = {instance.status}  cashed: {instance.cached_status}')
 
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
-        logger.info(f'Выполняем действие после подтверждения платежа {instance.id}')
+        pay_logger.info(f'Выполняем действие после подтверждения платежа {instance.id}')
         # Плюсуем баланс
         with transaction.atomic():
             user = User.objects.get(pk=instance.merchant.owner.id)
             # tax = Decimal(round(instance.confirmed_amount * user.tax / 100, 2))
             tax = Decimal(round(instance.confirmed_amount * instance.get_tax() / 100, 2))
 
-            logger.info(f'user: {user}. {user.balance} -> {user.balance} + {instance.confirmed_amount} - {tax} = {user.balance + instance.confirmed_amount - tax}')
+            pay_logger.info(f'user: {user}. {user.balance} -> {user.balance} + {instance.confirmed_amount} - {tax} = {user.balance + instance.confirmed_amount - tax}')
             user.balance = F('balance') + Decimal(str(instance.confirmed_amount)) - tax
             user.save()
             user.refresh_from_db()
@@ -730,34 +734,67 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
                 current_balance=new_balance
             )
             new_log.save()
-            logger.debug(f'new_balance: {new_balance}')
+            pay_logger.debug(f'new_balance: {new_balance}')
 
         # Отправляем вэбхук
         try:
             data = instance.webhook_data()
-            logger.debug(f'Отправляем вэбхук {instance.id}: {data}')
+            pay_logger.debug(f'Отправляем вэбхук {instance.id}: {data}')
             result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
                                                 dump_data=instance.merchant.dump_webhook_data)
-            logger.debug(f'answer {instance.id}: {result}')
+            pay_logger.debug(f'answer {instance.id}: {result}')
         except Exception as err:
-            logger.error(f'Ошибка при отправке вэбхука: {err}')
+            pay_logger.error(f'Ошибка при отправке вэбхука: {err}')
     
     # # Отправка вэбхука если статус изменился на 5 - ожидание смс и api:
     # if instance.source == 'api' and instance.status == 5 and instance.cached_status != 5:
     #     data = instance.webhook_data()
-    #     logger.debug(f'{instance} API status 5')
+    #     pay_logger.debug(f'{instance} API status 5')
     #     result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
     #                                         dump_data=instance.merchant.dump_webhook_data)
-    #     logger.info(f'answer {instance.id}: {result}')
+    #     pay_logger.info(f'answer {instance.id}: {result}')
 
     # Если статус изменился на -1 (Отклонен):
     if instance.status == -1 and instance.cached_status != -1:
-        logger.info(f'Выполняем действие после отклонения платежа {instance.id}')
+        pay_logger.info(f'Выполняем действие после отклонения платежа {instance.id}')
         data = instance.webhook_data()
-        logger.debug(f'Отправляем вэбхук {instance.id}: {data}')
+        pay_logger.debug(f'Отправляем вэбхук {instance.id}: {data}')
         result = send_payment_webhook.delay(url=instance.merchant.host, data=data,
                                             dump_data=instance.merchant.dump_webhook_data)
-        logger.info(f'answer {instance.id}: {result}')
+        pay_logger.info(f'answer {instance.id}: {result}')
+
+    # ---------- Обработка m10_to_m10 ----------
+    if instance.pay_type == 'm10_to_m10' and instance.status == 3:
+        try:
+            pay_logger.info('Обработка m10_to_m10')
+            if instance.phone_send_counter <= 3:
+                threshold = datetime.datetime.now(tz=TZ) - datetime.timedelta(minutes=10)
+                pay_logger.debug(f'Проверим поступления m10_to_m10.'
+                                 f' threshold: {threshold}. '
+                                 f' sender {instance.phone} '
+                                 f' pay {instance.amount} '
+                                 f'register_date >= {threshold}'
+                                 )
+                Incoming = apps.get_model('deposit', 'Incoming')
+
+                target_incomings = Incoming.objects.filter(
+                    sender=instance.phone,
+                    pay=instance.amount,
+                    register_date__gte=threshold)
+                pay_logger.info(f'target_incomings: {target_incomings}')
+                if target_incomings and target_incomings.count() == 1:
+                    # Подтверждаем
+                    target_incoming: Incoming = target_incomings.first()
+                    pay_logger.info(f'Подвтерждаем-связываем: {target_incoming} и {instance}')
+                    with transaction.atomic():
+                        instance.status = 9
+                        instance.confirmed_incoming = target_incoming
+                        target_incoming.confirmed_payment = instance
+                        instance.save()
+                        target_incoming.save()
+        except Exception as e:
+            pay_logger.error(f'Ошибка подтверждения платежа: {e}')
+    # ---------- Конец обработки m10_to_m10 ----------
 
     # Уведомление в тг о новой заявке от новичков
     if created:
@@ -768,7 +805,8 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         except Merchant.DoesNotExist:
             pass
 
+    # Распределение платежа операм на смене
     if instance.pay_type == 'card_2' and instance.status == 3 and not instance.work_operator:
-        logger.debug(f'send_payment_to_work_oper')
+        pay_logger.debug(f'send_payment_to_work_oper')
         # send_payment_to_work_oper.delay(instance.id)
         send_payment_to_work_oper(instance.id)
