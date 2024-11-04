@@ -964,9 +964,9 @@ class PaymentEdit(StaffOnlyPerm, UpdateView, ):
         context = super(PaymentEdit, self).get_context_data(**kwargs)
         # history = self.object.history.order_by('-id').all()
         # context['history'] = history
-        for log in self.object.logs.all():
-            print(log)
-            print(type(log.changes))
+        # for log in self.object.logs.all():
+        #     print(log)
+        #     print(type(log.changes))
         return context
 
 

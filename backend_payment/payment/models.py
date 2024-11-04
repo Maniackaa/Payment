@@ -55,7 +55,6 @@ class Merchant(models.Model):
         confirmed_payments = self.payments.filter(status=9)
         count = confirmed_payments.count()
         result = confirmed_payments.aggregate(total_sum=Sum('confirmed_amount'))
-        print(result)
         return {
             'count': count,
             'total_sum': result['total_sum']}
@@ -366,6 +365,9 @@ class Payment(models.Model):
         for k, v in data.items():
             result += f'{v} '
         return result
+
+    def phone_name(self):
+        return json.loads(self.card_data).get('phone_name', '')
 
     def operator(self):
         if not self.card_data:

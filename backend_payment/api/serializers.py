@@ -171,6 +171,8 @@ class PaymentFullSerializer(serializers.ModelSerializer):
 
 
 class PaymentGuestSerializer(serializers.ModelSerializer):
+    # phone_name = serializers.CharField(required=False, allow_null=True)
+
     class Meta:
         fields = ('id', 'status', 'confirmed_amount', 'mask')
         model = Payment
@@ -180,6 +182,14 @@ class PaymentGuestSerializer(serializers.ModelSerializer):
             logger.debug(f'Платеж уже обработан: status {self.instance.status}')
             raise serializers.ValidationError("Платеж уже обработан")
         return value
+
+    def save(self, **kwargs):
+        phone_name = self.initial_data.get('phone_name')
+        if phone_name:
+            card_data = json.loads(self.instance.card_data)
+            card_data['phone_name'] = phone_name
+            self.instance.card_data = json.dumps(card_data)
+        return super().save(**kwargs)
 
 
 class PaymentTypesSerializer(serializers.ModelSerializer):
