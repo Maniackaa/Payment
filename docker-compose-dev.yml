@@ -126,8 +126,8 @@ services:
       - media:/app/media
 
 
-  flower:
-    container_name: flower
+  flower2:
+    container_name: flower2
     image: mher/flower
     build: ./backend_payment
     command: celery -A backend_payment.celery flower --port=5555 --basic-auth=Maniac:password1
