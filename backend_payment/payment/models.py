@@ -784,9 +784,12 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
                 target_incomings = Incoming.objects.filter(
                     sender=instance.phone,
                     pay=instance.amount,
-                    register_date__gte=threshold)
-                pay_logger.info(f'target_incomings: {target_incomings}')
-                if target_incomings and target_incomings.count() == 1:
+                    register_date__gte=threshold,
+                    confirmed_payment__is_null=False
+                )
+                target_incomings_count = target_incomings.count()
+                pay_logger.info(f'target_incomings - {target_incomings_count}: {target_incomings}')
+                if target_incomings and target_incomings_count == 1:
                     # Подтверждаем
                     target_incoming: Incoming = target_incomings.first()
                     pay_logger.info(f'Подвтерждаем-связываем: {target_incoming} и {instance}')
@@ -796,6 +799,8 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
                         target_incoming.confirmed_payment = instance
                         instance.save()
                         target_incoming.save()
+                else:
+                    pay_logger.info(f'Условие подтверждения не выполнено.')
         except Exception as e:
             pay_logger.error(f'Ошибка подтверждения платежа: {e}')
     # ---------- Конец обработки m10_to_m10 ----------

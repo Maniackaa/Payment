@@ -2,6 +2,7 @@ import datetime
 import logging
 import re
 
+import structlog
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models, transaction
@@ -14,7 +15,7 @@ from django.utils.html import format_html
 from core.global_func import TZ
 from payment.models import Payment
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 err_log = logging.getLogger('error_log')
 
 # User = get_user_model()
@@ -98,10 +99,11 @@ def pre_save_incoming(sender, instance: Incoming, raw, using, update_fields, *ar
 
 @receiver(post_save, sender=Incoming)
 def post_save_incoming(sender, instance: Incoming, created, raw, using, update_fields, *args, **kwargs):
-    logger.debug(f'post_save_incoming: {instance}. created: {created}')
+    inc_logger = logger.bind(incoming_id=instance.id)
+    inc_logger.debug(f'post_save_incoming: {instance}. created: {created}')
     if created:
         threshold = datetime.datetime.now(tz=TZ) - datetime.timedelta(minutes=10)
-        logger.debug(f'Проверим заявки m10_to_m10. threshold: {threshold}')
+        inc_logger.debug(f'Проверим заявки m10_to_m10. threshold: {threshold}')
         target_payments = Payment.objects.filter(
             pay_type='m10_to_m10',
             phone=instance.sender,
@@ -109,8 +111,10 @@ def post_save_incoming(sender, instance: Incoming, created, raw, using, update_f
             status__in=[0, 3],
             create_at__gte=threshold
         )
-        logger.debug(f'target_payments: {target_payments}')
-        if target_payments and target_payments.count() == 1:
+
+        count = target_payments.count()
+        inc_logger.debug(f'target_payments - {count}: {target_payments}')
+        if target_payments and count == 1:
             target_payment = target_payments.first()
             logger.debug(f'target_payment: {target_payment}')
             target_payment.status = 9
@@ -118,3 +122,7 @@ def post_save_incoming(sender, instance: Incoming, created, raw, using, update_f
             target_payment.save()
             instance.confirmed_payment = target_payment
             instance.save()
+        else:
+            inc_logger.debug('Не найдено target_payments')
+
+
