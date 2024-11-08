@@ -483,11 +483,11 @@ class Payment(models.Model):
                 "id": str(self.id),
                 "order_id": self.order_id,
                 "user_login": self.user_login,
-                "amount": self.amount,
+                "amount": float(self.amount),
                 "create_at": self.create_at.isoformat(),
                 "status": self.status,
                 "confirmed_time": self.confirmed_time.isoformat(),
-                "confirmed_amount": self.confirmed_amount,
+                "confirmed_amount": float(self.confirmed_amount),
                 "signature": self.get_hash(),
                 "mask": self.mask
             }
