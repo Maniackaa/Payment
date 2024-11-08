@@ -54,7 +54,7 @@ def send_payment_webhook(url, data: dict, dump_data=True):
             f'url: {response.url}; <br>'
             f'time: {round(time.perf_counter() - start, 2)}; '
         )
-        return json.dumps(content)
+        return content
     except Exception as err:
         logger.error(err)
         return err
@@ -87,7 +87,7 @@ def send_withdraw_webhook(url, data: dict, dump_data=True):
             f'time: {round(time.perf_counter() - start, 2)}; '
         )
         log.debug(f'time withdraw webhook: {round(time.perf_counter() - start, 2)}; ')
-        return json.dumps(content)
+        return content
     except Exception as err:
         log.error(err)
 

@@ -1443,8 +1443,7 @@ def merchant_test_webhook(request, *args, **kwargs):
     return HttpResponse(f'<b>Отправлено:</b><br>'
                         f'{data}<br><br>'
                         f'<b>Получено</b>:<br>'
-                        f'{result}<br>'
-                        f'{result.content.decode()}',
+                        f'{result}<br>',
                         charset='utf-8'
                         )
 
