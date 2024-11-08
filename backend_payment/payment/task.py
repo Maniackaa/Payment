@@ -22,7 +22,7 @@ User = get_user_model()
 
 
 @shared_task(priority=3)
-def send_payment_webhook(url, data: dict, dump_data=True) -> HttpResponse:
+def send_payment_webhook(url, data: dict, dump_data=True):
     """Отправка вебхука принятия или отклонения заявки payment"""
     log = logger.bind(payment_id=data['id'])
     try:
@@ -54,14 +54,14 @@ def send_payment_webhook(url, data: dict, dump_data=True) -> HttpResponse:
             f'url: {response.url}; <br>'
             f'time: {round(time.perf_counter() - start, 2)}; '
         )
-        return JsonResponse(data=content, safe=False)
+        return json.dumps(content)
     except Exception as err:
         logger.error(err)
-        return JsonResponse(data=str(err))
+        return err
 
 
 @shared_task(priority=3)
-def send_withdraw_webhook(url, data: dict, dump_data=True) -> HttpResponse:
+def send_withdraw_webhook(url, data: dict, dump_data=True):
     log = logger.bind(payment_id=data['id'])
     try:
         start = time.perf_counter()
@@ -87,7 +87,7 @@ def send_withdraw_webhook(url, data: dict, dump_data=True) -> HttpResponse:
             f'time: {round(time.perf_counter() - start, 2)}; '
         )
         log.debug(f'time withdraw webhook: {round(time.perf_counter() - start, 2)}; ')
-        return JsonResponse(data=content, safe=False)
+        return json.dumps(content)
     except Exception as err:
         log.error(err)
 
