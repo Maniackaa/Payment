@@ -54,10 +54,10 @@ def send_payment_webhook(url, data: dict, dump_data=True) -> HttpResponse:
             f'url: {response.url}; <br>'
             f'time: {round(time.perf_counter() - start, 2)}; '
         )
-        return HttpResponse(status=200, content_type='text/plain', content=content, charset='utf-8')
+        return JsonResponse(data=content)
     except Exception as err:
         logger.error(err)
-        return str(err)
+        return JsonResponse(data=str(err))
 
 
 @shared_task(priority=3)
@@ -87,7 +87,7 @@ def send_withdraw_webhook(url, data: dict, dump_data=True) -> HttpResponse:
             f'time: {round(time.perf_counter() - start, 2)}; '
         )
         log.debug(f'time withdraw webhook: {round(time.perf_counter() - start, 2)}; ')
-        return HttpResponse(status=200, content_type='text/plain', content=content, charset='utf-8')
+        return JsonResponse(data=content)
     except Exception as err:
         log.error(err)
 
