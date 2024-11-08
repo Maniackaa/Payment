@@ -24,8 +24,8 @@ User = get_user_model()
 
 class PaymentCreateSerializer(serializers.ModelSerializer):
     """Создание payment"""
-    amount = serializers.IntegerField(required=True)
-    confirmed_amount = serializers.IntegerField(read_only=True)
+    amount = serializers.DecimalField(required=True, max_digits=8, decimal_places=2)
+    confirmed_amount = serializers.DecimalField(read_only=True, max_digits=8, decimal_places=2)
     create_at = serializers.DateTimeField(read_only=True)
 
     def validate(self, data):
@@ -35,9 +35,6 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
             raise ValidationError('Is not your merchant')
         pay_type = data.get('pay_type')
         amount = data.get('amount')
-        print('check_limit')
-        print(user.profile.payment_limit_per_minute)
-        print(user.profile.limit_check())
         if user.profile.payment_limit_per_minute and not user.profile.limit_check():
             raise ValidationError({'warning': 'exceeded the limit'})
 

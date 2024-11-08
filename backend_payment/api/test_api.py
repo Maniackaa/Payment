@@ -186,7 +186,7 @@ class TestAPI(APITestCase):
             "expired_year": "26"
         }
         amount = 30
-        signature_string = f'{self.shop.id}{card_data["card_number"]}{amount}'
+        signature_string = f'{self.shop.id}{card_data["card_number"]}{int(amount)}'
         data = {
             "merchant": self.shop.id,
             "withdraw_id": "test_idee4rde4eee4errr3",

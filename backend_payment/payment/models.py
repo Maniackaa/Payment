@@ -166,7 +166,7 @@ class Withdraw(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, max_length=36, db_index=True,
                           unique=True, )
     merchant = models.ForeignKey('Merchant', verbose_name='Shop', on_delete=models.CASCADE, related_name='withdraws')
-    withdraw_id = models.CharField(max_length=36, db_index=True)
+    withdraw_id = models.CharField(max_length=64, db_index=True)
     amount = models.IntegerField('Сумма заявки', validators=[MinValueValidator(30), MaxValueValidator(10000)])
     payload = models.JSONField(default=str, blank=True, null=True)
     create_at = models.DateTimeField('Время добавления в базу', auto_now_add=True)
@@ -243,10 +243,11 @@ class Payment(models.Model):
                           unique=True,)
     counter = models.IntegerField(null=True, blank=True)
     merchant = models.ForeignKey('Merchant', on_delete=models.CASCADE, related_name='payments')
-    order_id = models.CharField(max_length=36, db_index=True)
-    amount = models.IntegerField('Сумма заявки', null=True)
+    order_id = models.CharField(max_length=64, db_index=True)
+    # amount = models.IntegerField('Сумма заявки', null=True)
+    amount = models.DecimalField('Сумма заявки', max_digits=8, decimal_places=2, null=True, blank=True)
 
-    user_login = models.CharField(max_length=36, null=True, blank=True)
+    user_login = models.CharField(max_length=64, null=True, blank=True)
     owner_name = models.CharField(max_length=100, null=True, blank=True)
     pay_requisite = models.ForeignKey('PayRequisite', on_delete=models.CASCADE, null=True, blank=True)
     pay_type = models.CharField('Тип платежа', choices=PAY_TYPE)
@@ -272,7 +273,8 @@ class Payment(models.Model):
     # Подтверждение:
     work_operator = models.ForeignKey(to=User, on_delete=models.SET_NULL, null=True, blank=True, related_name='oper_payments')
     operator_counter = models.IntegerField(null=True, blank=True)
-    confirmed_amount = models.IntegerField('Подтвержденная сумма заявки', null=True, blank=True)
+    confirmed_amount = models.DecimalField('Подтвержденная сумма заявки',
+                                           max_digits=8, decimal_places=2, null=True, blank=True)
     comission = models.DecimalField('Комиссия', max_digits=16, decimal_places=2, null=True, blank=True)
     mask = models.CharField('Маска карты', max_length=16, null=True, blank=True)
     confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
@@ -470,7 +472,7 @@ class Payment(models.Model):
         if self.status == -1:
             return hash_gen(f'{str(self.id)}{self.order_id}{self.status}', self.merchant.secret)
         if self.status == 9:
-            return hash_gen(f'{str(self.id)}{self.order_id}{self.confirmed_amount}{self.status}', self.merchant.secret)
+            return hash_gen(f'{str(self.id)}{self.order_id}{int(self.confirmed_amount)}{self.status}', self.merchant.secret)
         if self.status in [3, 5]:
             card_data = json.loads(self.card_data)
             return hash_gen(f'{card_data["card_number"]}', self.merchant.secret)
@@ -667,7 +669,7 @@ def pre_save_pay(sender, instance: Payment, raw, using, update_fields, *args, **
             instance.confirmed_time = timezone.now()
         if not instance.confirmed_amount:
             instance.confirmed_amount = instance.amount
-        instance.comission = Decimal(round(instance.confirmed_amount * instance.get_tax() / 100, 2))
+        instance.comission = Decimal(round(instance.confirmed_amount * Decimal(instance.get_tax()) / 100, 2))
         # Осободим реквизиты
         instance.pay_requisite = None
         if not instance.confirmed_user:
@@ -721,7 +723,7 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         with transaction.atomic():
             user = User.objects.get(pk=instance.merchant.owner.id)
             # tax = Decimal(round(instance.confirmed_amount * user.tax / 100, 2))
-            tax = Decimal(round(instance.confirmed_amount * instance.get_tax() / 100, 2))
+            tax = Decimal(round(instance.confirmed_amount * Decimal(instance.get_tax()) / 100, 2))
 
             pay_logger.info(f'user: {user}. {user.balance} -> {user.balance} + {instance.confirmed_amount} - {tax} = {user.balance + instance.confirmed_amount - tax}')
             user.balance = F('balance') + Decimal(str(instance.confirmed_amount)) - tax
@@ -731,7 +733,7 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
             # Фиксируем историю
             new_log = BalanceChange.objects.create(
                 user=user,
-                amount=instance.confirmed_amount - tax,
+                amount=instance.confirmed_amount - Decimal(tax),
                 comment=f'From payment {instance.confirmed_amount} ₼: {instance.id}. +{round(instance.confirmed_amount - tax, 2)} ₼. (Tax: {round(tax, 2)} ₼).',
                 current_balance=new_balance
             )

@@ -4,6 +4,7 @@ import json
 import random
 import time
 import uuid
+from decimal import Decimal
 from http import HTTPStatus
 from pprint import pprint
 import pandas as pd
@@ -346,8 +347,8 @@ def invoice(request, *args, **kwargs):
             'pay_type': pay_type,
         })
         if not form.is_valid():
-            return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason='order_id not unique',
-                                          content='order_id not unique'
+            return HttpResponseBadRequest(status=HTTPStatus.BAD_REQUEST, reason=f'{form.errors}',
+                                          content=f'{form.errors}'
                                           )
         try:
             payment, status = Payment.objects.get_or_create(
@@ -830,7 +831,8 @@ class PaymentListView(StaffOnlyPerm, ListView, ):
             if key.startswith('confirm_amount_value:'):
                 confirmed_amount = request.POST[key]
                 if confirmed_amount:
-                    confirmed_amount = int(confirmed_amount)
+                    # confirmed_amount = int(confirmed_amount)
+                    confirmed_amount = Decimal(confirmed_amount)
             if key.startswith('confirmed_incoming_id_value:'):
                 confirmed_incoming_id = request.POST[key]
                 if confirmed_incoming_id:
@@ -1265,6 +1267,8 @@ def invoice_test(request, *args, **kwargs):
 
     if request.method == 'POST':
         print('post')
+        print(request.__dict__)
+        print(request.POST.__dict__)
         request_dict = request.POST.dict()
         logger.debug(f'request_dict: {request_dict}')
         request_dict.pop('csrfmiddlewaretoken')
@@ -1610,13 +1614,23 @@ def show_log(request, pk):
         return HttpResponse(html_log)
 
 
+# class Test(LoginRequiredMixin, StaffOnlyPerm, DetailView):
+#
+#     def get(self, request, *args, **kwargs):
+#         try:
+#             msg = EmailMessage('Request Callback',
+#                                'Here is the message.', to=['maniac_kaa@mail.ru'])
+#             msg.send()
+#         except RuntimeError as err:
+#             logger.error(err)
+#         return HttpResponseRedirect('/')
+
+
 class Test(LoginRequiredMixin, StaffOnlyPerm, DetailView):
 
     def get(self, request, *args, **kwargs):
         try:
-            msg = EmailMessage('Request Callback',
-                               'Here is the message.', to=['maniac_kaa@mail.ru'])
-            msg.send()
+            pass
         except RuntimeError as err:
             logger.error(err)
         return HttpResponseRedirect('/')
