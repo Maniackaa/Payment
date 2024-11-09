@@ -118,6 +118,7 @@ class PaymentStatFilter(django_filters.FilterSet):
                 if not data.get(name) and initial:
                     data[name] = initial
         super().__init__(data, *args, **kwargs)
+
     from_initial = '2024-10-01T00:00'
 
     now = timezone.now()
@@ -161,21 +162,36 @@ class PaymentFilter(django_filters.FilterSet):
                 initial = f.extra.get('initial')
                 if not data.get(name) and initial:
                     data[name] = initial
-        # profile = get_current_authenticated_user().profile
-        # data['on_work'] = profile.on_work
         super().__init__(data, *args, **kwargs)
 
     id = django_filters.CharFilter(label='Наш id', lookup_expr='icontains')
     order_id = django_filters.CharFilter(label='Их order_id', lookup_expr='icontains')
     status = django_filters.MultipleChoiceFilter(choices=Payment.PAYMENT_STATUS)
-    # oper1 = django_filters.NumberFilter(label='Оператор №', method='my_custom_filter', initial=1)
-    # oper2 = django_filters.NumberFilter(label='из', method='my_custom_filter2', initial=1)
     create_at = django_filters.DateFilter(label='Дата создания', field_name='create_at', lookup_expr='contains',
                                           widget=MyDateInput({'class': 'form-control'}))
-    on_work = django_filters.BooleanFilter(method='operators_filter',
-                                           widget=forms.CheckboxInput(attrs={'disabled': False}),
-                                           label='Только твои', )
-    mask = django_filters.CharFilter(label='Маска', lookup_expr='icontains')
+    mask = django_filters.CharFilter(label='Маска содержит', lookup_expr='icontains')
+
+    from_initial = '2024-10-01T00:00'
+    now = timezone.now()
+    year = now.year
+    month = (now.month + 1)
+    if month > 12:
+        month = month % 12
+        year += 1
+    to_initial = datetime.datetime(year, month, 1, 0, 0).isoformat()[:16]
+
+    create_at_from = django_filters.DateTimeFilter(
+        label='От',
+        field_name='create_at',
+        lookup_expr='gte',
+        widget=MyTimeInput({'class': 'form-control', 'value': from_initial})
+    )
+    create_at_to = django_filters.DateTimeFilter(
+        label='до',
+        field_name='create_at',
+        lookup_expr='lt',
+        widget=MyTimeInput({'class': 'form-control', 'value': to_initial})
+                                                 )
 
     class Meta:
         model = Payment
@@ -185,26 +201,6 @@ class PaymentFilter(django_filters.FilterSet):
     def qs(self):
         parent = super(PaymentFilter, self).qs
         return parent.filter()
-
-
-    # def my_custom_filter(self, queryset, name, value):
-    #     y = int(self.form['oper2'].value())
-    #     start = 60 / y * (int(value) - 1)
-    #     return queryset.annotate(minute=Extract('create_at', 'minute')).filter(minute__gte=start)
-    #
-    # def my_custom_filter2(self, queryset, name, value):
-    #     x = int(self.form['oper1'].value())
-    #     end = 60 / int(value) * x
-    #     return queryset.annotate(minute=Extract('create_at', 'minute')).filter(minute__lt=end)
-
-    def operators_filter(self, queryset, name, value):
-        if value is True:
-            # Работает фильтр по операм
-            operators_on_work = SupportOptions.load().operators_on_work
-            user_id = str(get_current_authenticated_user().id)
-            return queryset.filter(pay_type='card_2').filter(status__in=[3, 4, 5, 6, 7]).filter(
-                    work_operator=user_id).order_by('counter')
-        return queryset
 
 
 class WithdrawFilter(django_filters.FilterSet):
