@@ -205,6 +205,7 @@ class WithdrawCardSerializer(serializers.ModelSerializer):
     cvv = serializers.CharField(required=False, max_length=4, allow_blank=True)
     expired_month = serializers.CharField(required=False, allow_blank=True)
     expired_year = serializers.CharField(required=False, allow_blank=True)
+    card_number = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = CreditCard
@@ -217,6 +218,8 @@ class WithdrawCardSerializer(serializers.ModelSerializer):
         )
 
     def validate_card_number(self, data):
+        if not data:
+            return ''
         card_number = ''.join([x for x in data if x.isdigit()])
         if all(
                 (card_number.isdigit(), len(card_number) == 16)
@@ -235,7 +238,7 @@ class WithdrawCardSerializer(serializers.ModelSerializer):
 
 class WithdrawCreateSerializer(serializers.ModelSerializer):
     """Создание заявки на вывод"""
-    card_data = WithdrawCardSerializer()
+    card_data = WithdrawCardSerializer(required=False, allow_null=True)
     # signature = serializers.CharField()
 
     class Meta:
@@ -245,6 +248,7 @@ class WithdrawCreateSerializer(serializers.ModelSerializer):
             'merchant',
             'withdraw_id',
             'card_data',
+            'target_phone',
             'amount',
             'payload',
         )
@@ -270,6 +274,8 @@ class WithdrawCreateSerializer(serializers.ModelSerializer):
             amount = data.get('amount')
             if amount > user.balance:
                 raise ValidationError('Not enough balance')
+        if not data.get('card_data', {}).get('card_number') and not data.get('target_phone'):
+            raise ValidationError('Нет данных для оплаты')
         return data
 
 

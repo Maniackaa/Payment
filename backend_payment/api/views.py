@@ -477,9 +477,11 @@ class PaymentStatusView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, view
         return self.update(request, *args, **kwargs)
 
 
-signature_text = """<p><b>signature</b>* - required field (string)<br><br></p>
-<p>Расчет signature (amount берется только целая часть):<br></p>
-<p>string = merchant + card_number + amount + secret_key (encoding UTF-8)</p>
+signature_text = """
+<p>Передаются либо данные карты либо телефон для выплаты на m10</p>
+<p><b>signature</b>* - required field (string)<br><br></p>
+<p>Расчет signature:<br></p>
+<p>string = merchant + card_number или target_phone + amount + secret_key (encoding UTF-8)</p>
 <p>signature = hash('sha256', $string)</p>
 В примере string = "2111122223333444430secret_key"
 (card_number 16 цифр без лишних символов)
@@ -563,7 +565,8 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
         if serializer.is_valid(raise_exception=True):
             data = serializer.validated_data
             shop = data["merchant"]
-            signature_string = f'{shop.id}{data["card_data"]["card_number"]}{int(data["amount"])}'
+            target_data = data["card_data"].get("card_number") or data['target_phone']
+            signature_string = f'{shop.id}{target_data}{int(data["amount"])}'
             logger.warning(f'{signature_string} + {shop.secret}')
             hash_s = hash_gen(signature_string, shop.secret)
             logger.warning(hash_s)
