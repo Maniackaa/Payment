@@ -786,7 +786,7 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
                     sender=instance.phone,
                     pay=instance.amount,
                     register_date__gte=threshold,
-                    confirmed_payment__isnull=False
+                    confirmed_payment__isnull=True
                 )
                 target_incomings_count = target_incomings.count()
                 pay_logger.info(f'target_incomings - {target_incomings_count}: {target_incomings}')
