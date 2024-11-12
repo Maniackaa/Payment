@@ -114,7 +114,7 @@ def post_save_incoming(sender, instance: Incoming, created, raw, using, update_f
 
         count = target_payments.count()
         inc_logger.debug(f'target_payments - {count}: {target_payments}')
-        if target_payments and count == 1:
+        if target_payments:
             target_payment = target_payments.first()
             logger.debug(f'target_payment: {target_payment}')
             target_payment.status = 9

@@ -790,9 +790,9 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
                 )
                 target_incomings_count = target_incomings.count()
                 pay_logger.info(f'target_incomings - {target_incomings_count}: {target_incomings}')
-                if target_incomings and target_incomings_count == 1:
+                if target_incomings:
                     # Подтверждаем
-                    target_incoming: Incoming = target_incomings.first()
+                    target_incoming: Incoming = target_incomings.last()
                     pay_logger.info(f'Подвтерждаем-связываем: {target_incoming} и {instance}')
                     with transaction.atomic():
                         instance.status = 9
