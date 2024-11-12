@@ -365,12 +365,12 @@ signature = hash('sha256', $string)""",
             phone = serializer.validated_data['phone']
             payment.phone = phone
             payment.status = 3
-            payment.save()
             data = serializer.data
             if payment.pay_requisite:
                 data.update({'m10_phone': payment.pay_requisite.info,
                              'm10_link': payment.pay_requisite.info2
                              })
+            payment.save()
             return Response(data=data, status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
