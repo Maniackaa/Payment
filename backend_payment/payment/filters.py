@@ -219,7 +219,7 @@ class WithdrawFilter(django_filters.FilterSet):
 
     class Meta:
         model = Payment
-        fields = ['id', 'withdraw_id', 'status', 'create_at']
+        fields = ['id', 'withdraw_id', 'status', 'create_at', 'merchant', 'merchant__owner', 'confirmed_user']
 
 
 class BalanceChangeFilter(django_filters.FilterSet):
