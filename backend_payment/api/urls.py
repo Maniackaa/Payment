@@ -8,16 +8,18 @@ from api import views
 app_name = "api"
 
 v1_router = DefaultRouter()
-v1_router.register("payment", views.PaymentViewSet, basename='payment'),
-v1_router.register("payment_status", views.PaymentStatusView, basename='payment_status'),
-v1_router.register("payment_types", views.PaymentTypesView, basename='payment_types'),
+v1_router.register("payment", views.PaymentViewSet, basename='payment')
+v1_router.register("payment_status", views.PaymentStatusView, basename='payment_status')
+v1_router.register("payment_types", views.PaymentTypesView, basename='payment_types')
 
-v1_router.register("withdraw", views.WithdrawViewSet, basename='withdraw'),
-v1_router.register("balance_changes", views.BalanceViewSet, basename='balance_changes'),
+v1_router.register("payments_archive", views.PaymentsArchive, basename='payments_archive')
+
+v1_router.register("withdraw", views.WithdrawViewSet, basename='withdraw')
+v1_router.register("balance_changes", views.BalanceViewSet, basename='balance_changes')
 
 # Для робота
-v1_router.register("full_info", views.FullInfoView, basename='full_info'),
-v1_router.register("worker_payments", views.WorkerPaymentsView, basename='worker_payments'),
+v1_router.register("full_info", views.FullInfoView, basename='full_info')
+v1_router.register("worker_payments", views.WorkerPaymentsView, basename='worker_payments')
 
 urlpatterns = [
     path("", include(v1_router.urls)),

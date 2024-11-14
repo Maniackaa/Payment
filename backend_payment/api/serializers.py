@@ -283,3 +283,13 @@ class BalanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = BalanceChange
         fields = ('create_at', 'amount', 'current_balance', 'comment')
+
+
+class PaymentArchiveSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Payment
+        fields = ("id", "order_id", "pay_type", "create_at", 'merchant', "amount", "confirmed_amount", "comission",
+                  "status", "user_login", "owner_name", "bank_str", "mask", "referrer", "confirmed_time",
+                  "response_status_code", "comment"
+                  )

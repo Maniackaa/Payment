@@ -1,8 +1,10 @@
+import datetime
 import json
 
 import structlog
 from django.http import JsonResponse
 from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, extend_schema_view, \
     extend_schema_serializer, extend_schema_field, inline_serializer
@@ -10,8 +12,11 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExampl
 from rest_framework import viewsets, status, generics, serializers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action, api_view
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import GenericAPIView, get_object_or_404, CreateAPIView, UpdateAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 
 from rest_framework.response import Response
 from rest_framework import mixins
@@ -23,8 +28,9 @@ from api.filters import BalanceChangeFilter
 from api.permissions import PaymentOwnerOrStaff, IsStaff, IsStaffOrReadOnly
 from api.serializers import PaymentCreateSerializer, PaymentInputCardSerializer, \
     PaymentInputSmsCodeSerializer, PaymentTypesSerializer, WithdrawCreateSerializer, \
-    WithdrawSerializer, PaymentGuestSerializer, BalanceSerializer, PaymentInputPhoneSerializer, PaymentFullSerializer
-from core.global_func import hash_gen, get_client_ip
+    WithdrawSerializer, PaymentGuestSerializer, BalanceSerializer, PaymentInputPhoneSerializer, PaymentFullSerializer, \
+    PaymentArchiveSerializer
+from core.global_func import hash_gen, get_client_ip, export_payments_func
 from payment.models import Payment, PayRequisite, Withdraw, BalanceChange
 from payment.views import get_phone_script, get_bank_from_bin
 
@@ -99,6 +105,33 @@ class PaymentTypesView(mixins.ListModelMixin, viewsets.GenericViewSet):
             name = pay_type['pay_type']
             result.append(PayRequisite.objects.filter(pay_type=name).first())
         return result
+
+
+# class LargeResultsSetPagination(PageNumberPagination):
+#     page_size = 100
+#     page_size_query_param = 'page_size'
+#     max_page_size = 200
+
+
+class PaymentsArchive(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = PaymentArchiveSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [PaymentOwnerOrStaff]
+    # pagination_class = LargeResultsSetPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['status', 'merchant', 'pay_type']
+    search_fields = ['id', 'order_id']
+
+    def get_queryset(self):
+        # return Payment.objects.all()
+        threshold = timezone.now() - datetime.timedelta(days=365)
+        return Payment.objects.filter(merchant__owner=self.request.user, create_at__gte=threshold).all()
+
+    @extend_schema(tags=['Payment check'], summary='Просмотр архива',
+                   description=f'Пример запроса:<br> /api/v1/payments_archive/?limit=100&offset=100&status=9&pay_type=card_2'
+                   )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -419,6 +452,14 @@ signature = hash('sha256', $string)""",
             return Response(data={'status': 'success'}, status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False,
+            methods=["GET"],
+            permission_classes=[])
+    def day_confirmed(self, request, *args, **kwargs):
+        print(request.user)
+        file = export_payments_func(Payment.objects.all()[:100])
+        return file
+
 
 class BalanceViewSet(viewsets.GenericViewSet, generics.ListAPIView):
     serializer_class = BalanceSerializer
@@ -565,7 +606,7 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
         if serializer.is_valid(raise_exception=True):
             data = serializer.validated_data
             shop = data["merchant"]
-            target_data = data["card_data"].get("card_number") or data['target_phone']
+            target_data = data.get("card_data", {}).get("card_number") or data['target_phone']
             signature_string = f'{shop.id}{target_data}{int(data["amount"])}'
             logger.warning(f'{signature_string} + {shop.secret}')
             hash_s = hash_gen(signature_string, shop.secret)
