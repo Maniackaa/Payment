@@ -179,6 +179,8 @@ class Withdraw(models.Model):
     target_phone = models.CharField('Телефон для выплаты на m10', max_length=20, null=True, blank=True)
     confirmed_time = models.DateTimeField('Время подтверждения', null=True, blank=True)
     confirmed_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    balance_before = models.DecimalField('Баланс на момент заявки', max_digits=18, decimal_places=2, default=0)
+    balance_after = models.DecimalField('Баланс после выплаты', max_digits=18, decimal_places=2, default=0)
     comment = models.CharField('Комментарий', max_length=1000, null=True, blank=True)
     response_status_code = models.IntegerField(null=True, blank=True)
 
@@ -589,6 +591,10 @@ def pre_save_withdraw(sender, instance: Withdraw, raw, using, update_fields, *ar
             instance.confirmed_time = timezone.now()
         withdraw_tax = instance.merchant.owner.withdraw_tax
         instance.comission = Decimal(round(instance.amount * withdraw_tax / 100, 2))
+        instance.balance_after = instance.merchant.owner.balance - instance.amount - withdraw_tax
+
+    if not instance.balance_before:
+        instance.balance_before = instance.merchant.owner.balance
 
 
 @receiver(post_save, sender=Withdraw)

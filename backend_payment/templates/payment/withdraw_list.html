@@ -41,8 +41,10 @@
             <th>Комисс</th>
            <th>Статус</th>
            <th>T подтв</th>
-         <th>Баланс</th>
-                  <th>response</th>
+         <th>Баланс текущий</th>
+         <th>Баланс до</th>
+         <th>Баланс после</th>
+         <th>response</th>
          <th>comment</th>
        </tr>
      </thead>
@@ -70,6 +72,8 @@
 
             <td>{{ withdraw.confirmed_time|default_if_none:"-"  }}</td>
             <td>{{ withdraw.balance|default_if_none:""   }}</td>
+            <td>{{ withdraw.balance_before   }}</td>
+            <td>{{ withdraw.balance_after   }}</td>
             <td>{{ withdraw.response_status_code|default_if_none:""   }}</td>
             <td>{{ withdraw.comment|default_if_none:""   }}</td>
 
