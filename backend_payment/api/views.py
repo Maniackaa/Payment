@@ -124,7 +124,7 @@ class PaymentsArchiveFilter(django_filters.FilterSet):
         fields = ['create_at_gte', 'create_at_lt', 'status', 'pay_type', 'merchant']
 
 
-@extend_schema(external_docs={"a": "cfscv"}, tags=['api'], summary='Просмотр архива',
+@extend_schema(tags=['Payment check'], summary='Просмотр архива',
                description=f'http://127.0.0.1:8000/api/v1/payments_archive/?limit=1000&create_at_gte=2024-05-31T00&create_at_lt=2024-06-01&status=9&pay_type=card_2&search=ab'
                )
 class PaymentsArchive(generics.ListAPIView):
@@ -141,7 +141,6 @@ class PaymentsArchive(generics.ListAPIView):
         # return Payment.objects.all()
         threshold = timezone.now() - datetime.timedelta(days=365)
         return Payment.objects.filter(merchant__owner=self.request.user, create_at__gte=threshold).all()
-
 
 
 class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
