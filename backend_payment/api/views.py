@@ -1,6 +1,7 @@
 import datetime
 import json
 
+import django_filters
 import structlog
 from django.http import JsonResponse
 from django.utils import timezone
@@ -113,13 +114,27 @@ class PaymentTypesView(mixins.ListModelMixin, viewsets.GenericViewSet):
 #     max_page_size = 200
 
 
-class PaymentsArchive(mixins.ListModelMixin, viewsets.GenericViewSet):
+class PaymentsArchiveFilter(django_filters.FilterSet):
+
+    create_at_gte = django_filters.DateTimeFilter(field_name='create_at', lookup_expr='gte')
+    create_at_lt = django_filters.DateTimeFilter(field_name='create_at', lookup_expr='lt')
+
+    class Meta:
+        model = Payment
+        fields = ['create_at_gte', 'create_at_lt', 'status', 'pay_type', 'merchant']
+
+
+@extend_schema(external_docs={"a": "cfscv"}, tags=['api'], summary='Просмотр архива',
+               description=f'http://127.0.0.1:8000/api/v1/payments_archive/?limit=1000&create_at_gte=2024-05-31T00&create_at_lt=2024-06-01&status=9&pay_type=card_2&search=ab'
+               )
+class PaymentsArchive(generics.ListAPIView):
     serializer_class = PaymentArchiveSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [PaymentOwnerOrStaff]
     # pagination_class = LargeResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['status', 'merchant', 'pay_type']
+    filterset_class = PaymentsArchiveFilter
+
     search_fields = ['id', 'order_id']
 
     def get_queryset(self):
@@ -127,11 +142,6 @@ class PaymentsArchive(mixins.ListModelMixin, viewsets.GenericViewSet):
         threshold = timezone.now() - datetime.timedelta(days=365)
         return Payment.objects.filter(merchant__owner=self.request.user, create_at__gte=threshold).all()
 
-    @extend_schema(tags=['Payment check'], summary='Просмотр архива',
-                   description=f'Пример запроса:<br> /api/v1/payments_archive/?limit=100&offset=100&status=9&pay_type=card_2'
-                   )
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
 
 class PaymentViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
