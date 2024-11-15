@@ -584,14 +584,14 @@ class Work(models.Model):
 
 @receiver(pre_save, sender=Withdraw)
 def pre_save_withdraw(sender, instance: Withdraw, raw, using, update_fields, *args, **kwargs):
-    logger.debug(f'pre_save_status = {instance.status} cashed: {instance.cached_status}')
+    logger.debug(f'withdraw pre_save_status = {instance.status} cashed: {instance.cached_status}')
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
         if not instance.confirmed_time:
             instance.confirmed_time = timezone.now()
         withdraw_tax = instance.merchant.owner.withdraw_tax
         instance.comission = Decimal(round(instance.amount * withdraw_tax / 100, 2))
-        instance.balance_after = instance.merchant.owner.balance - instance.amount - withdraw_tax
+        instance.balance_after = instance.merchant.owner.balance - instance.amount - Decimal(withdraw_tax)
 
     if not instance.balance_before:
         instance.balance_before = instance.merchant.owner.balance
@@ -600,7 +600,7 @@ def pre_save_withdraw(sender, instance: Withdraw, raw, using, update_fields, *ar
 @receiver(post_save, sender=Withdraw)
 def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_fields, *args, **kwargs):
     try:
-        logger.debug(f'post_save_status = {instance.status}  cashed: {instance.cached_status}')
+        logger.debug(f'withdraw post_save_status = {instance.status}  cashed: {instance.cached_status}')
         # Если статус изменился на 9 (потвержден):
         if instance.status == 9 and instance.cached_status != 9:
             logger.info(f'Выполняем действие после подтверждения выплаты {instance.id}')
