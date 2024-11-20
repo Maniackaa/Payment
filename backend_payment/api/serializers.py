@@ -195,11 +195,6 @@ class PaymentTypesSerializer(serializers.ModelSerializer):
         fields = ('pay_type', 'min_amount', 'max_amount', 'method_info')
 
 
-class WithdrawSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Withdraw
-        fields = ('id', 'withdraw_id', 'amount', 'status', 'payload')
-
 
 class WithdrawCardSerializer(serializers.ModelSerializer):
     cvv = serializers.CharField(required=False, max_length=4, allow_blank=True)
@@ -234,6 +229,13 @@ class WithdrawCardSerializer(serializers.ModelSerializer):
             return data
         else:
             raise ValidationError('cvv must be 3-4 digits')
+
+
+
+class WithdrawSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Withdraw
+        fields = ('id', 'withdraw_id', 'amount', 'status', 'payload')
 
 
 class WithdrawCreateSerializer(serializers.ModelSerializer):

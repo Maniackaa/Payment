@@ -539,7 +539,7 @@ signature_text = """
 
 
 @extend_schema(tags=['Withdraw'], summary='Заявки на выводы')
-class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = WithdrawCreateSerializer
     queryset = Withdraw.objects.all()
     authentication_classes = [JWTAuthentication]
@@ -549,7 +549,7 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
                    summary='Создание withdraw',
                    description=signature_text,
                    examples=[OpenApiExample(
-                       request_only=True, name='Good Example',
+                       request_only=True, name='Example Card Data',
                        value={
                                "merchant": "2",
                                "withdraw_id": "your_withdraw_id-aaaa15320",
@@ -566,7 +566,22 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
                                    "field2": "data2"
                                }
                            },
-                   )],
+                   ),
+                       OpenApiExample(
+                           request_only=True, name='Example M10',
+                           value={
+                               "merchant": "2",
+                               "withdraw_id": "your_withdraw_id-aaaa15320",
+                               "target_phone": "+994555001122",
+                               "amount": "30",
+                               "signature": "29fea979c5454a0014ff30de6e9c6210669b058e1556b1705f0e0e8938bdd28d",
+                               "payload": {
+                                   "field1": "data1",
+                                   "field2": "data2"
+                               }
+                           },
+                       )
+                   ],
                    request=WithdrawCreateSerializer,
                    responses={
                        status.HTTP_201_CREATED: OpenApiResponse(
@@ -687,6 +702,13 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
                    },
                    )
     def retrieve(self, request, *args, **kwargs):
+        print('retrieve', args, kwargs)
         instance = self.get_object()
         serializer = WithdrawSerializer(instance)
         return Response(serializer.data)
+
+    def get_queryset(self):
+        print('get_queryset')
+        print(self.serializer_class)
+        return Withdraw.objects.filter(merchant__owner=self.request.user)
+        return super().get_queryset()
