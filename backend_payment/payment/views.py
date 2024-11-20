@@ -722,7 +722,8 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
                 profile_on_work_text = 'Вы на смене.'
             else:
                 profile_on_work_text = 'Вы не на смене. Новые заявки не назначаются!'
-            context['work_data'] = work_data + f' {profile_on_work_text}'
+            banks = user.profile.banks
+            context['work_data'] = work_data + f' {profile_on_work_text}' + f' {[x for x in banks.all()]}'
             if self.get_queryset().last():
                 last_count = self.get_queryset().last().counter
                 logger.debug(f'last_count: {last_count}')
@@ -761,6 +762,13 @@ class PaymentListSummaryView(StaffOnlyPerm, ListView, ):
                 payment_id = request.POST['my_payment']
                 payment = Payment.objects.get(pk=payment_id)
                 payment.status = 5
+                payment.save()
+
+            if 'clear' in request.POST.keys():
+                payment_id = request.POST['clear']
+                payment = Payment.objects.get(pk=payment_id)
+                payment.work_operator = None
+                payment.status = 3
                 payment.save()
 
             return redirect(reverse('payment:payments_summary'))

@@ -575,6 +575,9 @@ class Bank(models.Model):
     def __str__(self):
         return f'{self.name}'
 
+    def __repr__(self):
+        return f'{self.name}'
+
 
 class Work(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

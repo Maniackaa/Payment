@@ -46,10 +46,11 @@
              ;">
             <div class="col">
                 № {{ payment.counter }} <span style="color: #0303b7">-{{ payment.phone_name }}-</span><br>
-                Статус: {{ payment.status_bot_str|safe }}
+                {{ payment.status_bot_str|safe }}
 
-                 <button name="reset_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-warning btn-sm">R</button>
-                 <button name="my_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; height: 25px;font-size: small" type="submit" class="btn btn-warning btn-sm">My</button>
+                 <button name="reset_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; font-size: small" type="submit" class="btn btn-warning btn-sm">R</button>
+                 <button name="my_payment" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; font-size: small" type="submit" class="btn btn-warning btn-sm">My</button>
+                 <button name="clear" value="{{ payment.id }}" style="margin-bottom: 0px; margin-top: -10px; font-size: medium" type="submit" class="btn btn-warning btn-sm">💀</button>
 
             </div>
             <div class="col">
