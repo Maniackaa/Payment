@@ -102,7 +102,7 @@
 
              <td>{{ payment.mask|default_if_none:"" }}</td>
              <td>{{ payment.work_operator|default_if_none:""}} {% if payment.work_operator.profile.is_bot == True %}🤖{% endif %}</td>
-             <td>{{ payment.user_login|default_if_none:""}}</td>
+             <td><a href="{% url 'payment:payments_stats' %}?user_login={{ payment.user_login }}&merchant__owner={{ payment.merchant.owner.id }}">{{ payment.user_login|default_if_none:""}}</a></td>
             <td>{{ payment.owner_name|default_if_none:""}}</td>
             {% if payment.screenshot %}
               <td><a target="_blank" href="/media/{{ payment.screenshot }}">{{ payment.amount }}</a></td>

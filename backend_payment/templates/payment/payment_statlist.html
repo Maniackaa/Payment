@@ -23,7 +23,7 @@
                 </div>
             {% endfor %}
             <div class="row">
-                <button class="btn btn-info btn-light" type="submit">Фильтровать {{stat}}</button>
+                <button class="btn btn-info btn-light" type="submit">Фильтровать ({{stat.sum}} azn {{stat.count}} шт.)</button>
             </div>
             <div class="row justify-content-center align-items-center">
                 <div class="col-md-auto" style="text-align: center">
@@ -114,9 +114,9 @@
             <td>{{ payment.create_at|date:"d.m H:i" }}</td>
             <td>{{ payment.merchant.name}}{% if payment.merchant.is_new %}🍼{% endif %}</td>
             <td>{{ payment.pay_type}} ({{ payment.counter|default_if_none:"" }})</td>
-            <td>{{ payment.bank_name|default_if_none:""}}
+            <td>{{ payment.bank|default_if_none:""}}
                 {% if payment.card_number is None or payment.card_number == '' %}
-                    -
+
                     {% elif payment.luna_check == True %}
                     ✅
                     {% else %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Тест{% endblock %}
+
+{% block content %}
+
+<h1>[]</h1>
+    <p id="output">1</p>
+    <p id="output1">2</p>
+    <p id="output2">3</p>
+    <p id="output3">4</p>
+    <p id="output4">5</p>
+    <a href="https://ya.ru">link</a>
+<input class="btn-success"  type="submit"  value="12" name="myButton" id="myButton">
+
+<script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+<script>
+        const app = window.Telegram.WebApp
+        app.ready();
+        app.expand();
+        function displayVariable() {
+            var initData = window.Telegram.WebApp.initData.toString();
+            document.getElementById("output").innerText = initData;
+            var myVariable1 = window.Telegram.WebApp.initData.toString();
+            document.getElementById("output1").innerText = myVariable1;
+            var myVariable2 = window.Telegram.WebApp.platform.toString();
+            document.getElementById("output2").innerText = myVariable2;
+
+
+        }
+
+        const params = new URLSearchParams(window.Telegram.WebApp.initData);
+        const userJson = params.get('user');
+        const user = JSON.parse(decodeURIComponent(userJson));
+        const queryId = params.get('query_id');
+        const authDate = params.get('auth_date');
+        const signature = params.get('signature');
+        const hash = params.get('hash');
+
+        const data = {
+                id: queryId,
+                type: "article",
+                title: "Hello Mini App!",
+                input_message_content: {
+                    message_text: "This message was sent from answerWebAppQuery",
+                },
+            };
+
+        function myFunction() {
+
+            alert(userJson + user + JSON.stringify(data))
+            console.log(queryId)
+
+        }
+        displayVariable();
+
+        window.onload = function() {
+            const button = document.getElementById("myButton");
+            button.addEventListener("click", myFunction);
+        };
+        console.log(Telegram)
+        console.log(Telegram.WebApp)
+        console.log(app)
+
+        document.addEventListener('DOMContentLoaded', function() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        // This checks if the method exists before calling it
+        if (typeof window.Telegram.WebApp.answerWebAppQuery === 'function') {
+            const queryId = queryId; // Replace with actual query ID
+            const result = 'your_result'; // Replace with actual result
+            window.Telegram.WebApp.answerWebAppQuery(queryId, result);
+        } else {
+            console.error('answerWebAppQuery is not a function');
+        }
+    } else {
+        console.error('Telegram WebApp API is not available');
+    }
+});
+</script>
+
+
+{% endblock %}

@@ -36,11 +36,11 @@
             </tr>
             <tr>
                 <td>user_login</td>
-                <td>{{ payment.user_login }}</td>
+                <td>{{ payment.user_login|default_if_none:"" }}</td>
             </tr>
             <tr>
                 <td>Сумма заявки</td>
-                <td>{{ payment.amount }}</td>
+                <td>{{ payment.amount }} {{ payment.currency }}</td>
             </tr>
             <tr>
                 <td>Телефон</td>
@@ -48,28 +48,29 @@
             </tr>
             <tr>
                 <td>pay_requisite</td>
-                <td>{{ payment.pay_requisite }}</td>
+                <td>{{ payment.pay_requisite|default_if_none:"" }}</td>
             </tr>
             <tr>
-                <td>confirmed_incoming</td>
-                <td>{{ payment.confirmed_incoming }}</td>
+                <td>Привязанный платеж</td>
+                <td>{{ payment.confirmed_incoming|default_if_none:"" }}</td>
             </tr>
             <tr>
-                <td>confirmed_amount</td>
-                <td>{{ payment.confirmed_amount }}</td>
+                <td>Подтвержденная сумма</td>
+                <td>{{ payment.confirmed_amount|default_if_none:"" }}</td>
             </tr>
             <tr>
                 <td>Подтверждено</td>
-                <td>{{ payment.confirmed_time }}</td>
+                <td>{{ payment.confirmed_time|date:"d.m.Y H:i:s" }}</td>
             </tr>
             <tr>
-                <td>change_time</td>
-                <td>{{ payment.change_time  }}</td>
+                <td>Подтверждено опером</td>
+                <td>{{ payment.confirmed_user|default_if_none:""  }}</td>
             </tr>
             <tr>
-                <td>confirmed_user</td>
-                <td>{{ payment.confirmed_user  }}</td>
+                <td>Изменено</td>
+                <td>{{ payment.change_time|date:"d.m.Y H:i:s"  }}</td>
             </tr>
+
             <tr>
                 <td>source</td>
                 <td>{{ payment.source }}</td>
@@ -78,7 +79,31 @@
                 <td>Статус</td>
                 <td>{{ payment.status_str }}</td>
             </tr>
+            <tr>
+                <td>response_status_code</td>
+                <td>{{ payment.response_status_code|default_if_none:"" }}</td>
+            </tr>
+            <tr>
+                <td>mask</td>
+                <td>{{ payment.mask|default_if_none:"" }}</td>
+            </tr>
+            <tr>
+                <td>comission</td>
+                <td>{{ payment.comission }}</td>
+            </tr>
+            <tr>
+                <td>work_operator</td>
+                <td>{{ payment.work_operator|default_if_none:"" }}</td>
+            </tr>
 
+            <tr>
+                <td>bank</td>
+                <td>{{ payment.bank|default_if_none:"" }}</td>
+            </tr>
+            <tr>
+                <td>work_operator</td>
+                <td>{{ payment.work_operator|default_if_none:"" }}</td>
+            </tr>
         {{ payment.card_data }}
 
 

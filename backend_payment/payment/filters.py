@@ -141,10 +141,13 @@ class PaymentStatFilter(django_filters.FilterSet):
         lookup_expr='lt',
         widget=MyTimeInput({'class': 'form-control', 'value': to_initial})
                                                  )
+    bank = django_filters.ModelChoiceFilter(queryset=Bank.objects.all(),
+                                            null_label='Без банка')
+
 
     class Meta:
         model = Payment
-        fields = ['pay_type', 'merchant', 'merchant__owner', 'bank']
+        fields = ['pay_type', 'merchant', 'merchant__owner', 'bank', 'user_login']
 
     @property
     def qs(self):
@@ -195,7 +198,7 @@ class PaymentFilter(django_filters.FilterSet):
 
     class Meta:
         model = Payment
-        fields = ['pay_type', 'amount', 'merchant', 'merchant__owner', 'bank',]
+        fields = ['pay_type', 'amount', 'merchant', 'merchant__owner', 'bank', 'user_login']
 
     @property
     def qs(self):
