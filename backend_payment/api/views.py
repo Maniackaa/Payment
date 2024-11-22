@@ -25,7 +25,7 @@ from rest_framework.views import APIView
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from api.filters import BalanceChangeFilter
+from api.filters import BalanceChangeFilter, PaymentsArchiveFilter, WithdrawFilter
 from api.permissions import PaymentOwnerOrStaff, IsStaff, IsStaffOrReadOnly
 from api.serializers import PaymentCreateSerializer, PaymentInputCardSerializer, \
     PaymentInputSmsCodeSerializer, PaymentTypesSerializer, WithdrawCreateSerializer, \
@@ -114,18 +114,9 @@ class PaymentTypesView(mixins.ListModelMixin, viewsets.GenericViewSet):
 #     max_page_size = 200
 
 
-class PaymentsArchiveFilter(django_filters.FilterSet):
-
-    create_at_gte = django_filters.DateTimeFilter(field_name='create_at', lookup_expr='gte')
-    create_at_lt = django_filters.DateTimeFilter(field_name='create_at', lookup_expr='lt')
-
-    class Meta:
-        model = Payment
-        fields = ['create_at_gte', 'create_at_lt', 'status', 'pay_type', 'merchant']
-
 
 @extend_schema(tags=['Payment check'], summary='Просмотр архива',
-               description=f'http://127.0.0.1:8000/api/v1/payments_archive/?limit=1000&create_at_gte=2024-05-31T00&create_at_lt=2024-06-01&status=9&pay_type=card_2&search=ab'
+               description=f'/api/v1/payments_archive/?limit=1000&create_at_gte=2024-05-31T00&create_at_lt=2024-06-01&status=9&pay_type=card_2&search=ab'
                )
 class PaymentsArchive(generics.ListAPIView):
     serializer_class = PaymentArchiveSerializer
@@ -134,7 +125,6 @@ class PaymentsArchive(generics.ListAPIView):
     # pagination_class = LargeResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = PaymentsArchiveFilter
-
     search_fields = ['id', 'order_id']
 
     def get_queryset(self):
@@ -540,10 +530,17 @@ signature_text = """
 
 @extend_schema(tags=['Withdraw'], summary='Заявки на выводы')
 class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet, mixins.ListModelMixin):
-    serializer_class = WithdrawCreateSerializer
-    queryset = Withdraw.objects.all()
+    # serializer_class = WithdrawCreateSerializer
+    # queryset = Withdraw.objects.all()
     authentication_classes = [JWTAuthentication]
     permission_classes = [PaymentOwnerOrStaff]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = WithdrawFilter
+    search_fields = ['id', 'withdraw_id']
+
+    def get_queryset(self):
+        threshold = timezone.now() - datetime.timedelta(days=365)
+        return Withdraw.objects.filter(merchant__owner=self.request.user, create_at__gte=threshold).all()
 
     @extend_schema(tags=['Withdraw'],
                    summary='Создание withdraw',
@@ -707,8 +704,25 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
         serializer = WithdrawSerializer(instance)
         return Response(serializer.data)
 
-    def get_queryset(self):
-        print('get_queryset')
-        print(self.serializer_class)
-        return Withdraw.objects.filter(merchant__owner=self.request.user)
-        return super().get_queryset()
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            serializer_class = WithdrawCreateSerializer
+        else:
+            serializer_class = WithdrawSerializer
+        return serializer_class
+
+
+    # def get_queryset(self):
+    #     print('get_queryset')
+    #     print(self.serializer_class)
+    #     return Withdraw.objects.filter(merchant__owner=self.request.user)
+    #     # return super().get_queryset()
+    #
+    # def get_serializer(self):
+    #     print('get_serializer')
+    #     return super().get_serializer()
+
+    # def list(self, request, *args, **kwargs):
+    #     print(self.serializer_class)
+    #     serializer = WithdrawSerializer()
+    #     return Response(serializer.data)

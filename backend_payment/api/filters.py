@@ -1,6 +1,7 @@
+import django_filters
 from django_filters import rest_framework as filters
 
-from payment.models import BalanceChange
+from payment.models import BalanceChange, Payment, Withdraw
 
 
 class BalanceChangeFilter(filters.FilterSet):
@@ -13,3 +14,23 @@ class BalanceChangeFilter(filters.FilterSet):
     class Meta:
         model = BalanceChange
         fields = []
+
+
+class PaymentsArchiveFilter(django_filters.FilterSet):
+
+    create_at_gte = django_filters.DateTimeFilter(field_name='create_at', lookup_expr='gte')
+    create_at_lt = django_filters.DateTimeFilter(field_name='create_at', lookup_expr='lt')
+
+    class Meta:
+        model = Payment
+        fields = ['create_at_gte', 'create_at_lt', 'status', 'pay_type', 'merchant']
+
+
+class WithdrawFilter(django_filters.FilterSet):
+
+    create_at_gte = django_filters.DateTimeFilter(field_name='create_at', lookup_expr='gte')
+    create_at_lt = django_filters.DateTimeFilter(field_name='create_at', lookup_expr='lt')
+
+    class Meta:
+        model = Withdraw
+        fields = ['create_at_gte', 'create_at_lt', 'status', 'merchant']

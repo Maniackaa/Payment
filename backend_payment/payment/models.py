@@ -538,6 +538,17 @@ class PaymentLog(models.Model):
         return json.loads(self.changes)
 
 
+class BlockedUser(models.Model):
+    # Заблокированные связки user_login-merch.owner'ы
+    user = models.ForeignKey(verbose_name='Кто заблокировал', to=User, null=True, blank=True, on_delete=models.CASCADE)
+    create_at = models.DateTimeField('Когда', auto_now_add=True)
+    user_login = models.CharField(max_length=64, null=True, blank=True)
+
+
+    class Meta:
+        ordering = ('create_at',)
+
+
 class PhoneScript(models.Model):
     name = models.CharField('Наименование', unique=True)
     step_1 = models.BooleanField('Шаг 1. Ввод карты', default=1)
