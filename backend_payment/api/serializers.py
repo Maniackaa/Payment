@@ -13,7 +13,7 @@ from rest_framework.serializers import as_serializer_error
 from rest_framework import validators
 
 from core.global_func import hash_gen, get_client_ip
-from payment.models import Payment, Merchant, CreditCard, PayRequisite, Withdraw, BalanceChange
+from payment.models import Payment, Merchant, CreditCard, PayRequisite, Withdraw, BalanceChange, Currency
 from payment.views import get_pay_requisite
 
 logger = structlog.get_logger(__name__)
@@ -27,6 +27,7 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
     amount = serializers.DecimalField(required=True, max_digits=8, decimal_places=2)
     confirmed_amount = serializers.DecimalField(read_only=True, max_digits=8, decimal_places=2)
     create_at = serializers.DateTimeField(read_only=True)
+    currency_code = serializers.CharField(default='AZN')
 
     def validate(self, data):
         merchant = data.get('merchant')  # Номер магазина
@@ -52,6 +53,10 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
             ip = get_client_ip(request)
             if ip not in merchant.ip_list():
                 raise ValidationError(f'Your ip {ip} not in white list')
+        currency_code = data.get('currency_code')
+        possible_currency_codes = [c.name for c in Currency]
+        if currency_code not in possible_currency_codes:
+            raise ValidationError(f'Incorrect currency_code {currency_code}')
         return data
 
     def save(self, **kwargs):
@@ -65,6 +70,7 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
             'merchant',
             'order_id',
             'amount',
+            'currency_code',
             'confirmed_amount',
             'pay_type',
             'user_login',
@@ -195,7 +201,6 @@ class PaymentTypesSerializer(serializers.ModelSerializer):
         fields = ('pay_type', 'min_amount', 'max_amount', 'method_info')
 
 
-
 class WithdrawCardSerializer(serializers.ModelSerializer):
     cvv = serializers.CharField(required=False, max_length=4, allow_blank=True)
     expired_month = serializers.CharField(required=False, allow_blank=True)
@@ -229,7 +234,6 @@ class WithdrawCardSerializer(serializers.ModelSerializer):
             return data
         else:
             raise ValidationError('cvv must be 3-4 digits')
-
 
 
 class WithdrawSerializer(serializers.ModelSerializer):
@@ -291,7 +295,7 @@ class PaymentArchiveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = ("id", "order_id", "pay_type", "create_at", 'merchant', "amount", "confirmed_amount", "comission",
-                  "status", "user_login", "owner_name", "bank_str", "mask", "referrer", "confirmed_time",
+        fields = ("id", "order_id", "pay_type", "create_at", 'merchant', "amount", "currency_code", "confirmed_amount",
+                  "comission", "status", "user_login", "owner_name", "bank_str", "mask", "referrer", "confirmed_time",
                   "response_status_code", "comment"
                   )

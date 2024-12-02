@@ -542,6 +542,13 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
         threshold = timezone.now() - datetime.timedelta(days=365)
         return Withdraw.objects.filter(merchant__owner=self.request.user, create_at__gte=threshold).all()
 
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            serializer_class = WithdrawCreateSerializer
+        else:
+            serializer_class = WithdrawSerializer
+        return serializer_class
+
     @extend_schema(tags=['Withdraw'],
                    summary='Создание withdraw',
                    description=signature_text,
@@ -703,13 +710,6 @@ class WithdrawViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewse
         instance = self.get_object()
         serializer = WithdrawSerializer(instance)
         return Response(serializer.data)
-
-    def get_serializer_class(self):
-        if self.request.method == "POST":
-            serializer_class = WithdrawCreateSerializer
-        else:
-            serializer_class = WithdrawSerializer
-        return serializer_class
 
 
     # def get_queryset(self):

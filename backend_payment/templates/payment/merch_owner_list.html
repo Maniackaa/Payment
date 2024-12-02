@@ -16,7 +16,8 @@
        <thead class="">
             <tr class="" style="text-align: center">
                 <th>Мерч</th>
-                <th>Баланс</th>
+                <th>Баланс AZN</th>
+                <th>Баланс BDT</th>
                 <th>Ссылка</th>
                 <th>Итого</th>
                 <th>Сутки</th>
@@ -28,6 +29,7 @@
                 <tr class="text-center">
                     <td>{{obj}}</td>
                     <td>{{obj.balance}}</td>
+                    <td>{{obj.bdt_balance}}</td>
                     <td><a href="{% url 'payment:merch_owner_detail' obj.id%}">Изменить баланс/выплата</a></td>
                     <td style="">{{ obj.total }}</td>
                     <td style="">{{ result.day_1|default_if_none:""|get_value_from_dict:obj.username|default_if_none:"" }}</td>

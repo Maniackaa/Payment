@@ -12,8 +12,6 @@ v1_router.register("payment", views.PaymentViewSet, basename='payment')
 v1_router.register("payment_status", views.PaymentStatusView, basename='payment_status')
 v1_router.register("payment_types", views.PaymentTypesView, basename='payment_types')
 
-# v1_router.register("payments_archive", views.PaymentsArchive.as_view(), basename='payments_archive')
-
 v1_router.register("withdraw", views.WithdrawViewSet, basename='withdraw')
 v1_router.register("balance_changes", views.BalanceViewSet, basename='balance_changes')
 

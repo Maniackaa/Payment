@@ -10,6 +10,8 @@ from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 from django_better_admin_arrayfield.forms.widgets import DynamicArrayWidget
 from django.forms import widgets
 from django.db import models
+
+from deposit.models import Incoming
 from payment.models import CreditCard, PayRequisite, Payment, Merchant, PhoneScript, Bank, Withdraw, BalanceChange
 from users.models import SupportOptions
 
@@ -49,7 +51,19 @@ class MerchantOwnerFilter(SimpleListFilter):
             return queryset.filter(merchant__owner=self.value())
 
 
+class PaymentAdminForm(forms.ModelForm):
+
+    class Meta:
+        model = Payment
+        widgets = {
+            'status': forms.Select
+        }
+        fields = '__all__'
+        # exclude = ('status',)
+
+
 class PaymentAdmin(admin.ModelAdmin):
+    form = PaymentAdminForm
     list_display = (
         'id', 'create_at', 'merchant', 'order_id', 'amount',
         'status', 'card_number', 'sms_code', 'bank_name', 'response_status_code'
@@ -58,6 +72,14 @@ class PaymentAdmin(admin.ModelAdmin):
                    'work_operator', 'status')
     list_select_related = ['merchant', 'pay_requisite', 'bank', 'work_operator',
                            'confirmed_incoming', 'confirmed_user', 'merchant__owner']
+    # readonly_fields = ('confirmed_incoming', )
+    raw_id_fields = ('confirmed_incoming', )
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields["merchant"].label = "Магазин мерча"
+        # print(form.base_fields['confirmed_incoming'].__dict__)
+        return form
 
     # Кастомное поле
     # def card_number(self, obj):

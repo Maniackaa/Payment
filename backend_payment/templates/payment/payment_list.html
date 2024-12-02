@@ -107,7 +107,7 @@
             {% if payment.screenshot %}
               <td><a target="_blank" href="/media/{{ payment.screenshot }}">{{ payment.amount }}</a></td>
             {% else %}
-              <td>{{ payment.amount }}</td>
+              <td>{{ payment.amount }} {{ payment.currency }}</td>
             {% endif %}
             <form method="post" action=''>
             {% csrf_token %}

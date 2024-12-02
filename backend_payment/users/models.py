@@ -65,11 +65,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    balance = models.DecimalField('Баланс', max_digits=18, decimal_places=2, default=0)
-    tax = models.FloatField('Комиссия card_2', default=9)
-    tax_m10 = models.FloatField('Комиссия m10_to_m10', default=7)
-    tax_card = models.FloatField('Комиссия card-to-card', default=7)
-    withdraw_tax = models.FloatField('Комиссия на вывод', default=2)
+    # Баланс AZN
+    balance = models.DecimalField('Баланс AZN', max_digits=16, decimal_places=2, default=0)
+    tax = models.FloatField('Комиссия card_2 AZN', default=9)
+    tax_m10 = models.FloatField('Комиссия m10_to_m10 AZN', default=7)
+    tax_card = models.FloatField('Комиссия card-to-card AZN', default=7)
+    withdraw_tax = models.FloatField('Комиссия на вывод AZN', default=2)
+
+    bdt_balance = models.DecimalField('Баланс BDT', max_digits=16, decimal_places=2, default=0)
+    bdt_tax = models.FloatField('Комиссия bkash', default=9)
+    bdt_withdraw_tax = models.FloatField('Комиссия на вывод BDT', default=2)
 
     class Meta:
         verbose_name = "Пользователь"

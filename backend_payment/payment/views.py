@@ -126,9 +126,10 @@ class SupportOptionsView(SuperuserOrStaffPlusPerm, FormView, UpdateView,):
                 return 2
             return 3
 
-        pay_list = Payment.objects.filter(status=9).values(
+        day_start = timezone.now() - datetime.timedelta(days=60)
+        pay_list = Payment.objects.filter(status=9, create_at__gte=day_start).values(
             'confirmed_amount', 'confirmed_user__username', 'confirmed_time').order_by('-confirmed_time')
-        index = Payment.objects.filter(status=9).values('confirmed_time').order_by('confirmed_time')
+        index = Payment.objects.filter(status=9, create_at__gte=day_start).values('confirmed_time').order_by('confirmed_time')
         df = pd.DataFrame(list(pay_list), index=index)
         df.columns = ['amount', 'oper', 'confirmed_time']
         df['step_time'] = df['confirmed_time'] + pd.Timedelta(hours=3 - 2)
@@ -159,9 +160,7 @@ class SupportOptionsView(SuperuserOrStaffPlusPerm, FormView, UpdateView,):
     def post(self, request, *args, **kwargs):
         savepoint = transaction.savepoint()
         new_opers = self.request.POST.getlist('operators_on_work')
-        print(f'new_opers: {new_opers}')
         options = SupportOptions.load()
-        print(f'old_opers: {options.operators_on_work}')
         options.operators_on_work = new_opers
         options.save()
         # Снятие со смены остальных
@@ -1164,11 +1163,22 @@ class MerchOwnerDetail(SuperuserOrStaffPlusPerm, FormView, UpdateView):
         merchowner = form.instance
         balance_delta = form.cleaned_data['balance_delta']
         comment = form.cleaned_data['comment']
-        merchowner.balance = F('balance') + balance_delta
-        merchowner.save()
+        currency_code = form.cleaned_data['currency_code']
+        if currency_code == 'BDT':
+            merchowner.bdt_balance = F('bdt_balance') + balance_delta
+            merchowner.save()
+            user = User.objects.get(pk=merchowner.id)
+            current_balance = user.bdt_balance
+        else:
+            #AZN
+            merchowner.balance = F('balance') + balance_delta
+            merchowner.save()
+            user = User.objects.get(pk=merchowner.id)
+            current_balance = user.balance
         merchowner = User.objects.get(pk=merchowner.id)
-        BalanceChange.objects.create(amount=balance_delta, user=merchowner, comment=f'Изменение баланса на {balance_delta} ₼. {comment}',
-                                     current_balance=merchowner.balance)
+        BalanceChange.objects.create(amount=balance_delta, user=merchowner,
+                                     comment=f'Изменение баланса на {balance_delta} {currency_code}: {comment} {currency_code}',
+                                     current_balance=current_balance)
         return redirect(reverse_lazy('payment:merch_owner_detail', kwargs={'pk': merchowner.id}))
 
 

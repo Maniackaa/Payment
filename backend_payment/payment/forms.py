@@ -4,8 +4,9 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.contrib.postgres.forms import SimpleArrayField
+from django.forms import widgets, RadioSelect
 
-from payment.models import Payment, CreditCard, Merchant, Withdraw
+from payment.models import Payment, CreditCard, Merchant, Withdraw, CURRENCY_CHOICES
 from users.models import SupportOptions
 
 User = get_user_model()
@@ -183,7 +184,8 @@ class PaymentListConfirmForm(forms.ModelForm):
 
 class MerchantForm(forms.ModelForm):
     name = forms.CharField(label='Название')
-    merch_viewers = SimpleArrayField(base_field=forms.CharField(), required=False, label='Логины помощников через запятую')
+    merch_viewers = SimpleArrayField(base_field=forms.CharField(), required=False,
+                                     label='Логины помощников через запятую')
 
     class Meta:
         model = Merchant
@@ -193,17 +195,16 @@ class MerchantForm(forms.ModelForm):
 
 class MerchBalanceChangeForm(forms.ModelForm):
     balance_delta = forms.DecimalField()
-    comment = forms.CharField(required=False)
+    currency_code = forms.ChoiceField(choices=CURRENCY_CHOICES, widget=RadioSelect())
+    comment = forms.CharField(required=False, widget=widgets.Textarea())
 
     class Meta:
         model = User
-        fields = ('balance_delta', 'comment')
+        fields = ('balance_delta', 'currency_code', 'comment')
 
     def clean(self):
         cleaned_data = super().clean()
         balance = self.instance.balance
-        print(cleaned_data)
-        print(balance)
         balance_delta = cleaned_data.get('balance_delta')
         if balance_delta < 0 and balance < -balance_delta:
             raise ValidationError(f'Недостаточно средств: {balance}')
@@ -211,6 +212,7 @@ class MerchBalanceChangeForm(forms.ModelForm):
 
 
 class PaymentForm(forms.ModelForm):
+    # Редактирование заявки
     comment = forms.CharField(widget=forms.Textarea, required=False)
 
     class Meta:

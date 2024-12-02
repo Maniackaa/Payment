@@ -3,6 +3,7 @@ import json
 import threading
 import uuid
 from decimal import Decimal
+from enum import Enum
 from typing import Any
 
 import pytz
@@ -30,6 +31,38 @@ from users.models import SupportOptions
 logger = structlog.get_logger(__name__)
 
 User = get_user_model()
+
+
+class Currency(Enum):
+    AZN = {
+        "code": "AZN",
+        "title": "Azerbaijani Manat",
+        "title_rus": "Azerbaijani Manat",
+        "symbol": "₼",
+        "native": "ман.",
+        "exp": 2
+    }
+    BDT = {
+        "code": "BDT",
+        "title": "Bangladeshi taka",
+        "title_rus": "Бангладешская така",
+        "symbol": "৳",
+        "native": "Tk",
+        "exp": 2
+    }
+
+    def __init__(self, vals):
+        self.code = vals['code']
+        self.title = vals['title']
+        self.symbol = vals['symbol']
+        self.native = vals['native']
+        self.exp = vals['exp']
+
+    def __str__(self):
+        return f'{self.symbol}'
+
+
+CURRENCY_CHOICES = [(currency.code, f'{currency.code} - {currency.symbol}') for currency in Currency]
 
 
 class Merchant(models.Model):
@@ -88,16 +121,16 @@ def after_save_shop(sender, instance: Merchant, created, raw, using, update_fiel
 class BalanceChange(models.Model):
     create_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='balance_history')
-    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Изменение баланса')
-    # tax = models.DecimalField('Комиссия по операции', max_digits=10, decimal_places=2, default=0)
-    current_balance = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Текущий баланс', null=True)
+    amount = models.DecimalField(max_digits=16, decimal_places=2, verbose_name='Изменение баланса')
+    currency_code = models.CharField(choices=CURRENCY_CHOICES, default='AZN')
+    current_balance = models.DecimalField(max_digits=16, decimal_places=2, verbose_name='Текущий баланс AZN', null=True)
     comment = models.CharField(null=True, blank=True)
 
     class Meta:
         ordering = ('-create_at',)
 
     def __str__(self):
-        return f'{self.id}. {self.create_at} {self.comment} {self.amount}: {self.current_balance}'
+        return f'{self.id}. {self.create_at} {self.comment} ({"-" if self.amount < 0 else "+"}{self.amount} {self.currency_code}) ---> {self.current_balance} {self.currency_code}'
 
 
 class CreditCard(models.Model):
@@ -168,6 +201,7 @@ class Withdraw(models.Model):
     merchant = models.ForeignKey('Merchant', verbose_name='Shop', on_delete=models.CASCADE, related_name='withdraws')
     withdraw_id = models.CharField(max_length=64, db_index=True)
     amount = models.IntegerField('Сумма заявки', validators=[MinValueValidator(30), MaxValueValidator(10000)])
+    currency_code = models.CharField(choices=CURRENCY_CHOICES, default='AZN')
     payload = models.JSONField(default=str, blank=True, null=True)
     create_at = models.DateTimeField('Время добавления в базу', auto_now_add=True)
     status = models.IntegerField('Статус заявки',
@@ -201,6 +235,7 @@ class Withdraw(models.Model):
                 "id": str(self.id),
                 "withdraw_id": self.withdraw_id,
                 "amount": self.amount,
+                "currency_code": self.currency_code,
                 "create_at": self.create_at.isoformat(),
                 "status": self.status,
                 "confirmed_time": self.confirmed_time.isoformat(),
@@ -249,7 +284,7 @@ class Payment(models.Model):
     order_id = models.CharField(max_length=64, db_index=True)
     # amount = models.IntegerField('Сумма заявки', null=True)
     amount = models.DecimalField('Сумма заявки', max_digits=8, decimal_places=2, null=True, blank=True)
-
+    currency_code = models.CharField(choices=CURRENCY_CHOICES, default='AZN')
     user_login = models.CharField(max_length=64, null=True, blank=True)
     owner_name = models.CharField(max_length=100, null=True, blank=True)
     pay_requisite = models.ForeignKey('PayRequisite', on_delete=models.CASCADE, null=True, blank=True)
@@ -295,6 +330,16 @@ class Payment(models.Model):
     def __str__(self):
         string = f'{self.__class__.__name__} {self.id}'
         return string
+
+    @property
+    def currency(self):
+        code = self.currency_code
+        currency_codes = [c.name for c in Currency]
+        if code in currency_codes:
+            currency = getattr(Currency, code)
+        else:
+            currency = getattr(Currency, 'AZN')
+        return currency
 
     @property
     def wrong_webhook(self):
@@ -487,6 +532,7 @@ class Payment(models.Model):
                 "order_id": self.order_id,
                 "user_login": self.user_login,
                 "amount": float(self.amount),
+                "currency_code": self.currency_code,
                 "create_at": self.create_at.isoformat(),
                 "status": self.status,
                 "confirmed_time": self.confirmed_time.isoformat(),
@@ -599,16 +645,20 @@ class Work(models.Model):
 @receiver(pre_save, sender=Withdraw)
 def pre_save_withdraw(sender, instance: Withdraw, raw, using, update_fields, *args, **kwargs):
     logger.debug(f'withdraw pre_save_status = {instance.status} cashed: {instance.cached_status}')
+
+    # Баланс на момент заявки
+    if not instance.balance_before:
+        instance.balance_before = instance.merchant.owner.balance
+
     # Если статус изменился на 9 (потвержден):
     if instance.status == 9 and instance.cached_status != 9:
         if not instance.confirmed_time:
             instance.confirmed_time = timezone.now()
-        withdraw_tax = instance.merchant.owner.withdraw_tax
-        instance.comission = Decimal(round(instance.amount * withdraw_tax / 100, 2))
-        instance.balance_after = instance.merchant.owner.balance - instance.amount - Decimal(withdraw_tax)
-
-    if not instance.balance_before:
-        instance.balance_before = instance.merchant.owner.balance
+        # Считаем комиссию и меняем баланс
+        if instance.currency_code == 'AZN':
+            withdraw_tax = instance.merchant.owner.withdraw_tax
+            instance.comission = Decimal(round(instance.amount * withdraw_tax / 100, 2))
+            instance.balance_after = instance.merchant.owner.balance - instance.amount - Decimal(withdraw_tax)
 
 
 @receiver(post_save, sender=Withdraw)
@@ -621,17 +671,21 @@ def after_save_withdraw(sender, instance: Withdraw, created, raw, using, update_
             # Минусуем баланс
             with transaction.atomic():
                 user = User.objects.get(pk=instance.merchant.owner.id)
-                withdraw_tax = Decimal(round(instance.amount * user.withdraw_tax / 100, 2))
-                logger.info(f'user: {user}. {user.balance} -> {round(user.balance - Decimal(f"{instance.amount}") - withdraw_tax, 2)}')
-                user.balance = F('balance') - Decimal(f"{instance.amount}") - withdraw_tax
-                user.save()
-                user = User.objects.get(pk=instance.merchant.owner.id)
-                logger.info(f'New balance: {user.balance}')
+                if instance.currency_code == 'AZN':
+                    withdraw_tax = Decimal(round(instance.amount * user.withdraw_tax / 100, 2))
+                    logger.info(f'user: {user}. {user.balance} -> {round(user.balance - Decimal(f"{instance.amount}") - withdraw_tax, 2)} {instance.currency_code}')
+                    user.balance = F('balance') - Decimal(f"{instance.amount}") - withdraw_tax
+                    user.save()
+                    user = User.objects.get(pk=instance.merchant.owner.id)
+                    logger.info(f'New balance AZN: {user.balance}')
                 # Фиксируем историю
+                if instance.currency_code == 'AZN':
+                    currency_code = 'AZN'
                 new_log = BalanceChange.objects.create(
                     user=user,
                     amount=- instance.amount - withdraw_tax,
-                    comment=f'Withdraw {instance.amount} ₼: {instance.id}. {round(-instance.amount - withdraw_tax, 2)} ₼. (Tax: {round(withdraw_tax, 2)} ₼)',
+                    currency_code=currency_code,
+                    comment=f'Withdraw {instance.amount} {instance.currency_code}: {instance.id}. {round(-instance.amount - withdraw_tax, 2)} {instance.currency_code}. (Tax: {round(withdraw_tax, 2)} {instance.currency_code})',
                     current_balance=user.balance
                 )
                 new_log.save()

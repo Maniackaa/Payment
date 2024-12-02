@@ -83,13 +83,14 @@ class UserAdmin(BaseUserAdmin):
     # The fields to be used in displaying the User model.
     # These override the definitions on the base UserAdmin
     # that reference specific fields on auth.User.
-    list_display = ('id', 'username', 'email', 'is_active',  'balance', 'tax', 'withdraw_tax', 'is_superuser', 'is_staff',
-                    )
+    list_display = ('id', 'username', 'email', 'is_active',  'balance', 'tax', 'withdraw_tax', 'is_superuser',
+                    'is_staff',)
     list_filter = ('is_superuser', 'is_staff', 'role')
     fieldsets = (
         (None, {'fields': ('username', 'email', 'password')}),
-        ('Personal info', {'fields': ('role', 'tax', 'tax_m10', 'tax_card', 'withdraw_tax', 'balance')}),
-        ('Permissions', {'fields': ('is_staff', 'is_active', "groups", "user_permissions",)}),
+        ('AZN', {'fields': ('tax', 'tax_m10', 'tax_card', 'withdraw_tax', 'balance')}),
+        ('BDT', {'fields': ('bdt_balance', 'bdt_tax', 'bdt_withdraw_tax')}),
+        ('Permissions', {'fields': ('role', 'is_staff', 'is_active', "groups", "user_permissions",)}),
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
     # overrides get_fieldsets to use this attribute when creating a user.
@@ -100,7 +101,7 @@ class UserAdmin(BaseUserAdmin):
         ),
     )
     search_fields = ('email',)
-    ordering = ('email',)
+    ordering = ('id',)
     filter_horizontal = ()
     list_display_links = ('id', 'username')
     inlines = [ProfileInline]

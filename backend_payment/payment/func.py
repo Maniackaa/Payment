@@ -3,6 +3,7 @@ from datetime import timedelta
 
 import pandas as pd
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from payment.models import Work
 User = get_user_model()
@@ -12,7 +13,8 @@ def work_calc():
     # Подсчет времени работы опера
     opers_work_calc = {}
     for user in User.objects.filter(is_staff=True):
-        works = Work.objects.filter(user_id=user.id).all()
+        day_start = timezone.now() - datetime.timedelta(days=60)
+        works = Work.objects.filter(user_id=user.id, change_time__gte=day_start).all()
         if works:
             df = pd.DataFrame(list(works.values()))
             df.columns = ['pk', 'user_id', 'timestamp', 'status']
