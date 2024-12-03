@@ -51,7 +51,7 @@ from payment.func import work_calc
 from payment.models import Payment, PayRequisite, Merchant, PhoneScript, Bank, Withdraw, BalanceChange, Work
 from payment.permissions import AuthorRequiredMixin, StaffOnlyPerm, MerchantOnlyPerm, SuperuserOnlyPerm, \
     MerchantOrViewPerm, SuperuserOrStaffPlusPerm
-from payment.task import send_payment_webhook, send_withdraw_webhook, low_priority_task
+from payment.task import send_payment_webhook, send_withdraw_webhook, automatic_decline_expired_payment
 from users.models import SupportOptions, Profile
 
 logger = structlog.get_logger(__name__)
@@ -1623,11 +1623,23 @@ def show_log(request, pk):
 #         return HttpResponseRedirect('/')
 
 
+# class Test(DetailView):
+#
+#     def get(self, request, *args, **kwargs):
+#         try:
+#             template_name = 'payment/test_tax.html'
+#             return render(request, template_name, context={})
+#
+#         except RuntimeError as err:
+#             logger.error(err)
+#         return HttpResponseRedirect('/')
+
 class Test(DetailView):
 
     def get(self, request, *args, **kwargs):
         try:
             template_name = 'payment/test_tax.html'
+            automatic_decline_expired_payment.apply_async(queue='high')
             return render(request, template_name, context={})
 
         except RuntimeError as err:
