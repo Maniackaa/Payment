@@ -11,6 +11,7 @@ from django.db import models
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from users.managers import UserManager
 
@@ -116,17 +117,20 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 @receiver(pre_save, sender=User)
 def pre_save_user(sender, instance: User, raw, using, update_fields, *args, **kwargs):
-    if instance.is_white():
-        instance.is_active = 1
+    if instance.is_white() and instance.id is None:
         instance.role = 'merchant'
 
 
 @receiver(post_save, sender=User)
-def create_or_update_user_profile(sender, instance, created, **kwargs):
+def after_save_user(sender, instance: User, created, raw, using, update_fields, *args, **kwargs):
     if created:
         instance.profile = Profile.objects.create(user=instance,
                                                   my_filter=[])
-    instance.profile.save()
+        instance.profile.save()
+        if instance.is_white():
+            instance.role = 'merchant'
+            instance.is_active = 1
+            instance.save()
 
 
 class Profile(models.Model):

@@ -124,6 +124,7 @@ class TestAPI(APITestCase):
     def test_full_steps(self):
         start_url = '/api/v1/payment/'
         self.client.force_authenticate(user=self.merch_user)
+        self.assertEqual(self.merch_user.balance, 0, 'Баланс не равен 0')
         data = {"merchant": "1", "order_id": "testorder1", "amount": "10", "pay_type": "card_2"}
         start_count = Payment.objects.count()
         response = self.client.post(start_url, data)
@@ -141,6 +142,7 @@ class TestAPI(APITestCase):
                 "expired_year": "26",
                 "cvv": "2131"}
 
+        # Передаем данные карты
         response = self.client.put(url, data)
         assert response.status_code == 200, f'Не верный прием данных карты: {data}'
         payment = Payment.objects.get(pk=pk)
@@ -148,12 +150,13 @@ class TestAPI(APITestCase):
 
         url = start_url + f'{pk}/send_sms_code/'
         data = {"sms_code": "134q"}
+
+        # Передаем смс-код
         response = self.client.put(url, data)
         assert response.status_code == 200, f'Не верный прием смс: {data}'
 
         # Просмотр платежа
         url = f'/api/v1/payment_status/{pk}/'
-        print(url)
         data = {'id': pk}
 
         response = self.guest_client.get(url, data)
@@ -166,6 +169,9 @@ class TestAPI(APITestCase):
 
         # Подтверждение платежа
         response = self.client.put(url, data={'status': 9})
+
+
+
         self.assertEqual(response.status_code, 403, 'Меняется статус мерчем. Ответ не 403')
         self.client.force_authenticate(user=self.operator)
         response = self.client.put(url, data={'status': 9})
@@ -173,6 +179,13 @@ class TestAPI(APITestCase):
 
         payment = Payment.objects.get(pk=pk)
         self.assertEqual(payment.status, 9, 'Не подтверждается платеж оператором по API')
+
+        # Баланс мерча увеличился
+        merch_owner = User.objects.get(pk=self.merch_user.id)
+        self.assertEqual(merch_owner.tax, 9, 'Неверный tax azn')
+        new_balance = float(payment.amount) - merch_owner.tax * float(payment.amount) / 100
+        self.assertEqual(float(merch_owner.balance), new_balance, 'Неверный баланс после подтверждения')
+        self.assertEqual(merch_owner.bdt_balance, 0, 'Изменился баланс bdt')
 
     def test_create_withdraw(self):
         # Тест создание вывода"
@@ -198,6 +211,8 @@ class TestAPI(APITestCase):
                 "field2": "data2"
             }
         }
+        merch = User.objects.get(pk=self.merch_user.id)
+        self.assertEqual(0, merch.balance, 'Баланс мерча не равен 0')
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 201, 'Не создается вывод')
 

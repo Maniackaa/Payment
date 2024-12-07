@@ -109,7 +109,7 @@ class UserAdmin(BaseUserAdmin):
 
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'first_name', 'last_name', 'view_bad_warning')
+    list_display = ('id', 'user', 'view_bad_warning', 'is_bot', 'payment_limit_per_minute', 'bot_max_amount')
     list_display_links = ('id', 'user')
 
 class WhiteListMerchantAdmin(admin.ModelAdmin):

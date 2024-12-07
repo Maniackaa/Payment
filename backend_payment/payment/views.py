@@ -132,7 +132,8 @@ class SupportOptionsView(SuperuserOrStaffPlusPerm, FormView, UpdateView,):
         index = Payment.objects.filter(status=9, create_at__gte=day_start).values('confirmed_time').order_by('confirmed_time')
         df = pd.DataFrame(list(pay_list), index=index)
         df.columns = ['amount', 'oper', 'confirmed_time']
-        df['step_time'] = df['confirmed_time'] + pd.Timedelta(hours=3 - 2)
+        # df['step_time'] = df['confirmed_time'] + pd.Timedelta(hours=3 - 2)
+        df['step_time'] = df['confirmed_time'] + pd.Timedelta(hours=3)
         df['step_date'] = df['step_time'].apply(datetime.datetime.date)
         df['step'] = df['step_time'].apply(get_step)
         step_grouped = df.groupby(['step_date', 'oper', 'step'])
