@@ -23,6 +23,7 @@ MY_APPS = [
     'payment.apps.PaymentConfig',
     'deposit.apps.DepositConfig',
     'api.apps.ApiConfig',
+    'balance_checker.apps.BalanceCheckerConfig',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

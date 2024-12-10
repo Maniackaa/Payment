@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="col-md-3">
+    <div class="card mb-3">
+        <img src="{{ obj.image.url }}" class="card-img-top" alt="{{ obj.title }}">
+        <div class="card-body">
+            <h5 class="card-title">{{ obj.description }}</h5>
+            <p class="card-text">{{ obj.name }}</p>
+            <p class="card-text">{{ obj.type }}</p>
+            <p class="card-text"><strong>Баланс: {{ obj.balance }}</strong></p>
+            <p class="card-text">Баланс: {{ obj.balance_i| default_if_none:'' }}</p>
+            <a href="#" class="btn btn-primary">Подробно</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

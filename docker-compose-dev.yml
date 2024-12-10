@@ -1,7 +1,7 @@
 version: '3'
 
 volumes:
-  pg_data:
+  pg_data_deposite:
   pgadmin_data:
   redis_data:
   static:
@@ -14,7 +14,7 @@ services:
     env_file: .env
     volumes:
       - ./postgres/init_db:/docker-entrypoint-initdb.d
-      - pg_data:/var/lib/postgresql/data
+      - pg_data_deposite:/var/lib/postgresql/data
       - ./postgres/root:/root
     ports:
       - "35432:5432"

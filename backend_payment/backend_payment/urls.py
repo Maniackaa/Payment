@@ -7,6 +7,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, Sp
 urlpatterns = [
     path('', include('payment.urls', namespace='payment')),
     path('', include('deposit.urls', namespace='deposit')),
+    path('', include('balance_checker.urls', namespace='balance_checker')),
     path('admin/', admin.site.urls),
     path('auth/', include('users.urls', namespace='users')),
     path('api/v1/', include('api.urls')),

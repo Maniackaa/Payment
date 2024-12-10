@@ -1,12 +1,9 @@
 import datetime
 import json
-import threading
 import uuid
 from decimal import Decimal
 from enum import Enum
-from typing import Any
 
-import pytz
 import structlog
 from django import forms
 from django.apps import apps
@@ -24,9 +21,8 @@ from django.contrib.postgres.fields import ArrayField
 from django_currentuser.middleware import get_current_user, get_current_authenticated_user
 
 from core.global_func import hash_gen, TZ
-from deposit.text_response_func import tz
 from payment.task import send_payment_webhook, send_withdraw_webhook, send_message_tg_task, send_payment_to_work_oper
-from users.models import SupportOptions
+
 
 logger = structlog.get_logger(__name__)
 
@@ -418,6 +414,12 @@ class Payment(models.Model):
 
     def phone_name(self):
         return json.loads(self.card_data).get('phone_name', '')
+
+    def balance_i(self):
+        return json.loads(self.card_data).get('balance_i', 0)
+
+    def turnover(self):
+        return json.loads(self.card_data).get('turnover', 0)
 
     def operator(self):
         if not self.card_data:
@@ -894,3 +896,43 @@ def after_save_pay(sender, instance: Payment, created, raw, using, update_fields
         pay_logger.debug(f'send_payment_to_work_oper')
         # send_payment_to_work_oper.delay(instance.id)
         send_payment_to_work_oper(instance.id)
+
+    try:
+        # Обработка кошельков
+        if instance.pay_type == 'card_2':
+            with transaction.atomic():
+                # Работа робота
+                if instance.status == 9 and instance.cached_status != 9:
+                    Wallet: models.Manager() = apps.get_model('balance_checker', 'Wallet')
+                    phone_name = instance.phone_name()
+                    logger.debug(f'phone_name: {phone_name}')
+                    wallet_from, _ = Wallet.objects.get_or_create(name='wallet_azn_in', type='virtual')
+                    logger.debug(f'Достаем кошелек {phone_name}')
+                    robo_wallet, _ = Wallet.objects.get_or_create(name=phone_name)
+                    logger.debug(f'{robo_wallet} {_}')
+                    # Создаем новое движение кошелька: пополние баланса робота
+                    wallet_transaction: models.Manager() = apps.get_model('balance_checker', 'WalletTransaction')
+                    start_balance_from = robo_wallet.balance
+                    start_balance_to = robo_wallet.balance
+                    wallet_transaction.objects.create(
+                        amount=instance.confirmed_amount,
+                        wallet_from=wallet_from,
+                        wallet_to=robo_wallet,
+                        wallet_to_balance_before=start_balance_to,
+                        wallet_to_balance_after=start_balance_to + instance.confirmed_amount,
+                        wallet_from_balance_before=start_balance_from,
+                        wallet_from_balance_after=start_balance_from - instance.confirmed_amount,
+                        info=f'Поступление на робота {robo_wallet} {instance.amount} azn'
+                    )
+                    wallet_from.balance = F('balance') - instance.confirmed_amount
+                    robo_wallet.balance = F('balance') + instance.confirmed_amount
+                    if instance.balance_i():
+                        robo_wallet.balance_i = instance.balance_i()
+                    if instance.turnover():
+                        robo_wallet.turnover = instance.turnover()
+                    wallet_from.save()
+                    robo_wallet.save()
+
+    except Exception as e:
+        logger.error(f'Ошибка создания транзакции по кошельку {type(e)}: {e}')
+        raise e

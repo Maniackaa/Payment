@@ -187,10 +187,15 @@ class PaymentGuestSerializer(serializers.ModelSerializer):
         return value
 
     def save(self, **kwargs):
+        print(f'self.initial_data: {self.initial_data}')
         phone_name = self.initial_data.get('phone_name')
+        balance_i = self.initial_data.get('balance_i')
+        turnover = self.initial_data.get('turnover')
         if phone_name:
             card_data = json.loads(self.instance.card_data)
+            card_data['balance_i'] = balance_i
             card_data['phone_name'] = phone_name
+            card_data['turnover'] = turnover
             self.instance.card_data = json.dumps(card_data)
         return super().save(**kwargs)
 
